@@ -1,0 +1,163 @@
+<apex:component controller="RecycleSetupController"  allowDML="true">
+  
+  <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <apex:slds />
+        <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        
+        <script src="{!URLFOR($Resource.jQuery)}"></script>
+        
+        <body>
+            <div class="slds" style="margin:0px 10px;">
+                <div class="slds-page-header">
+                    <div class="slds-grid">
+                        <div class="slds-col slds-has-flexi-truncate">
+                            <div class="slds-media slds-no-space slds-grow">
+                                <div class="slds-media__figure">
+                                    <svg class="slds-icon slds-icon-custom-custom67" aria-hidden="true">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/custom-sprite/svg/symbols.svg#custom67")}"></use>
+                                    </svg>
+                                </div>
+                                <div class="slds-media__body">
+                                    <p class="slds-text-title--caps slds-line-height--reset">Setting</p>
+                                    <h1 class="slds-page-header__title slds-m-right--small slds-align-middle slds-truncate" title="Recycle Setup">Recycle Setup</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <apex:form id="frm">
+                    <apex:pagemessages ></apex:pagemessages>
+                    <div id="details">
+                        <div id="page_buttons" style="margin-top:10px;text-align:center;">
+                            <apex:commandButton value="Save" action="{!Save}" styleClass="slds-button slds-button--brand" status="Processing" reRender="frm" oncomplete="overridePageMessages();"/>
+                       
+                        </div>
+                        <div class="slds-form--compound" style="margin-top:20px;">
+                            <div class="slds-form-element__group">
+                                 <div class="slds-form-element__row">
+                                    <div class="slds-form-element slds-size--1-of-1">
+                                        <label class="slds-form-element__label">Default Page Size</label>
+                                        <div class="slds-form-element__control">
+                                            <apex:selectList value="{!rbinsetting.Show_Default_Entries__c}" multiselect="false" size="1" styleClass="slds-select"> 
+                                                <apex:selectOption itemValue="10" itemLabel="10"/>
+                                                <apex:selectOption itemValue="25" itemLabel="25"/>
+                                                <apex:selectOption itemValue="50" itemLabel="50"/>
+                                                <apex:selectOption itemValue="100" itemLabel="100"/>
+                                                <apex:selectOption itemValue="200" itemLabel="200"/>
+                                                <apex:selectOption itemValue="500" itemLabel="500"/>
+                                                <apex:selectOption itemValue="1000" itemLabel="1000"/>
+                                            </apex:selectList>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    
+                                    <div class="slds-form-element__row">
+                                    <div class="slds-form-element slds-size--1-of-1">
+                                        <label class="slds-form-element__label">Display Records on Recycle Bin Page </label>
+                                        <div class="slds-form-element__control">
+                                            <apex:inputText value="{!rbinsetting.Record_Limits__c}" styleClass="slds-input"/>
+                                        </div>
+                                    </div>
+                                    
+                                 </div>
+                            </div>
+                        </div>
+                        <div id="page_buttons_bottom" style="margin-top:10px;text-align:center;">
+                            <apex:commandButton value="Save" action="{!Save}" styleClass="slds-button slds-button--brand" status="Processing" reRender="frm" oncomplete="overridePageMessages();"/>
+                        </div>
+                    </div>
+                </apex:form>
+            </div>
+            <style>
+                .slds-form--compound .slds-form-element__row {
+                    display:inline-block !important;
+                    width:48.8%;
+                    margin-right: 1%;
+                }
+            </style>
+            <script>
+                function overridePageMessages(){    
+                    var textureEffect = '';
+                    //Uncomment below line for texture effect on page messages
+                    textureEffect = 'slds-theme--alert-texture';
+                                 
+                    $('.warningM3').addClass('slds-notify slds-notify--toast slds-theme--warning customMessage '+textureEffect);          
+                    $('.confirmM3').addClass('slds-notify slds-notify--alert slds-theme--success  customMessage '+textureEffect);    
+                    $('.errorM3').addClass('slds-notify slds-notify--alert slds-theme--error customMessage '+textureEffect);                  
+                    $('.infoM3').addClass('slds-notify slds-notify--toast customMessage '+textureEffect);    
+                                     
+                    $('.errorM3').removeClass('errorM3'); 
+                    $('.confirmM3').removeClass('confirmM3'); 
+                    $('.infoM3').removeClass('infoM3');   
+                    $('.warningM3').removeClass('warningM3');  
+                }
+                
+                               
+               
+            </script>
+            
+             <div style="margin-top:50px;text-align:center;">
+                    App Developed by <a style="text-decoration:underline;" href="http://kandisatech.com/" target="_blank">Kandisa Technologies Private Limited</a>
+                </div> 
+            
+            
+             <!------------- Start: Processing Div---------------------------------------->
+            <style>
+                .msgIcon {
+                    display: none!important
+                }
+                .customMessage * {
+                    color: #fff!important
+                }
+                .customMessage {
+                    margin: 5px 0!important;
+                    opacity: 1!important;
+                    width: 100%;
+                    //font-size: 12px;
+                    border: 0px;
+                    padding-left: 10px;
+                }
+                .slds-scope .slds-notify--toast, .slds-scope .slds-notify_toast {
+                    padding:6px 8px 6px 6px !important;
+                }
+                .message {
+                    opacity: .1
+                }
+                
+                .ProcessingBackground {
+                    background-color: #fff;
+                    opacity: 0.60;
+                    filter: alpha(opacity = 50);
+                    width: 100%;
+                    height: 100%;
+                    position: fixed;
+                    z-index: 8000;
+                    top:0;
+                    left:0;
+                }
+                .Processing {
+                    z-index: 8552;
+                    left: 50%;
+                    top: 50%;
+                    text-align: center;
+                    position: fixed;
+                } 
+                
+                
+               
+            </style>
+             <div id="divProcessing" style="display:none;">
+                <div class="ProcessingBackground"></div>
+                <div class="Processing">
+                    <!--/img/loading.gif-->
+                    <image alt="Processing" width="64" height="64" src="{!URLFOR($Asset.SLDS, '/assets/images/spinners/slds_spinner_brand.gif')}" />
+                </div>
+            </div>  
+            <apex:actionStatus id="Processing" onstart="document.getElementById('divProcessing').style.display = '';" onstop="document.getElementById('divProcessing').style.display = 'none';">                            
+            </apex:actionStatus>
+            <!------------- End: Processing Div---------------------------------------->
+        </body>
+    </html>
+  
+</apex:component>

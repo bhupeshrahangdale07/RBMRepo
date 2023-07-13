@@ -1,0 +1,699 @@
+<apex:component controller="RecyclebinController" allowDML="true">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <apex:slds />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+        <script src="{!URLFOR($Resource.jQuery351)}"></script>
+    <script src="{!URLFOR($Resource.dataTables, 'DataTables-1.10.22/js/jquery.dataTables.min.js')}" />
+    <script src="/soap/ajax/40.0/connection.js" type="text/javascript"></script>
+    <script src="/soap/ajax/40.0/apex.js" type="text/javascript"></script>
+    <script src="{!URLFOR($Resource.aljs)}"></script>
+
+    <style>
+        div.clsError {
+            color: red;
+        }
+
+        div.dataTables_length {
+            float: left;
+        }
+
+        div.dataTables_filter {
+            float: right;
+        }
+
+        div.dataTables_info {
+            float: left;
+        }
+
+        div.dataTables_paginate {
+            float: right;
+        }
+
+        div.dataTables_length,
+        div.dataTables_filter,
+        div.dataTables_paginate,
+        div.dataTables_info {
+            padding: 10px;
+        }
+
+        a.paginate_button {
+            <!--display: inline-block;
+            -->background-color: #e7e7e7;
+            padding: 2px 6px;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+
+        a.paginate_button.current {
+            background-color: transparent;
+            border: 1px solid black;
+            cursor: default;
+        }
+
+        a.paginate_button.disabled {
+            color: #3d6672;
+            cursor: default;
+        }
+
+        .paging_full_numbers a:active {
+            outline: none
+        }
+
+        .paging_full_numbers a:hover {
+            text-decoration: none;
+        }
+
+        .slds .slds-tabs--scoped__content {
+            padding-bottom: 3rem !important;
+        }
+
+        .slds-scope .slds-select[multiple],
+        .slds-scope .slds-select[size] {
+            height: 1.975rem;
+        }
+
+        div.dataTables_paginate span>a {
+            width: 15px;
+            text-align: center;
+        }
+
+        div.dataTables_info {
+            padding: 9px 6px 6px 6px;
+        }
+
+        table.dataTable thead th {
+            cursor: pointer;
+        }
+
+        table.dataTable thead th.sorting_asc {
+            background: url({!URLFOR($Asset.SLDS, '/assets/icons/utility/arrowdown_60.png')
+        }
+
+        ) no-repeat right center;
+        background-size: 15px;
+        }
+
+        table.dataTable thead th.sorting_desc {
+            background: url({!URLFOR($Asset.SLDS, '/assets/icons/utility/arrowup_60.png')
+        }
+
+        ) no-repeat right center;
+        background-size: 15px;
+        }
+
+        .msgIcon {
+            display: none!important
+        }
+
+        .customMessage * {
+            color: #fff!important
+        }
+
+        .customMessage {
+            margin: 5px 0!important;
+            opacity: 1!important;
+            width: 100%; //font-size: 12px;
+            border: 0px;
+            padding-left: 10px;
+        }
+
+        .slds-scope .slds-notify--toast,
+        .slds-scope .slds-notify_toast {
+            padding: 6px 8px 6px 6px !important;
+        }
+
+        .message {
+            opacity: .1
+        }
+
+        .slds-icon-[action-sprite]-[delete] {
+            bgcolor: black;
+        }
+    </style>
+
+    <body>
+        <div class="slds" style="margin:0px 10px;">
+            <div class="slds-page-header">
+                <div class="slds-media">
+                    <div class="slds-media__figure">
+                        <span class="slds-icon_container slds-icon-action-delete slds-icon_container--circle" title="Recycle Bin">
+                            <svg class="slds-icon slds-icon--small" aria-hidden="true">
+                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/action-sprite/svg/symbols.svg#delete")}" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="slds-media__body">
+                        <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Recycle Bin">Recycle Bin</h1>
+                        <p class="slds-text-body_small slds-line-height_reset {!if(IsAdminUser,'','slds-hide')}">
+                            <a onclick="return fnGotoRecycleBinManagerSettings();">Go to Recycle Bin Manager Settings</a>
+                            <!--<apex:outputLink target="_blank" value="/apex/SearchObjectSettings" id="theLink">Go to Recycle Bin Manager Settings</apex:outputLink>-->
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <apex:form id="frm">
+                <apex:pagemessages ></apex:pagemessages>
+                <apex:actionFunction id="actUndeleteAll" name="actUndeleteAll" action="{!UndeleteAllRecords}" status="Processing" reRender="frm"
+                    oncomplete="overridePageMessages();" />
+                <apex:actionFunction id="actUndeleteSelected" name="actUndeleteSelected" action="{!UndeleteSelectedRecords}" status="Processing"
+                    reRender="frm" oncomplete="overridePageMessages();" />
+                <apex:actionFunction id="actPurgeSelected" name="actPurgeSelected" action="{!DeleteFromRecyclebin}" status="Processing" reRender="frm"
+                    oncomplete="overridePageMessages();" />
+                <div id="SearchFilters" style="margin-top:10px;">
+                    <div class="slds-form--compound" style="margin-top:20px;">
+                        <div class="slds-form-element__group">
+                            <div class="slds-form-element__row">
+                                <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
+                                    <label class="slds-form-element__label">Search by Object</label>
+                                    <div class="slds-form-element__control">
+                                        <apex:selectList value="{!strSelectedObject}" multiselect="false" size="1" styleClass="slds-select">
+                                            <apex:selectOptions value="{!lstObjects}"></apex:selectOptions>
+                                        </apex:selectList>
+                                    </div>
+                                </div>
+                                <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
+                                    <label class="slds-form-element__label">Search by Keyword</label>
+                                    <div class="slds-form-element__control">
+                                        <apex:inputText value="{!strKeyword}" styleClass="slds-input" />
+                                    </div>
+                                </div>
+
+                                <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
+                                    <label class="slds-form-element__label">Deleted From Date</label>
+                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                        <svg aria-hidden="true" class="slds-input__icon slds-icon-text-default">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS,"/assets/icons/utility-sprite/svg/symbols.svg#event")}"></use>
+                                        </svg>
+                                        <apex:inputText id="ipFromDate" value="{!strFromDate}" styleClass="slds-input ldsdatepicker" />
+                                    </div>
+                                    <div id="ipFromDateErr" class="clsError"></div>
+                                </div>
+                                <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
+                                    <label class="slds-form-element__label">Deleted To Date</label>
+                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                        <svg aria-hidden="true" class="slds-input__icon slds-icon-text-default">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS,"/assets/icons/utility-sprite/svg/symbols.svg#event")}"></use>
+                                        </svg>
+                                        <apex:inputText id="ipToDate" value="{!strToDate}" styleClass="slds-input ldsdatepicker" />
+                                    </div>
+                                    <div id="ipToDateErr" class="clsError"></div>
+                                </div>
+
+                                <apex:outputPanel rendered="{!IsAdminUser}" styleClass="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
+                                    <label class="slds-form-element__label">Deleted by User</label>
+                                    <div class="slds-form-element__control">
+                                        <div class="slds-combobox_container slds-has-inline-listbox">
+                                            <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click slds-combobox-lookup" id="divUserFilter" aria-expanded="false"
+                                                aria-haspopup="listbox" role="combobox">
+                                                <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                                                    <input type="text" class="slds-input slds-combobox__input" id="txtUser" aria-autocomplete="list" aria-controls="listbox-user"
+                                                        autocomplete="off" role="textbox" placeholder="Search User" />
+                                                    <apex:inputHidden value="{!strSelectedUser}" id="hdnSelectedUserId" />
+                                                    <span class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right">
+                                                        <svg class="slds-icon slds-icon slds-icon_x-small slds-icon-text-default" aria-hidden="true">
+                                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS," /assets/icons/utility-sprite/svg/symbols.svg#search")}" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                                <div id="listbox-user" role="listbox">
+                                                    <ul class="slds-listbox slds-listbox_vertical slds-dropdown slds-dropdown_fluid" id="ui_results" role="presentation">
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--<apex:selectList value="{!strSelectedUser}" multiselect="false" size="1" styleClass="slds-select"> 
+                                                <apex:selectOptions value="{!lstUsers}"></apex:selectOptions>
+                                            </apex:selectList>-->
+                                    </div>
+                                </apex:outputPanel>
+
+                                <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
+                                    <label class="slds-form-element__label"></label>
+                                    <div class="slds-form-element__control" style="margin-top:4px;">
+                                        <apex:commandButton id="btnSearch" value="Search" action="{!SearchRecords}" styleClass="slds-button slds-button--brand" status="Processing"
+                                            reRender="frm" oncomplete="overridePageMessages();" />
+                                        <apex:commandButton value="Clear" action="{!Clear}" reRender="frm" styleClass="slds-button slds-button_neutral" status="Processing"
+                                            oncomplete="overridePageMessages();clearDeleteByUser();" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="SearchResults" style="margin-top:20px;">
+                    <div id="page_buttons" style="margin-top:10px;text-align:center;">
+                        <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand"
+                        />
+                        <apex:commandButton value="Restore All" onclick="fnUndeleteAllRecords();return false;" styleClass="slds-button slds-button--brand"
+                        />
+                        <apex:commandButton value="Purge Selected" onclick="fnDeleteFromRecyclebin();return false;" styleClass="slds-button slds-button--brand"
+                            rendered="{!IsAdminUser}" />
+                    </div>
+                    <table width="100%" id="tblDeletedRecords" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered checkableTable"
+                        style="border-spacing:0px !important;">
+                        <thead>
+                            <tr>
+                                <th class="slds-size_1-of-12">
+                                    <span class="slds-checkbox">
+                                        <input id="checkAllBox" type="checkbox" onclick="toggleCheckAll(this);" />
+                                        <label class="slds-checkbox__label" for="checkAllBox">
+                                            <span class="slds-checkbox_faux"></span>
+                                            <span class="slds-form-element__label">
+                                                <b>&nbsp;&nbsp;</b>
+                                            </span>
+                                        </label>
+                                    </span>
+                                </th>
+                                <th class="slds-size_5-of-12">
+                                    <b>Name</b>
+                                </th>
+                                <th class="slds-size_2-of-12">
+                                    <b>Type </b>
+                                </th>
+                                <th class="slds-size_2-of-12">
+                                    <b>Deleted By</b>
+                                </th>
+                                <th class="slds-size_2-of-12">
+                                    <b>Deleted Date</b>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat value="{!lstwrapResults}" var="lstofresult" rendered="{!lstwrapResults != null && lstwrapResults.size > 0}">
+                                <apex:repeat value="{!lstofresult}" var="result">
+                                    <tr>
+                                        <td>
+                                            <span class="slds-checkbox">
+                                                <apex:inputCheckbox id="chkresult" styleClass="chkRSelected" value="{!result.isCheck}" />
+                                                <label class="slds-checkbox__label" for="{!$Component.chkresult}">
+                                                    <span class="slds-checkbox_faux"></span>
+                                                    <span class="slds-form-element__label"></span>
+                                                </label>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="javascript:void(0);" data-url="/apex/rbin__RecordPage?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}"
+                                                onclick="openRecord(this);">{!result.Name}</a>
+                                        </td>
+                                        <td>{!result.Type}</td>
+                                        <td>{!result.DeletedBy}</td>
+                                        <td>{!result.DeletedOn}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </apex:repeat>
+                            <!--<tr style="display:{!if(lstwrapResults == null || lstwrapResults.size == 0, '','none')}">
+                                    <td colspan="100%"><i>No records to display.</i></td>
+                                </tr>-->
+                        </tbody>
+                    </table>
+                </div>
+                <script>
+
+                    function isLightningExperienceOrSalesforce1() {
+                        return ((typeof sforce != 'undefined') && sforce && (!!sforce.one));
+                    }
+
+                    function fnGotoRecycleBinManagerSettings() {
+                        if (isLightningExperienceOrSalesforce1()) {
+                            // Do something for Lightning Experience
+                            //window.location = '/lightning/n/rbin__Recycle_Bin_Manager_Settings'
+                            sforce.one.navigateToURL("/lightning/n/rbin__Recycle_Bin_Manager_Settings");
+                        }
+                        else {
+                            // Use classic Visualforce
+                            window.open('/apex/SearchObjectSettings', '_blank')
+                            //window.location = '';
+                        }
+
+                        return false;
+                    };
+
+                    Date.prototype.addDays = function (days) {
+                        var date = new Date(this.valueOf());
+                        date.setDate(date.getDate() + days);
+                        return date;
+                    };
+
+
+                    var dtResultTable;
+                    setFocus();
+                    function setFocus() { };
+
+                    function openRecord(link) {
+                        var dataurl = $(link).attr('data-url');
+                        if (dataurl != undefined && dataurl != null && dataurl != '') {
+                            if (sforce != undefined && sforce.one != undefined) {
+                                //lightning
+                                sforce.one.navigateToURL(dataurl);
+                            } else {
+                                //classic
+                                window.open(dataurl, '_self');
+                            }
+                        }
+                    }
+
+                    function toggleCheckAll(checkAllBox) {
+                        $('.checkableTable :checkbox').prop('checked', checkAllBox.checked);
+                    }
+
+                    var assetsLoc = '{!URLFOR($Asset.SLDS)}';
+
+                    $.aljsInit({
+                        assetsLocation: assetsLoc,
+                        scoped: true
+                    });
+
+                    $(document).ready(function () {
+                        $('.ldsdatepicker').datepicker({
+                            format: 'MM/DD/YYYY',
+                            numYearsBefore: 1,
+                            numYearsAfter: 0,
+                            onSelect: function (datepicker, t) {
+                                var dt = new Date();
+                                var cdt = new Date(datepicker.selectedFullDate._d).addDays(15);
+                                if (dt > cdt) {
+                                    datepicker.$el.val('');
+                                    var cdt15 = new Date().addDays(-14);
+                                    var dverr = $(datepicker.$selectedInput).closest('div.slds-form-element').find('div.clsError');
+                                    //You cannot select a date prior to 11/06/2018 due to salesforce limitation of storing the data in recycle bin for only 15 days.
+                                    $(dverr).text('You cannot select a date prior to ' + moment(cdt15).format('MM/DD/YYYY') + ' due to salesforce limitation of storing the data in recycle bin for only 15 days.');
+                                    //eventDateValue=moment(cdt15).format('DD/MM/YYYY');
+                                } else {
+                                    var dverr = $(datepicker.$selectedInput).closest('div.slds-form-element').find('div.clsError');
+                                    $(dverr).empty();
+                                }
+                            }
+                        });
+                        dtResultTable = $('#tblDeletedRecords').DataTable({
+                            "oLanguage": {
+                                "sSearch": "Search all columns: ",
+                            },
+                            "bDestroy": true,
+                            "sPaginationType": "full_numbers",
+                            "lengthMenu": [10, 25, 50, 100, 200, 500, 1000],
+                            "aoColumnDefs": [
+                                { "bSortable": false, "aTargets": [0] }
+                            ],
+                            "order": [[4, "asc"]]
+                        });
+
+                        //$('#tblDeletedRecords_filter input').addClass('slds-input');
+                        //$('#tblDeletedRecords_length select').addClass('slds-select');
+
+                    });
+
+                    function clearDeleteByUser() {
+                        $('#txtUser').val('');
+                        gb_txtUser = '';
+                    }
+
+                    function overridePageMessages() {
+                        var textureEffect = '';
+                        //Uncomment below line for texture effect on page messages
+                        textureEffect = 'slds-theme--alert-texture';
+
+                        $('.warningM3').addClass('slds-notify slds-notify--toast slds-theme--warning customMessage ' + textureEffect);
+                        $('.confirmM3').addClass('slds-notify slds-notify--alert slds-theme--success  customMessage ' + textureEffect);
+                        $('.errorM3').addClass('slds-notify slds-notify--alert slds-theme--error customMessage ' + textureEffect);
+                        $('.infoM3').addClass('slds-notify slds-notify--toast customMessage ' + textureEffect);
+
+                        $('.errorM3').removeClass('errorM3');
+                        $('.confirmM3').removeClass('confirmM3');
+                        $('.infoM3').removeClass('infoM3');
+                        $('.warningM3').removeClass('warningM3');
+
+                        $('#txtUser').val(gb_txtUser); // added by RP on 27/11/2018
+
+                        setTimeout(function () {
+                            if (gb_pagesize != undefined && parseInt(gb_pagesize) > 10) {
+                                $('select[name=tblDeletedRecords_length]').val(gb_pagesize);
+                                $('select[name=tblDeletedRecords_length]').trigger('change');
+                            }
+                        }, 200);
+
+                    }
+                    function fnUndeleteAllRecords() {
+                        var rcount = {!recordcount
+                    };
+                    if (rcount > 0) {
+                        var d = getMessagebox();
+                        d = d.replace('{title}', 'Restore All Confirmation');
+                        d = d.replace('{message}', 'This will restore all ' + rcount + ' deleted records below, Are you sure you want to Restore all?');
+                        var btnsave = '<button class="slds-button slds-button--neutral slds-button--brand btnUndeleteAll" >Ok</button>';
+                        var btnclose = '<button class="slds-button slds-button--neutral btnCloseMessagebox">Close</button>';
+                        d = d.replace('{cancelbutton}', btnclose);
+                        d = d.replace('{actionbutton}', btnsave);
+                        $('.slds').find('#divMessagebox').remove();
+                        $('.slds').append(d);
+                    }
+                    $(this).blur();
+                    return false;
+                        }
+
+                    function fnUndeleteSelectedRecords() {
+                        dtResultTable.page.len(-1).draw();
+                        var rselectedcount = $(".chkRSelected:checked").length;
+                        if (rselectedcount > 0) {
+                            var d = getMessagebox();
+                            d = d.replace('{title}', 'Restore Selected Confirmation');
+                            d = d.replace('{message}', 'This will restore ' + rselectedcount + ' selected records below, Are you sure you want to Restore selected?');
+                            var btnsave = '<button class="slds-button slds-button--neutral slds-button--brand btnUndeleteSelected" >Ok</button>';
+                            var btnclose = '<button class="slds-button slds-button--neutral btnCloseMessagebox">Close</button>';
+                            d = d.replace('{cancelbutton}', btnclose);
+                            d = d.replace('{actionbutton}', btnsave);
+                            $('.slds').find('#divMessagebox').remove();
+                            $('.slds').append(d);
+                        } else {
+                            var d = getMessagebox();
+                            d = d.replace('{title}', 'Warning');
+                            d = d.replace('{message}', 'Please select atleast one record.');
+                            var btnclose = '<button class="slds-button slds-button--neutral slds-button--brand btnCloseMessagebox">Close</button>';
+                            d = d.replace('{cancelbutton}', btnclose);
+                            d = d.replace('{actionbutton}', '');
+                            $('.slds').find('#divMessagebox').remove();
+                            $('.slds').append(d);
+                        }
+
+                        $(this).blur();
+                        return false;
+                    }
+
+                    function fnDeleteFromRecyclebin() {
+                        dtResultTable.page.len(-1).draw();
+                        var rselectedcount = $(".chkRSelected:checked").length;
+                        if (rselectedcount > 0) {
+                            var d = getMessagebox();
+                            d = d.replace('{title}', 'Purge Selected Confirmation');
+                            d = d.replace('{message}', 'This will purge ' + rselectedcount + ' selected records below, Are you sure you want to Purge?');
+                            var btnsave = '<button class="slds-button slds-button--neutral slds-button--brand btnPurgeSelected" >Ok</button>';
+                            var btnclose = '<button class="slds-button slds-button--neutral btnCloseMessagebox">Close</button>';
+                            d = d.replace('{cancelbutton}', btnclose);
+                            d = d.replace('{actionbutton}', btnsave);
+                            $('.slds').find('#divMessagebox').remove();
+                            $('.slds').append(d);
+                        } else {
+                            var d = getMessagebox();
+                            d = d.replace('{title}', 'Warning');
+                            d = d.replace('{message}', 'Please select atleast one record.');
+                            var btnclose = '<button class="slds-button slds-button--neutral slds-button--brand btnCloseMessagebox">Close</button>';
+                            d = d.replace('{cancelbutton}', btnclose);
+                            d = d.replace('{actionbutton}', '');
+                            $('.slds').find('#divMessagebox').remove();
+                            $('.slds').append(d);
+                        }
+
+                        $(this).blur();
+                        return false;
+                    }
+                </script>
+            </apex:form>
+            <script>
+                var dtResultTable;
+                //< !--Model message box-- >
+                function getMessagebox() {
+                    return '<div id="divMessagebox"> \
+                          <div aria-hidden="false" role="dialog" class="slds-modal slds-fade-in-open"> \
+                            <div class="slds-modal__container"> \
+                              <div class="slds-modal__header"> \
+                                <h2 class="slds-text-heading--medium">{title}</h2> \
+                                <button class="slds-button slds-button--icon-inverse slds-modal__close btnCloseMessagebox"> \
+                                  <i style="font-size: larger;cursor:pointer;color:black;" class="fa fa-close"></i>\
+                                  <span class="slds-assistive-text">Close</span> \
+                                </button> \
+                              </div> \
+                              <div class="slds-modal__content slds-p-around--medium"> \
+                                <div> \
+                                  <p>{message}</p> \
+                                </div> \
+                              </div> \
+                              <div class="slds-modal__footer"> \
+                                <div class="slds-x-small-buttons--horizontal"> \
+                                  {cancelbutton} \
+                                  {actionbutton} \
+                                </div> \
+                              </div> \
+                            </div> \
+                          </div> \
+                          <div class="slds-backdrop slds-backdrop--open"></div> \
+                        </div>';
+                }
+
+                /*user filter */
+                var gb_txtUser;
+                $(document).on('keyup', '#txtUser', function () {
+                    var keyword = $(this).val();
+                    var usertextbox = $(this);
+                    if (keyword.length > 2) {
+                        Visualforce.remoting.Manager.invokeAction(
+                            '{!$RemoteAction.RecyclebinController.queryUsers}', keyword,
+                            function (result, event) {
+                                if (event.status) {
+                                    $(usertextbox).closest('#divUserFilter').addClass('slds-is-open');
+                                    $(usertextbox).closest('#divUserFilter').find('#ui_results').empty();
+                                    if (result) {
+                                        var commonli = '<li role="presentation" class="slds-listbox__item"> \
+                                                    <div class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta" role="option"> \
+                                                        <span class="slds-media__figure"> \
+                                                            <span class="slds-icon_container slds-icon-standard-user" title="User"> \
+                                                                <svg class="slds-icon slds-icon_small" aria-hidden="true"> \
+                                                                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS,"/assets/icons/standard-sprite/svg/symbols.svg#user")}" /> \
+                                                                </svg> \
+                                                                <span class="slds-assistive-text">User</span> \
+                                                            </span> \
+                                                        </span> \
+                                                        <span class="slds-media__body"> \
+                                                            <span class="slds-listbox__option-text slds-listbox__option-text_entity userInfo" data-userid="{userid}">{username}</span> \
+                                                            <span class="slds-listbox__option-meta slds-listbox__option-meta_entity">User</span> \
+                                                        </span> \
+                                                    </div> \
+                                                </li>';
+                                        $(result).each(function () {
+                                            var templi = commonli;
+                                            $(usertextbox).closest('#divUserFilter').find('#ui_results').append(templi.replace('{username}', this.Name).replace('{userid}', this.Id).replace('{useremail}', this.Email));
+                                        });
+                                    }
+                                } else if (event.type === 'exception') {
+                                    $(this) = 'ERROR: ' + event.message;
+                                } else {
+                                    $(this) = 'ERROR: ' + event.message;
+                                }
+                            },
+                            { escape: true }
+                        );
+                    } else {
+                        $(this).closest('#divUserFilter').removeClass('slds-is-open');
+                        if (keyword == undefined || keyword == '') {
+                            $('input[id$=hdnSelectedUserId]').val('');
+                        }
+
+                    }
+                });
+                $(document).on('blur', '#txtUser', function () {
+                    if ($(this).val() == null || $(this).val() == '') {
+                        $(this).closest('#divUserFilter').removeClass('slds-is-open');
+                        clearDeleteByUser();
+                    }
+                });
+                $(document).on('click', 'li.slds-listbox__item', function () {
+                    var selectedUsername = $(this).find('span.userInfo').html();
+                    var selectedUserId = $(this).find('span.userInfo').attr('data-userid');
+                    gb_txtUser = selectedUsername;
+                    $('#txtUser').val(gb_txtUser);
+                    $('input[id$=hdnSelectedUserId]').val(selectedUserId);
+                    $(this).closest('#divUserFilter').removeClass('slds-is-open');
+                });
+
+                //< !--Close Message box-- ->
+                $(document).on('click', '.btnCloseMessagebox', function () {
+                    dtResultTable.page.len(10).draw();
+                    $('.slds').find('#divMessagebox').remove();
+
+                    setTimeout(function () {
+                        if (gb_pagesize != undefined && parseInt(gb_pagesize) > 10) {
+                            $('select[name=tblDeletedRecords_length]').val(gb_pagesize);
+                            $('select[name=tblDeletedRecords_length]').trigger('change');
+                        }
+                    }, 100);
+                    return false;
+                });
+
+
+                //< !--Purge Selected-- >
+                $(document).on('click', '.btnPurgeSelected', function () {
+                    actPurgeSelected();
+                    $('.slds').find('#divMessagebox').remove();
+                    dtResultTable.page.len(10).draw();
+                    return false;
+                });
+
+                //< !--Undelete Selected-- >
+                $(document).on('click', '.btnUndeleteSelected', function () {
+                    actUndeleteSelected();
+                    dtResultTable.page.len(10).draw();
+                    $('.slds').find('#divMessagebox').remove();
+                    return false;
+                });
+
+                //< !--Undelete All-- >
+                $(document).on('click', '.btnUndeleteAll', function () {
+                    actUndeleteAll();
+                    $('.slds').find('#divMessagebox').remove();
+                    return false;
+                });
+
+                //put global page number
+                var gb_pagesize = 10;
+                $(document).on('change', 'select[name=tblDeletedRecords_length]', function () {
+                    gb_pagesize = $(this).val();
+                });
+
+                window.onload = function () {
+                    $('input[id$=btnSearch]').trigger('click');
+                }
+
+            </script>
+            <div style="margin-top:50px;text-align:center;">
+                App Developed by
+                <a style="text-decoration:underline;" href="http://kandisatech.com/" target="_blank">Kandisa Technologies Private Limited</a>
+            </div>
+        </div>
+        <!------------- Start: Processing Div---------------------------------------->
+        <style>
+            .ProcessingBackground {
+                background-color: #fff;
+                opacity: 0.60;
+                filter: alpha(opacity=50);
+                width: 100%;
+                height: 100%;
+                position: fixed;
+                z-index: 8000;
+                top: 0;
+                left: 0;
+            }
+
+            .Processing {
+                z-index: 8552;
+                left: 50%;
+                top: 50%;
+                text-align: center;
+                position: fixed;
+            }
+        </style>
+        <div id="divProcessing" style="display:none;">
+            <div class="ProcessingBackground"></div>
+            <div class="Processing">
+                <!--/img/loading.gif-->
+                <image alt="Processing" width="64" height="64" src="{!URLFOR($Asset.SLDS, '/assets/images/spinners/slds_spinner_brand.gif')}"
+                />
+            </div>
+        </div>
+        <apex:actionStatus id="Processing" onstart="document.getElementById('divProcessing').style.display = '';" onstop="document.getElementById('divProcessing').style.display = 'none';">
+        </apex:actionStatus>
+        <!------------- End: Processing Div---------------------------------------->
+    </body>
+
+    </html>
+</apex:component>

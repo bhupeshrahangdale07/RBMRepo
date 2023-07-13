@@ -1,0 +1,3 @@
+<apex:page docType="html-5.0" standardStylesheets="false" tabStyle="Recycle_Bin_Manager__tab" title="Recycle Bin Manager" showHeader="true" sidebar="true">
+  <c:RecycleComponent />
+</apex:page>

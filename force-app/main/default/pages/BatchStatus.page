@@ -1,0 +1,5 @@
+<apex:page sidebar="false" docType="html-5.0" standardStylesheets="false" title="Mass Restore Batch Status">
+<apex:form >
+<c:RecycleBatchStatus />
+</apex:form> 
+</apex:page>
