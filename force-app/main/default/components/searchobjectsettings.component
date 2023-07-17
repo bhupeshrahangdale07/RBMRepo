@@ -509,7 +509,32 @@
                                 </div>
                             </div>
                             <div id="tab-scoped-5" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-5__item">
-
+                                <div id="trackingobjtable" class="slds-hide">
+                                    <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal slds-m-top_small sldstbodysectionfortracking">
+                                        <thead>
+                                            <tr class="slds-line-height_reset">
+                                                <th class="slds-text-title_caps slds-cell-wrap slds-size_1-of-12" scope="col">
+                                                    <div class="slds-truncate" title="Action">Action</div>
+                                                </th>
+                                                <th class="slds-text-title_caps slds-cell-wrap slds-size_11-of-12" scope="col">
+                                                    <div class="slds-truncate" title="Object Name">Object Name</div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodysectionfortracking">
+                                            
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="slds-line-height_reset">
+                                                <td class="slds-text-title_caps slds-cell-wrap" scope="col" colspan="2">
+                                                    
+                                                    <button class="slds-button slds-button_brand" id="btnAddnewforracking">Add New</button>
+                                                    <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">Save</button>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
                             
                         </div>
