@@ -61,7 +61,7 @@
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-4"
                                        id="tab-scoped-4__item">Track Deleted Records</a>
                                 </li>
-                                <li class="slds-tabs_scoped__item" title="Track Permanently Deleted Data" role="presentation" onclick="gettrackingobjects()">
+                                <li class="slds-tabs_scoped__item" title="Track Permanently Deleted Data" role="presentation" onclick="getpermtrackingobjects()">
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-5"
                                        id="tab-scoped-5__item">Track Permanently Deleted Data</a>
                                 </li>
@@ -509,7 +509,7 @@
                                 </div>
                             </div>
                             <div id="tab-scoped-5" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-5__item">
-                                <div id="trackingobjtable">
+                                <div id="trackingobjtable" class="slds-hide">
                                     <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal slds-m-top_small sldstbodysectionfortracking">
                                         <thead>
                                             <tr class="slds-line-height_reset">
@@ -591,6 +591,45 @@
                 });
             
             function gettrackingobjects() {
+                $('#spinner').removeClass('slds-hide');
+                Visualforce.remoting.Manager.invokeAction(
+                    //Invoking controller action getcon
+                    '{!$RemoteAction.SearchObjectSetting.triggerableobjects}',
+                    function(result, event){
+                        //We can access the records through the parameter result
+                        //event.status determines if there is error or not 
+                        if(event.status){
+                            if(result){
+                                gb_tracking_options = [];
+                                for(var i = 0 ; i < result.length ; i++ ) {
+                                    var o = {};
+                                    o.Name = result[i].name;
+                                    o.Key = result[i].value;
+                                    gb_tracking_options.push(o);
+                                }
+                                
+                                gb_tracking_options.sort(function (a, b) {
+                                    var nameA = a.Name.toUpperCase(); // ignore upper and lowercase
+                                    var nameB = b.Name.toUpperCase(); // ignore upper and lowercase
+                                    if (nameA < nameB) {
+                                        return -1;
+                                    }
+                                    if (nameA > nameB) {
+                                        return 1;
+                                    }
+                                    
+                                    // names must be equal
+                                    return 0;
+                                });
+                            }
+                        }
+                        $('#spinner').addClass('slds-hide');
+                    },
+                    {escape: true}
+                );    
+            }
+
+            function getpermtrackingobjects() {
                 $('#spinner').removeClass('slds-hide');
                 Visualforce.remoting.Manager.invokeAction(
                     //Invoking controller action getcon
