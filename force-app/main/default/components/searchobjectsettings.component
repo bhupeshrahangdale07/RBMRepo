@@ -509,7 +509,7 @@
                                 </div>
                             </div>
                             <div id="tab-scoped-5" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-5__item">
-                                <div id="trackingobjtable" class="slds-hide">
+                                <div id="trackingobjtable" >
                                     <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal slds-m-top_small sldstbodysectionfortracking">
                                         <thead>
                                             <tr class="slds-line-height_reset">

@@ -143,9 +143,11 @@ global with sharing class SearchObjectSetting {
                         trackobj.name = String.valueOf(real.get('label'));
                         trackobj.value = String.valueOf(real.get('name'));
                         SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
+                        if(schemaType != null){
                         if(schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting()) {
                             lst.add(trackobj);   
                         }
+                            }
                     }
                 }
             }
