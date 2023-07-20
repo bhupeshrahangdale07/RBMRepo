@@ -1,0 +1,6 @@
+.delete-button{
+    --slds-c-icon-color-background: rgb(228, 59, 59);
+    --slds-c-icon-color-foreground: red;
+    --slds-c-icon-radius-border: 0.80rem
+
+}

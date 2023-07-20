@@ -1,6 +1,7 @@
 <apex:component controller="SearchObjectSetting" allowDML="true">
     <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <apex:slds />
+        <apex:includeLightning />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="{!URLFOR($Resource.jQuery351)}"></script>
@@ -61,7 +62,7 @@
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-4"
                                        id="tab-scoped-4__item">Track Deleted Records</a>
                                 </li>
-                                <li class="slds-tabs_scoped__item" title="Track Permanently Deleted Data" role="presentation" onclick="getpermtrackingobjects()">
+                                <li class="slds-tabs_scoped__item" title="Track Permanently Deleted Data" role="presentation">
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-5"
                                        id="tab-scoped-5__item">Track Permanently Deleted Data</a>
                                 </li>
@@ -509,37 +510,9 @@
                                 </div>
                             </div>
                             <div id="tab-scoped-5" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-5__item">
-                                <div class="slds-box">
-                                    <p>
-                                        <i>
-                                            <b>Note:</b>
-                                        </i> Please select the objects you would like to track for permanently deletion.</p>
-                                </div><br/>
-                                <div id="trackingobjtableforpermnt">
-                                    <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal slds-m-top_small sldstbodysectionforpermnttracking">
-                                        <thead>
-                                            <tr class="slds-line-height_reset">
-                                                <th class="slds-text-title_caps slds-cell-wrap slds-size_1-of-12" scope="col">
-                                                    <div class="slds-truncate" title="Action">Action</div>
-                                                </th>
-                                                <th class="slds-text-title_caps slds-cell-wrap slds-size_11-of-12" scope="col">
-                                                    <div class="slds-truncate" title="Object Name">Object Name</div>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tbodysectionforpermnttracking">
-                                            
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="slds-line-height_reset">
-                                                <td class="slds-text-title_caps slds-cell-wrap" scope="col" colspan="2">
-                                                    
-                                                    <button class="slds-button slds-button_brand" id="btnAddnewforobjtracking">Add New</button>
-                                                    <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">Save</button>
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                <div>
+                                    <div id="LightningComponentid" /> 
+                                
                                 </div>
                             </div>
                             
@@ -595,6 +568,19 @@
                         }
                     });
                 });
+
+                function openPermntDelTab(){
+                   // $('#perdeltbody').empty();
+                    $Lightning.use("c:RBMvflwc", function() {
+        $Lightning.createComponent("c:trackPermanentlyDeletedDataTab",
+          { 
+          },
+          "LightningComponentid",
+          function(cmp) {
+             console.log('LWC Salesforce driller added in VF page');
+          });
+    });
+}
             
             function gettrackingobjects() {
                 $('#spinner').removeClass('slds-hide');
@@ -708,7 +694,7 @@
                 
                 fnGrid();
                 fnTrackingGrid();
-                fnTrackingGridforperdelete();
+                openPermntDelTab();
                 
                 // var arrObjects = sforce.connection.describeSObjects(arrobj);
                 
@@ -923,59 +909,6 @@
                     );
                 };
 
-              function fnTrackingGridforperdelete() {
-                
-                $('#tbodysectionforpermnttracking').empty();
-                var strtr = '<tr class="slds-hint-parent" id="{trguid}" data-id="{id}"> \
-<td data-label="Action"  class="slds-cell-wrap"> \
-<div class="slds-truncate clsdelete" title="Action">{0}</div> \
-</td> \
-<td data-label="Object Name" class="slds-cell-wrap"> \
-<div class="slds-truncate" title="Object Name">{1}</div> \
-</td> \
-</tr>';
-                var deleteicon = '<span id="btnDeletetrackingrec" class="slds-icon_container slds-icon-action-delete slds-icon_container--circle" title="Delete"> \
-<svg class="slds-icon slds-icon_x-small" aria-hidden="true"> \
-<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/action-sprite/svg/symbols.svg#delete")}" /> \
-</svg></span>';
-                var ddlselect = '<select data-key="Name" class="slds-select">{option}</select>';
-                
-                Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.SearchObjectSetting.findTrackingExistingRecords}',
-                    function (result, event) {
-                        if (event.status) {
-                            gb_tracking_records = result;
-                            $.map(gb_tracking_records, function (o) {
-                                var tr = strtr;
-                                o.recordid = guid();
-                                tr = tr.replace('{trguid}', o.recordid);
-                                tr = tr.replace('{id}', o.Id);
-                                tr = tr.replace('{0}', deleteicon);
-                                
-                                tr = tr.replace('{1}', o.Name);
-                                // /*var stroptions = '<option value="">-- Select --</option>';
-                                // $.map(gb_options,function(option){
-                                //     var val = option.Name;
-                                //     if(o.Name == option.Key){
-                                //         stroptions += '<option selected="true" value="' + option.Key + '">' + val + '</option>';
-                                //     }else{
-                                //         stroptions += '<option value="' + option.Key + '">' + val + '</option>';
-                                //     }
-                                    
-                                // });
-                                // tr = tr.replace('{1}',ddlselect.replace('{option}',stroptions));
-                                    
-                                    $('#tbodysectionforpermnttracking').append(tr);
-                                });
-                            } else if (event.type === 'exception') {
-                                alert(event.message + " " + event.where);
-                            } else {
-                                alert(event.message);
-                            }
-                        },
-                        { escape: true }
-                    );
-                };
             
             function fnGrid() {
                 
@@ -1135,53 +1068,7 @@
                 return false;
             });
 
-            $(document).on('click', '#btnAddnewforobjtracking', function () {
-                $('#lblmsgfortracking').empty();
-                $('#lblmsgfortracking').addClass('slds-hide');
-                
-                $('#lblmsg').empty();
-                $('#lblmsg').addClass('slds-hide');
-                
-                var strtr = '<tr class="slds-hint-parent" id="{trguid}" > \
-<td data-label="Action" class="slds-cell-wrap"> \
-<div class="slds-truncate" title="Action">{0}</div> \
-</td> \
-<td data-label="Object Name" class="slds-cell-wrap"> \
-<div class="slds-truncate" title="Object Name">{1}</div> \
-</td> \
-</tr>';
-                var deleteicon = '<span id="btnDeletetrackingrec" class="slds-icon_container slds-icon-action-delete slds-icon_container--circle" title="Delete"> \
-<svg class="slds-icon slds-icon_x-small" aria-hidden="true"> \
-<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/action-sprite/svg/symbols.svg#delete")}" /> \
-</svg></span>';
-                var ddlselect = '<select data-key="Name" class="slds-select">{option}</select>';
-                var tr = strtr;
-                var tempid = guid();
-                tr = tr.replace('{trguid}', tempid);
-                tr = tr.replace('{0}', deleteicon);
-                var stroptions = '<option value="" selected="true">-- Select --</option>';
-                $.map(gb_tracking_options, function (val) {
-                    stroptions += '<option value="' + val.Key + '">' + val.Name + '</option>';
-                });
-                tr = tr.replace('{1}', ddlselect.replace('{option}', stroptions));
-                
-                
-                if (gb_tracking_records.length < 20) {
-                    $('#btnSavefortacking').removeClass('slds-hide');
-                    $('#tbodysectionfortracking').append(tr);
-                    var obj = {};
-                    obj.recordid = tempid;
-                    gb_tracking_records.push(obj);
-                } else {
-                    $('#lblmsgfortracking').addClass('slds-theme_info')
-                    alert('You cannot add more than 20 entries in the "Default Objects to Track".');
-                    
-                    $('#lblmsgfortracking').removeClass('slds-hide');
-                    $('#lblmsgfortracking').removeClass('slds-theme_success');
-                    $('#lblmsgfortracking').delay(4000).fadeOut();
-                }
-                return false;
-            });
+            
             
             $(document).on('change', '.sldstbodysection select,.sldstbodysection input[type=checkbox]', function () {
                 var dkey = $(this).attr('data-key');
@@ -1207,17 +1094,6 @@
                 }
             });
 
-           $(document).on('change', '.sldstbodysectionforpermnttracking select,.sldstbodysectionforpermnttracking input[type=checkbox]', function () {
-                var dkey = $(this).attr('data-key');
-                var rid = $(this).closest('tr').attr('id');
-                var obj = gb_tracking_records.find(x => x.recordid === rid);
-                
-                if ($(this).attr('type') == 'checkbox') {
-                    obj[dkey] = $(this).is(':checked');
-                } else {
-                    obj[dkey] = $(this).val();
-                }
-            });
             
             $(document).on('click', '#btnSave', function () {
                 $('#lblmsg').empty();
@@ -1292,7 +1168,6 @@
                             lblmsg.style.display = 'block';
                             $('#lblmsg').delay(4000).fadeOut();*/
                             fnTrackingGrid();
-                            fnTrackingGridforperdelete();
                         } else if (event.type === 'exception') {
                             setTimeout(function () {
                                 $('#spinner').addClass('slds-hide');
@@ -1334,7 +1209,6 @@
                                     lblmsg.style.display = 'block';
                                     $('#lblmsg').delay(4000).fadeOut();*/
                                     fnTrackingGrid();
-                                    fnTrackingGridforperdelete();
                                     $('#spinner').addClass('slds-hide');
                                 } else {
                                     alert(event.message);
@@ -1434,7 +1308,6 @@
                             if(gb_general.rbin__Real_time_object_tracking__c == true) {
                                 $('#objtrackingchk').attr('checked', 'checked');
                                 $('#trackingobjtable').removeClass('slds-hide');
-                                $('#trackingobjtableforpermnt').removeClass('slds-hide');
                                 $('#trackingmethod').removeClass('slds-hide');
                                 $('#trackingschedule').removeClass('slds-hide');
                                 $('#enabletrackingobjnotes').addClass('slds-hide');
@@ -1442,7 +1315,6 @@
                                 $('#generalnotesfortracking').removeClass('slds-hide');
                             } else {
                                 $('#trackingobjtable').addClass('slds-hide');
-                                $('#trackingobjtableforpermnt').addClass('slds-hide');
                                 $('#trackingschedule').addClass('slds-hide');
                                 $('#enabletrackingobjnotes').removeClass('slds-hide');
                                 $('#masterdetailnotes').addClass('slds-hide');

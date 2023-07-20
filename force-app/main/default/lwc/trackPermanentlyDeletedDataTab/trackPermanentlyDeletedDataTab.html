@@ -1,3 +1,57 @@
 <template>
-    
+    <!-- <lightning-card title="LWC Compnent">    
+      <lightning-datatable
+          key-field="id"
+          columns={columns}
+          data={data}
+          hide-checkbox-column="true"
+          column-widths-mode="auto"
+          onsave={onsaveaction}
+        ></lightning-datatable> 
+    </lightning-card> -->
+
+    <lightning-card>
+       <div class="slds-m-around_medium">
+           <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
+               <thead>
+                   <tr class="slds-line-height_reset">
+                    <th class="" scope="col" style="width: 10%;">
+                        <div class="slds-truncate" title="Action">ACTION</div>
+                      </th>
+                      <th class="" scope="col">
+                        <div class="slds-truncate" title="Object Name">OBJECT NAME</div>
+                      </th>
+                   </tr>
+               </thead>
+               <tbody>
+                <template for:each={data} for:item="obj">
+                 <tr class="slds-hint-parent" key={obj.Id}>
+                    <th data-label="Action" scope="row">
+                        <lightning-button-icon class="slds-icon slds-icon_large delete-button" icon-name="utility:delete" alternative-text="Delete" title="Delete"></lightning-button-icon>
+                      </th>
+                      <td data-label="Account Name">
+                        <!-- <template if:true={isTextVisible}>
+                            <lightning-formatted-text value={obj.objectName}></lightning-formatted-text> 
+                        </template> -->
+                        <!--<template if:true={isComboboxVisible}>-->
+                        <lightning-combobox name="Object Name"
+                        placeholder="--Select Object--"
+                        options={objectList}
+                        onchange={handleChange}
+                        data-id={obj.Id}
+                        ></lightning-combobox>
+                   <!-- </template>-->
+                      </td>
+                 </tr>
+                </template>
+               </tbody>
+           </table>
+           <div slot="footer" class="slds-var-m-vertical_medium">
+            <lightning-button label="Add" variant="brand"  onclick={addRow} class="slds-m-right_small"></lightning-button>
+            <template if:true={isSaveBtnVisible}>
+            <lightning-button variant="brand" label="Save" name="Save" onclick={onsaveclickHandler}></lightning-button>
+        </template>
+            </div>
+       </div>
+   </lightning-card>
 </template>
