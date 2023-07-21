@@ -24,21 +24,19 @@
                    </tr>
                </thead>
                <tbody>
-                <template for:each={data} for:item="obj">
+                <template for:each={objectRecordList} for:item="obj">
                  <tr class="slds-hint-parent" key={obj.Id}>
                     <th data-label="Action" scope="row">
-                        <lightning-button-icon class="slds-icon slds-icon_large delete-button" icon-name="utility:delete" alternative-text="Delete" title="Delete"></lightning-button-icon>
+                        <lightning-button-icon class="slds-icon slds-icon_large delete-button" icon-name="action:delete" alternative-text="Delete" title="Delete" onclick={handleActionDelete}></lightning-button-icon>
                       </th>
                       <td data-label="Account Name">
-                        <!-- <template if:true={isTextVisible}>
-                            <lightning-formatted-text value={obj.objectName}></lightning-formatted-text> 
-                        </template> -->
-                        <!--<template if:true={isComboboxVisible}>-->
-                        <lightning-combobox name="Object Name"
-                        placeholder="--Select Object--"
-                        options={objectList}
-                        onchange={handleChange}
+                        <lightning-combobox 
                         data-id={obj.Id}
+                        name="Object Name"
+                        value={obj.Name}
+                        options={getAllObjectList}
+                        onchange={handleChange}
+                        
                         ></lightning-combobox>
                    <!-- </template>-->
                       </td>
