@@ -5,17 +5,17 @@ import LightningConfirm from "lightning/confirm";
 import getAllObjectName from '@salesforce/apex/fetchAllObjects.getAllObjectName';
 import saveTrackingObject from '@salesforce/apex/fetchAllObjects.saveTrackingObject';
 import fetchAllRecords from '@salesforce/apex/fetchAllObjects.fetchAllRecords';
+import deleteObject from '@salesforce/apex/fetchAllObjects.deleteObject';
 
 export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     
     @track getAllObjectList=[];
     @track objectRecordList=[];
+    @track deleteRecordIds = '';
     isSaveBtnVisible;
-    selectedObject;
-    // data=[
-    //     {Id :1, objectName:'Account'},
-    //     {Id :2, objectName:'Contact'}
-    // ];
+    
+    
+
     connectedCallback(){
         getAllObjectName()
         .then((result)=>{
@@ -58,12 +58,16 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         // console.log('Value-',event.detail.value);
         console.log('BojectList new Value',JSON.stringify(this.objectRecordList));
     }
+
+    //the function to be called on add button click used to add new row into a datatble
     addRow(){
         this.isSaveBtnVisible=true;
         let randomId = Math.random() * 16;
-        let myNewElement = {Id :randomId, Name:''};
+        let myNewElement = {Id :randomId, Name:null};
         this.objectRecordList = [...this.objectRecordList, myNewElement];
     }
+
+    //the function to be called on save button click used to save custom setting records
     onsaveclickHandler(){
         console.log('Object List'+JSON.stringify(this.objectRecordList));
         saveTrackingObject({ objNameList : this.objectRecordList })
@@ -88,13 +92,40 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         this.isSaveBtnVisible=false;
     }
     
-    handleActionDelete(){
-        console.log('In delete Action');
-        const evt = new ShowToastEvent({
-            title: 'Success!',
-            message: 'error',
-            variant: 'success'
+   async handleActionDelete(event){
+    
+    console.log('Record Id-',event.target.dataset.id);
+        
+    const result = await LightningConfirm.open({
+            message: 'Are you sure to delete this record?',
+            theme: 'warning', 
+            variant: 'header',
+            label: 'Delete a record',
+            
         });
-        this.dispatchEvent(evt);
-    }
+       if(result){
+
+        // if(isNaN(event.target.dataset.id)){
+        //     this.deleteRecordIds = event.target.dataset.id; /*+ ',' + event.target.dataset.id;*/
+        // }
+        deleteObject({removeObjectIds : this.deleteRecordIds})
+        .then((res)=>{
+            console.log('Result on delete-',res);
+        })
+        .catch((error)=>{
+            console.log('error on delete-',error);
+        })
+        this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === event.target.dataset.id), 1);
+        
+        // if(this.deleteRecordIds !== ''){
+        //     this.deleteRecordIds = this.deleteRecordIds.substring(1);
+        // }
+        
+        refreshApex(this.objectRecordList);
+            
+       }else{
+
+       }
+       this.isSaveBtnVisible=false;
+}
 }

@@ -50,4 +50,20 @@ public with sharing class fetchAllObjects {
             throw new AuraHandledException(e.getMessage());
         }
     }
+    @AuraEnabled
+    public static string deleteObject(String removeObjectIds){
+        try {
+            List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> deleteObjectRecordList = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+            system.debug('Id List-'+removeObjectIds);
+            if(String.isNotBlank(removeObjectIds)){
+            List<Id> objectIds = removeObjectIds.split(',');
+            deleteObjectRecordList = [SELECT Id FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c WHERE Id IN :objectIds];
+            system.debug('Delete record list-'+deleteObjectRecordList);
+        }
+        delete deleteObjectRecordList;
+        return 'Record Deleted Successfully!';
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }
