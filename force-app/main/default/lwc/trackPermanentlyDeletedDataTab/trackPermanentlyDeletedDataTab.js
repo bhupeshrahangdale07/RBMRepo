@@ -11,7 +11,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     
     @track getAllObjectList=[];
     @track objectRecordList=[];
-    @track deleteRecordIds = '';
+    @track deleteRecordIds ;
     isSaveBtnVisible;
     
     
@@ -95,7 +95,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
    async handleActionDelete(event){
     
     console.log('Record Id-',event.target.dataset.id);
-        
+    this.deleteRecordIds=event.target.dataset.id;
     const result = await LightningConfirm.open({
             message: 'Are you sure to delete this record?',
             theme: 'warning', 
@@ -111,6 +111,9 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         deleteObject({removeObjectIds : this.deleteRecordIds})
         .then((res)=>{
             console.log('Result on delete-',res);
+            this.wireAllRecords();
+            
+            location.reload();
         })
         .catch((error)=>{
             console.log('error on delete-',error);
@@ -120,12 +123,17 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         // if(this.deleteRecordIds !== ''){
         //     this.deleteRecordIds = this.deleteRecordIds.substring(1);
         // }
-        
+        location.reload()
         refreshApex(this.objectRecordList);
-            
+        //location.reload()
        }else{
 
        }
        this.isSaveBtnVisible=false;
 }
+updateRecordView() {
+    setTimeout(() => {
+         eval("$A.get('e.force:refreshView').fire();");
+    }, 3000); 
+ }
 }
