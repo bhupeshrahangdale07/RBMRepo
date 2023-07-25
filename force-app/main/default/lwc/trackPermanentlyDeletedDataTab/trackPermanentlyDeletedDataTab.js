@@ -2,6 +2,7 @@ import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import LightningConfirm from "lightning/confirm";
+import LightningAlert from 'lightning/alert';
 import getAllObjectName from '@salesforce/apex/fetchAllObjects.getAllObjectName';
 import saveTrackingObject from '@salesforce/apex/fetchAllObjects.saveTrackingObject';
 import fetchAllRecords from '@salesforce/apex/fetchAllObjects.fetchAllRecords';
@@ -12,6 +13,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     @track getAllObjectList=[];
     @track objectRecordList=[];
     @track deleteRecordIds ;
+    @track selectedObjectList=[];
     isSaveBtnVisible;
     
     
@@ -40,9 +42,19 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         }
     }
 
-    handleChange(event){
+   async handleChange(event){
+        
         console.log('in handle change',event.detail.value);
         var selectedValue =event.detail.value;
+       
+        const valueExists = this.objectRecordList.some(obj => obj.Name === selectedValue);
+if(valueExists) {
+    await LightningAlert.open({
+        message: 'This Object is already selected',
+        theme: 'error', // a red theme intended for error states
+        label: 'Error!', // this is the header text
+    });
+}
         //var selectedRow = event.currentTarget;
         var key = event.currentTarget.dataset.id;
         //var accountVar = this.objectRecordList[key];

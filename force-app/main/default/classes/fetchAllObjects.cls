@@ -21,6 +21,7 @@ public with sharing class fetchAllObjects {
     public static string saveTrackingObject(List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> objNameList){
         try {
             List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> prmntObjectTrackingList = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+            
             for(rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c objName : objNameList){
 
                 rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c prmntTrckObj = new rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c();
@@ -31,7 +32,7 @@ public with sharing class fetchAllObjects {
                 prmntObjectTrackingList.add(prmntTrckObj);
                 
             }
-            Database.insert(prmntObjectTrackingList,false);
+            insert prmntObjectTrackingList;
 
             return 'Setting Updated Successfully!';
             
