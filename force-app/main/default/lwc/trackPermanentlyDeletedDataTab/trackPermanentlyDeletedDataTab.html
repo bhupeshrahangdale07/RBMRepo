@@ -1,6 +1,9 @@
 <template>
 
     <lightning-card>
+        <template if:true={isLoading}>
+            <lightning-spinner variant="brand" alternative-text="Loading" size="medium" class="spinnerClass"></lightning-spinner>
+         </template>
        <div class="slds-m-around_medium">
            <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label" style="width: fit-content;">
                <thead>
@@ -30,6 +33,7 @@
                         value={obj.Name}
                         options={getAllObjectList}
                         onchange={handleChange}
+                        
                         ></lightning-combobox>
                     </template>
                    <!-- </template>-->

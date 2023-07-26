@@ -1,6 +1,7 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
+import { RefreshEvent } from 'lightning/refresh';
 import LightningConfirm from "lightning/confirm";
 import LightningAlert from 'lightning/alert';
 import getAllObjectName from '@salesforce/apex/fetchAllObjects.getAllObjectName';
@@ -13,12 +14,17 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     @track getAllObjectList=[];
     @track objectRecordList=[];
     @track deleteRecordIds ;
-    @track selectedObjectList=[];
+    @track newObjectList=[];
+    @track getAllRecords;
     isSaveBtnVisible;
+    recordExist=false;
+    isLoading = true;
+    
     
     
 
     connectedCallback(){
+        console.log('In connected callback');
         getAllObjectName()
         .then((result)=>{
 
@@ -31,44 +37,86 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         })
     }
     @wire(fetchAllRecords)
-    wireAllRecords({error , data}){
-        if(data){
-            this.objectRecordList = data;
-            console.log('Data-'+JSON.stringify(data))
+    wireAllRecords(result){
+        this.getAllRecords=result;
+        if(result.data){
+            this.objectRecordList = this.getAllRecords.data;
+            console.log('Data-'+JSON.stringify(result.data));
             this.error = undefined;
-        }else if(error){
+            this.isLoading=false;
+        }else if(result.error){
             console.log('Error-'+error);
             this.records = undefined;
+            this.isLoading=false;
         }
     }
 
    async handleChange(event){
-        
+    this.isSaveBtnVisible=true;
         console.log('in handle change',event.detail.value);
         var selectedValue =event.detail.value;
-       
-        const valueExists = this.objectRecordList.some(obj => obj.Name === selectedValue);
-if(valueExists) {
-    await LightningAlert.open({
-        message: 'This Object is already selected',
-        theme: 'error', // a red theme intended for error states
-        label: 'Error!', // this is the header text
-    });
-}
-        //var selectedRow = event.currentTarget;
         var key = event.currentTarget.dataset.id;
-        //var accountVar = this.objectRecordList[key];
-        console.log('Id',key);
+       //debugger;
+       const  objValue = this.newObjectList.findIndex((obj => obj.Id == key));
 
-        let obj =this.objectRecordList.find((o, i) => {
-            if (o.Id == key ) {
-                this.objectRecordList[i] = { Name : selectedValue};
-                return true; // stop searching
-            }
-        });
+       this.newObjectList[objValue].Name=selectedValue;
+        //const valueExists = this.objectRecordList.some(obj => obj.Name === selectedValue);
+// if(objValue) {
+//     // await LightningAlert.open({
+//     //     message: 'This Object is already selected',
+//     //     theme: 'error', // a red theme intended for error states
+//     //     label: 'Error!', // this is the header text
+//     // });
+//     // let obj =this.newObjectList.find((o, i) => {
+//     //     if (o.Id == key ) {
+//     //         this.newObjectList[i] = { Name : selectedValue};
+//     //         return true; // stop searching
+//     //     }
+//     // });
+//     this.recordExist=true;
+// }else{
+//     //this.recordExist=false;
+//     // let obj =this.newObjectList.find((o, i) => {
+//     //     if (o.Id == key ) {
+//     //         this.newObjectList[i] = { Name : selectedValue};
+//     //         return true; // stop searching
+//     //     }
+//     // });
+//     const  objNewValue = this.newObjectList.findIndex((obj => obj.Id == key));
+//     this.newObjectList[objNewValue].Name=selectedValue;
+//     this.recordExist=false;
+// }
+//         //var selectedRow = event.currentTarget;
+        
+//         //var accountVar = this.objectRecordList[key];
+//         console.log('Id',key);
+//         const selectedValueExists = this.newObjectList.some(obj => obj.Name === selectedValue);
+//         if(selectedValueExists){
+//             // await LightningAlert.open({
+//             //     message: 'This Object is already selected',
+//             //     theme: 'error', // a red theme intended for error states
+//             //     label: 'Error!', // this is the header text
+//             // });
+//             // let obj =this.newObjectList.find((o, i) => {
+//             //     if (o.Id == key ) {
+//             //         this.newObjectList[i] = { Name : selectedValue};
+//             //         return true; // stop searching
+//             //     }
+//             // });
+//             this.recordExist=true;
+            
+//     }else{
+//         this.recordExist=false;
+//     let obj =this.newObjectList.find((o, i) => {
+//         if (o.Id == key ) {
+//             this.newObjectList[i] = { Name : selectedValue};
+//             return true; // stop searching
+//         }
+//     });
+// }
         // this.objectRecordList[key].Name = event.detail.value;
         // console.log('Value-',event.detail.value);
-        console.log('BojectList new Value',JSON.stringify(this.objectRecordList));
+        console.log('ObjectList new Value',JSON.stringify(this.newObjectList));
     }
 
     //the function to be called on add button click used to add new row into a datatble
@@ -77,31 +125,48 @@ if(valueExists) {
         let randomId = Math.random() * 16;
         let myNewElement = {Id :randomId, Name:null};
         this.objectRecordList = [...this.objectRecordList, myNewElement];
+        this.newObjectList.push({Id :randomId, Name:null});
     }
 
     //the function to be called on save button click used to save custom setting records
-    onsaveclickHandler(){
-        console.log('Object List'+JSON.stringify(this.objectRecordList));
-        saveTrackingObject({ objNameList : this.objectRecordList })
-        .then((result)=>{
+    async onsaveclickHandler(event){
+        
+       this.isLoading=true;
+        console.log('Object List'+JSON.stringify(this.newObjectList));
+          saveTrackingObject({ objNameList : this.newObjectList })
+        .then(async(result)=>{
             console.log('Save Result-'+result);
-            const evt = new ShowToastEvent({
-                title: 'Success!',
-                message: 'Record Saved Successfully',
-                variant: 'Success'
+            refreshApex(this.wireAllRecords);
+            this.dispatchEvent(new RefreshEvent());
+            this.isLoading=false;
+          await LightningAlert.open({
+                message: 'Record Saved successfully!',
+                theme: 'success', // a red theme intended for error states
+                label: 'Success!', // this is the header text
             });
-            this.dispatchEvent(evt);
+
+           
+            this.newObjectList=[];
+            return refreshApex( this.getAllRecords);
+            
+            refreshApex(this.objectRecordList);
+            this.wireAllRecords();
         })
-        .catch((error)=>{
+        .catch(async(error)=>{
+            this.isLoading=false;
             console.log('Error result-'+JSON.stringify(error));
-            const evt = new ShowToastEvent({
-                title: 'Error!',
-                message: 'error',
-                variant: 'Error'
-            });
-            this.dispatchEvent(evt);
+            if(error){
+                await LightningAlert.open({
+                    message: JSON.stringify(error),
+                    theme: 'error', // a red theme intended for error states
+                    label: 'Success!', // this is the header text
+                });
+            }
+            
+            this.isLoading=false;
         })
         this.isSaveBtnVisible=false;
+    
     }
     
    async handleActionDelete(event){
@@ -116,27 +181,39 @@ if(valueExists) {
             
         });
        if(result){
-
-        // if(isNaN(event.target.dataset.id)){
-        //     this.deleteRecordIds = event.target.dataset.id; /*+ ',' + event.target.dataset.id;*/
-        // }
+        this.isLoading=true;
         deleteObject({removeObjectIds : this.deleteRecordIds})
-        .then((res)=>{
+        .then(async(res)=>{
             console.log('Result on delete-',res);
-            this.wireAllRecords();
+            //refreshApex(this.wireAllRecords);
+            //this.dispatchEvent(new RefreshEvent());
+            this.isLoading=false;
+          await  LightningAlert.open({
+                message: 'Record Deleted successfully!',
+                theme: 'success', // a red theme intended for error states
+                label: 'Success!', // this is the header text
+            });
+            return refreshApex(this.getAllRecords);
+            // var idx=this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds);
+            // console.log('index',idx);
+            // // this.objectRecordList = 
+            // //     this.objectRecordList.splice(idx, 1);
             
-            location.reload();
+            //this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds), 1);
+            console.log('dkhd-',this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds))
+            
+           // location.reload();
         })
         .catch((error)=>{
             console.log('error on delete-',error);
         })
-        this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === event.target.dataset.id), 1);
+       //this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === event.target.dataset.id), 1);
         
         // if(this.deleteRecordIds !== ''){
         //     this.deleteRecordIds = this.deleteRecordIds.substring(1);
         // }
-        location.reload()
-        refreshApex(this.objectRecordList);
+        //location.reload()
+       // refreshApex(fetchAllRecords);
         //location.reload()
        }else{
 
