@@ -60,62 +60,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
        const  objValue = this.newObjectList.findIndex((obj => obj.Id == key));
 
        this.newObjectList[objValue].Name=selectedValue;
-        //const valueExists = this.objectRecordList.some(obj => obj.Name === selectedValue);
-// if(objValue) {
-//     // await LightningAlert.open({
-//     //     message: 'This Object is already selected',
-//     //     theme: 'error', // a red theme intended for error states
-//     //     label: 'Error!', // this is the header text
-//     // });
-//     // let obj =this.newObjectList.find((o, i) => {
-//     //     if (o.Id == key ) {
-//     //         this.newObjectList[i] = { Name : selectedValue};
-//     //         return true; // stop searching
-//     //     }
-//     // });
-//     this.recordExist=true;
-// }else{
-//     //this.recordExist=false;
-//     // let obj =this.newObjectList.find((o, i) => {
-//     //     if (o.Id == key ) {
-//     //         this.newObjectList[i] = { Name : selectedValue};
-//     //         return true; // stop searching
-//     //     }
-//     // });
-//     const  objNewValue = this.newObjectList.findIndex((obj => obj.Id == key));
-//     this.newObjectList[objNewValue].Name=selectedValue;
-//     this.recordExist=false;
-// }
-//         //var selectedRow = event.currentTarget;
         
-//         //var accountVar = this.objectRecordList[key];
-//         console.log('Id',key);
-//         const selectedValueExists = this.newObjectList.some(obj => obj.Name === selectedValue);
-//         if(selectedValueExists){
-//             // await LightningAlert.open({
-//             //     message: 'This Object is already selected',
-//             //     theme: 'error', // a red theme intended for error states
-//             //     label: 'Error!', // this is the header text
-//             // });
-//             // let obj =this.newObjectList.find((o, i) => {
-//             //     if (o.Id == key ) {
-//             //         this.newObjectList[i] = { Name : selectedValue};
-//             //         return true; // stop searching
-//             //     }
-//             // });
-//             this.recordExist=true;
-            
-//     }else{
-//         this.recordExist=false;
-//     let obj =this.newObjectList.find((o, i) => {
-//         if (o.Id == key ) {
-//             this.newObjectList[i] = { Name : selectedValue};
-//             return true; // stop searching
-//         }
-//     });
-// }
-        // this.objectRecordList[key].Name = event.detail.value;
-        // console.log('Value-',event.detail.value);
         console.log('ObjectList new Value',JSON.stringify(this.newObjectList));
     }
 
@@ -159,7 +104,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 await LightningAlert.open({
                     message: JSON.stringify(error),
                     theme: 'error', // a red theme intended for error states
-                    label: 'Success!', // this is the header text
+                    label: 'Error!', // this is the header text
                 });
             }
             
@@ -190,31 +135,16 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             this.isLoading=false;
           await  LightningAlert.open({
                 message: 'Record Deleted successfully!',
-                theme: 'success', // a red theme intended for error states
-                label: 'Success!', // this is the header text
+                theme: 'success', 
+                label: 'Record Deleted', // this is the header text
             });
             return refreshApex(this.getAllRecords);
-            // var idx=this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds);
-            // console.log('index',idx);
-            // // this.objectRecordList = 
-            // //     this.objectRecordList.splice(idx, 1);
-            
-            //this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds), 1);
-            console.log('dkhd-',this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds))
-            
-           // location.reload();
+           
         })
         .catch((error)=>{
             console.log('error on delete-',error);
         })
-       //this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === event.target.dataset.id), 1);
-        
-        // if(this.deleteRecordIds !== ''){
-        //     this.deleteRecordIds = this.deleteRecordIds.substring(1);
-        // }
-        //location.reload()
-       // refreshApex(fetchAllRecords);
-        //location.reload()
+       
        }else{
 
        }
