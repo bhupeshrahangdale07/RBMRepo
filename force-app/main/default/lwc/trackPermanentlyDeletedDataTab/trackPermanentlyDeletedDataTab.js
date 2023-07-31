@@ -127,6 +127,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         });
        if(result){
         this.isLoading=true;
+    
         deleteObject({removeObjectIds : this.deleteRecordIds})
         .then(async(res)=>{
             console.log('Result on delete-',res);
@@ -138,15 +139,16 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 theme: 'success', 
                 label: 'Record Deleted', // this is the header text
             });
+            
             return refreshApex(this.getAllRecords);
-           
+            
         })
         .catch((error)=>{
             console.log('error on delete-',error);
         })
-       
+    
        }else{
-
+        
        }
        this.isSaveBtnVisible=false;
 }
