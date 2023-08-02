@@ -71,6 +71,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         let myNewElement = {Id :randomId, Name:null};
         this.objectRecordList = [...this.objectRecordList, myNewElement];
         this.newObjectList.push({Id :randomId, Name:null});
+        console.log('Object list -'+JSON.stringify(this.objectRecordList));
     }
 
     //the function to be called on save button click used to save custom setting records
@@ -127,7 +128,14 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         });
        if(result){
         this.isLoading=true;
-    
+        if(!isNaN(this.deleteRecordIds)){
+            console.log('Index Value -'+this.objectRecordList.findIndex(row => row.Name === null));
+            this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Name === null), 1);
+            this.newObjectList.splice( this.newObjectList.findIndex(row => row.Name === null), 1);
+            this.isSaveBtnVisible=false;
+            this.isLoading=false;
+            return refreshApex(this.getAllRecords);
+        }else{
         deleteObject({removeObjectIds : this.deleteRecordIds})
         .then(async(res)=>{
             console.log('Result on delete-',res);
@@ -139,14 +147,14 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 theme: 'success', 
                 label: 'Record Deleted', // this is the header text
             });
-            
+            //this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds), 1);
             return refreshApex(this.getAllRecords);
             
         })
         .catch((error)=>{
             console.log('error on delete-',error);
         })
-    
+    }
        }else{
         
        }

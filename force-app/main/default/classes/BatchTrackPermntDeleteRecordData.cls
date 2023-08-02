@@ -6,46 +6,58 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
     
     public void execute(Database.BatchableContext bc,List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> objList){
         
+        List<SObject> recordList = new List<SObject>();
+         List<Object> JsonDataList = new List<Object>();
         
+        set<Sobject> objNames=new set<Sobject>();
         
-        set<string> objNames=new set<string>();
         for(rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c cs:objList){
             system.debug('Name-'+cs.Name);
-            objNames.add(cs.Name); 
+             
+            
             string objName=cs.Name;
-            SObjectType sObjType = ((SObject) Type.forName(objName).newInstance())
-                .getSObjectType();
+            SObjectType sObjType = ((SObject) Type.forName(objName).newInstance()).getSObjectType();
             Schema.SObjectType convertType = Schema.getGlobalDescribe().get(objName);
             Sobject genericObject = convertType.newSObject();
-            
+            objNames.add(genericObject);
             DescribeSObjectResult describeResult = genericObject.getSObjectType().getDescribe();
+            system.debug('Object Names-'+genericObject);
             
             List<String> fieldNames = new List<String>( describeResult.fields.getMap().keySet() );
             //system.debug('Fields Names-'+fieldNames);
-            String myQuery =
-                ' SELECT ' +
-                String.join( fieldNames, ',' ) +
-                ' FROM ' +
-                describeResult.getName()+' Where IsDeleted=true ALL ROWS'
-                ;
-            system.debug('myQuery'+myQuery);
-            List<SObject> records = Database.query( myQuery );
+            String myQuery = ' SELECT ' +String.join( fieldNames, ',' ) +' FROM ' +describeResult.getName()+' Where IsDeleted=true ALL ROWS';
             
-            System.debug( records );
+            system.debug('myQuery -'+myQuery);
             
+             recordList.add(Database.query( myQuery ));
+            //system.debug(recordList[0].Contact.Name);
+            
+            JsonDataList.add(JSON.serializePretty(recordList));
+           
         }
-        /*for(string objct:objNames){
-String strQuery ='Select FIELDS(STANDARD) From '+objct+' Where IsDeleted=true ALL ROWS';  
-System.debug('Query-'+strQuery);
-List<sObject> QueryResultList= Database.query(strQuery);
-system.debug('Result-'+ QueryResultList);
-system.debug('Name---'+QueryResultList[0]);
-//store into a list and apply for loop
-for(sObject lst:QueryResultList){
-system.debug('Record Name-'+lst);
-}
-}*/
+        System.debug( recordList);
+        system.debug('In Json-  '+JSON.serializePretty(recordList));
         
+        //for(String obj : objNames){     
+         for (SObject rec : recordList) {
+            // Check if the SObject is of type Contact
+            if (rec instanceof Contact) {
+                Contact contactRecord = (Contact) rec;
+                String recordid = contactRecord.Id;
+                String recordName = contactRecord.Name;
+                String deletedBy = contactRecord.LastModifiedById;
+                //system.debug('Deleted by name -'+deletedBy);
+               
+                rbin__Deleted_Data__c newObject = new rbin__Deleted_Data__c();
+        			newObject.rbin__Record_ID__c=recordid;
+					newObject.rbin__Record_Name__c=recordName;
+                	newObject.rbin__Deleted_By__c=deletedBy;
+                	//newObject.rbin__Data__c=contactData;
+                insert newObject;
+        			
+    }
+         }
+   // }
     }
     public void finish(Database.BatchableContext bc){
         
