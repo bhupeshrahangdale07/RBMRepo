@@ -6,10 +6,20 @@ public with sharing class fetchAllObjects {
             Map<string,string> mapOfAllObj = new Map<string,string>();
 
             for(Schema.SObjectType objTyp : Schema.getGlobalDescribe().Values()){
-    
+
+                Map<String, Schema.SObjectField> objectFields = objTyp.getDescribe().fields.getMap();
+                if(objectFields.containskey('isdeleted') && objectFields.containskey('lastmodifieddate') && objTyp.getDescribe().isAccessible() && objTyp.getDescribe().isDeletable() && objTyp.getDescribe().isQueryable() && !objTyp.getDescribe().isCustomSetting() && !objTyp.getDescribe().getName().containsignorecase('feed') && objTyp.getDescribe().isQueryable()){
+    if(!objTyp.getDescribe().getLocalName().containsignorecase('history') && !objTyp.getDescribe().getLocalName().containsignorecase('tag') && !objTyp.getDescribe().getLocalName().containsignorecase('event') &&
+    !objTyp.getDescribe().getLocalName().containsignorecase('share') && !objTyp.getDescribe().getLocalName().containsignorecase('feed') && !objTyp.getDescribe().getLocalName().containsignorecase('platform') && 
+       !objTyp.getDescribe().getLocalName().containsignorecase('group') && !objTyp.getDescribe().getLocalName().containsignorecase('public') &&
+       !objTyp.getDescribe().isCustomSetting() && objTyp.getDescribe().isCreateable()){
+
                 String name = objTyp.getDescribe().getLocalName();
                 String label = objTyp.getDescribe().getLabel();
                 mapOfAllObj.put(name,label);
+            
+            }
+        }
             }
             return mapOfAllObj;
         } catch (Exception e) {
