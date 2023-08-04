@@ -9,7 +9,7 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
         List<SObject> recordList = new List<SObject>();
          List<Object> JsonDataList = new List<Object>();
         List<SObject> newRecordList = new List<SObject>();
-        Map<SObjectType,Object> jsonMap = new Map<SObjectType,Object>();
+        //Map<SObjectType,Object> jsonMap = new Map<SObjectType,Object>();
         Map<Id, SObject> recordMap = new Map<Id, SObject>();
         set<string> objNames=new set<string>();
         
@@ -29,32 +29,46 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
 			
             String myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + describeResult.getName() + ' WHERE IsDeleted = true ALL ROWS';
             	
-            recordList.add(Database.query(myQuery));
+            //recordList.add(Database.query(myQuery));
+            for(SObject q:Database.query(myQuery)){
+                recordList.add(q);
+            }
             
-           jsonMap.put(sObjType,JSON.serializePretty(Database.query(myQuery)));
+           //jsonMap.put(sObjType,JSON.serializePretty(Database.query(myQuery)));
+           
             String jsonData = JSON.serializePretty(recordList);
             //Filter out object data from the JSON array
              }
-        system.debug('Map -'+jsonMap);
-            for (SObject rec : recordList) {
+        for (SObject rec : recordList) {
+                recordMap.put(rec.Id, rec);
+            } 
+        system.debug('Map of Records- '+recordMap);
+        //system.debug('Map -'+jsonMap);
+        set<Id> existRecordIds= new set<Id>();
+        for(rbin__Deleted_Data__c existData:[Select id,rbin__Record_ID__c from rbin__Deleted_Data__c]){
+            existRecordIds.add(existData.rbin__Record_ID__c);
+        }
+            for (Id recordId : recordMap.keySet()) {
                //create a record only if it's of the same type as the objectName
-                for(SObjectType objct:jsonMap.keySet()){
+                SObject rec = recordMap.get(recordId);
                     
-                if (rec.getSObjectType() == objct) {
-                    
+               // if (rec.getSObjectType() == objct) {
+                if(!existRecordIds.contains(rec.Id)){
                     String recordName = (String)rec.get('Name');
                     String deletedBy = (String)rec.get('LastModifiedById');
                     String nameOfObject =String.valueOf(rec.getSObjectType());
+                    DateTime deletedDate = (DateTime)rec.get('LastModifiedDate');
                     rbin__Deleted_Data__c newObject = new rbin__Deleted_Data__c();
                     newObject.rbin__Record_ID__c = rec.Id;  
                     newObject.rbin__Record_Name__c = recordName; 
                     newObject.rbin__Deleted_By__c = deletedBy;
                     newObject.rbin__Object_Name__c = nameOfObject;
-                    newObject.rbin__Data__c=(String)jsonMap.get(objct);
+                    newObject.rbin__Deleted_Date__c= deletedDate;
+                    newObject.rbin__Data__c=JSON.serializePretty(rec);
                    
                      newRecordList.add(newObject);
                    
-                }
+                //}
             }
                 }
        
