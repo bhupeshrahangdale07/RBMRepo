@@ -1,4 +1,4 @@
-public with sharing class trackPermanentDeleteDataController {
+public with sharing class fetchAllObjects {
     
     @AuraEnabled(cacheable = true)
 
