@@ -1,6 +1,7 @@
-public with sharing class fetchAllObjects {
+public with sharing class trackPermanentDalateDataController {
     
-    /*@AuraEnabled(cacheable = true)
+    
+    @AuraEnabled(cacheable = true)
 
     public static Map<string,string> getAllObjectName(){
 
@@ -90,5 +91,5 @@ public with sharing class fetchAllObjects {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-    }*/
+    }
 }

@@ -4,10 +4,10 @@ import { refreshApex } from '@salesforce/apex';
 import { RefreshEvent } from 'lightning/refresh';
 import LightningConfirm from "lightning/confirm";
 import LightningAlert from 'lightning/alert';
-import getAllObjectName from '@salesforce/apex/fetchAllObjects.getAllObjectName';
-import saveTrackingObject from '@salesforce/apex/fetchAllObjects.saveTrackingObject';
-import fetchAllRecords from '@salesforce/apex/fetchAllObjects.fetchAllRecords';
-import deleteObject from '@salesforce/apex/fetchAllObjects.deleteObject';
+import getAllObjectName from '@salesforce/apex/trackPermanentDalateDataController.getAllObjectName';
+import saveTrackingObject from '@salesforce/apex/trackPermanentDalateDataController.saveTrackingObject';
+import fetchAllRecords from '@salesforce/apex/trackPermanentDalateDataController.fetchAllRecords';
+import deleteObject from '@salesforce/apex/trackPermanentDalateDataController.deleteObject';
 
 export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     
