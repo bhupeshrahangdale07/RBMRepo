@@ -35,6 +35,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         .catch((error)=>{
             console.log('Error found for Object List-'+error);
         })
+        
     }
     @wire(fetchAllRecords)
     wireAllRecords(result){
@@ -61,7 +62,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
        this.newObjectList[objValue].Name=selectedValue;
         
-        console.log('ObjectList new Value',JSON.stringify(this.newObjectList));
     }
 
     //the function to be called on add button click used to add new row into a datatble
@@ -72,6 +72,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         this.objectRecordList = [...this.objectRecordList, myNewElement];
         this.newObjectList.push({Id :randomId, Name:null});
         console.log('Object list -'+JSON.stringify(this.objectRecordList));
+        
     }
 
     //the function to be called on save button click used to save custom setting records

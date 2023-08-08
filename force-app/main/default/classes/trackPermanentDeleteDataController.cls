@@ -1,30 +1,44 @@
-public with sharing class fetchAllObjects {
+public with sharing class trackPermanentDeleteDataController {
     
     @AuraEnabled(cacheable = true)
+
     public static Map<string,string> getAllObjectName(){
-        try {
-            Map<string,string> mapOfAllObj = new Map<string,string>();
 
-            for(Schema.SObjectType objTyp : Schema.getGlobalDescribe().Values()){
-
-                Map<String, Schema.SObjectField> objectFields = objTyp.getDescribe().fields.getMap();
-                if(objectFields.containskey('isdeleted') && objectFields.containskey('lastmodifieddate') && objTyp.getDescribe().isAccessible() && objTyp.getDescribe().isDeletable() && objTyp.getDescribe().isQueryable() && !objTyp.getDescribe().isCustomSetting() && !objTyp.getDescribe().getName().containsignorecase('feed') && objTyp.getDescribe().isQueryable()){
-    if(!objTyp.getDescribe().getLocalName().containsignorecase('history') && !objTyp.getDescribe().getLocalName().containsignorecase('tag') && !objTyp.getDescribe().getLocalName().containsignorecase('event') &&
-    !objTyp.getDescribe().getLocalName().containsignorecase('share') && !objTyp.getDescribe().getLocalName().containsignorecase('feed') && !objTyp.getDescribe().getLocalName().containsignorecase('platform') && 
-       !objTyp.getDescribe().getLocalName().containsignorecase('group') && !objTyp.getDescribe().getLocalName().containsignorecase('public') &&
-       !objTyp.getDescribe().isCustomSetting() && objTyp.getDescribe().isCreateable()){
-
-                String name = objTyp.getDescribe().getLocalName();
-                String label = objTyp.getDescribe().getLabel();
-                mapOfAllObj.put(name,label);
-            
+        Map<string,string> mapOfAllObj = new Map<string,string>();
+        List<String> ignorsObjects = new List<String>{'Partner','CaseComment','FeedComment','FeedItem','IdeaComment','FeedComment','FeedItem','EngagementChannelType','DataUsePurpose'};
+        String endpoint = URL.getSalesforceBaseUrl().toExternalForm()+'/services/data/v48.0/sobjects/';
+        HttpRequest req = new HttpRequest();
+        endpoint += '';
+        req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionID());
+        req.setHeader('Content-Type', 'application/json');
+        req.setEndpoint(endpoint);
+        req.setMethod('GET');
+        Http httpreq = new Http();
+        HttpResponse  res  = httpreq.send(req);
+        Map<String, Object> m = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
+        List<Object> ob = (List<Object>)m.get('sobjects');
+        for(Object o : ob){
+            Map<String, Object> real = (Map<String, Object>)o;
+            if((Boolean)real.get('triggerable')){
+                if(!ignorsObjects.contains(String.valueOf(real.get('name')))){
+                   
+                    //trackingobject trackobj = new trackingobject();
+                    String objLabel = String.valueOf(real.get('label'));
+                    String name = String.valueOf(real.get('name'));
+                    SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
+                    if(schemaType != null){
+                    if(schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting()) {
+                    String label = String.valueOf(real.get('label'));
+                        mapOfAllObj.put(name,label);  
+                    } 
+                        }
+                }
             }
+           
         }
-            }
-            return mapOfAllObj;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
+        
+        return mapOfAllObj;
+         
     }
 
     @AuraEnabled

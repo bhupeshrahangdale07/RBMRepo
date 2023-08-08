@@ -1,5 +1,3 @@
-.delete-button{
-    --slds-c-icon-color-foreground: red;
-    --slds-c-icon-radius-border: 0.80rem
-
+.slds-input__icon.iconpointerevetns{
+    pointer-events:all
 }
