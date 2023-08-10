@@ -96,9 +96,9 @@
                                         <tr class="slds-line-height_reset">
                                             <td class="slds-text-title_caps slds-cell-wrap" scope="col" colspan="2">
                                                 
-                                                <button class="slds-button slds-button_brand" id="btnAddnew">Add New</button>
+                                                <button class="slds-button slds-button_brand" id="btnAddnew">{!$Label.AddNewButton}</button>
                                                 <div class=" slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_success slds-hide" role="alert" id="lblmsg"></div>
-                                                <button class="slds-button slds-button_brand slds-hide" id="btnSave">Save</button>
+                                                <button class="slds-button slds-button_brand slds-hide" id="btnSave">{!$Label.Save_rbin}</button>
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -236,7 +236,7 @@
                                         <button id="remotesitesett" class="slds-button slds-button_brand">Create Remote Site Setting</button>
                                     </div>-->
                                     <div class="slds-align_absolute-center" style="height: 3rem;">
-                                        <button id="btnSaveGeneral" class="slds-button slds-button_brand btnDisabled">Save</button>
+                                        <button id="btnSaveGeneral" class="slds-button slds-button_brand btnDisabled">{!$Label.Save_rbin}</button>
                                     </div>
                                 </div>
                             </div>
@@ -501,8 +501,8 @@
                                             <tr class="slds-line-height_reset">
                                                 <td class="slds-text-title_caps slds-cell-wrap" scope="col" colspan="2">
                                                     
-                                                    <button class="slds-button slds-button_brand" id="btnAddnewforracking">Add New</button>
-                                                    <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">Save</button>
+                                                    <button class="slds-button slds-button_brand" id="btnAddnewforracking">{!$Label.AddNewButton}</button>
+                                                    <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">{!$Label.Save_rbin}</button>
                                                 </td>
                                             </tr>
                                         </tfoot>

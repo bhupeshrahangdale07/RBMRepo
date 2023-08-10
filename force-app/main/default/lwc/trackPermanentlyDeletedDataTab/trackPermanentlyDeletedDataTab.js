@@ -8,6 +8,8 @@ import getAllObjectName from '@salesforce/apex/trackPermanentDalateDataControlle
 import saveTrackingObject from '@salesforce/apex/trackPermanentDalateDataController.saveTrackingObject';
 import fetchAllRecords from '@salesforce/apex/trackPermanentDalateDataController.fetchAllRecords';
 import deleteObject from '@salesforce/apex/trackPermanentDalateDataController.deleteObject';
+import AddNewButton from '@salesforce/label/c.AddNewButton';
+import Save_rbin from '@salesforce/label/c.Save_rbin';
 
 export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     
@@ -20,25 +22,33 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     recordExist=false;
     isLoading = true;
     
+    label={
+        AddNewButton,
+        Save_rbin,
+    };
     
     
 
-    connectedCallback(){
-        console.log('In connected callback');
-        getAllObjectName()
-        .then((result)=>{
-
-            for(let key in result){
-                this.getAllObjectList.push({label : key ,value : key});
-            }
-        })
-        .catch((error)=>{
-            console.log('Error found for Object List-'+error);
-        })
+    // connectedCallback(){
+    //     console.log('In connected callback');
+    //     getAllObjectName()
+    //     .then((result)=>{
+    //         console.log('List of existing-',JSON.stringify(this.objectRecordList));
+    //         for(let key in result){
+    //            // this.getAllObjectList.push({label : key ,value : key});
+    //         //    if (!this.objectRecordList.some(obj => obj.Name === key)) {
+    //         //     this.getAllObjectList.push({ label: key, value: key });
+    //         // }
+    //         }
+    //     })
+    //     .catch((error)=>{
+    //         console.log('Error found for Object List-'+error);
+    //     })
         
-    }
+    // }
     @wire(fetchAllRecords)
     wireAllRecords(result){
+        console.log('In wire 1');
         this.getAllRecords=result;
         if(result.data){
             this.objectRecordList = this.getAllRecords.data;
@@ -48,6 +58,23 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         }else if(result.error){
             console.log('Error-'+error);
             this.records = undefined;
+            this.isLoading=false;
+        }
+    }
+
+    @wire(getAllObjectName)
+    wireObjectNames({error, data}){
+        console.log('In wire 2');
+        if(data){
+        for(let key in data){
+            // this.getAllObjectList.push({label : key ,value : key});
+            if (!this.objectRecordList.some(obj => obj.Name === key)) {
+             this.getAllObjectList.push({ label: key, value: key });
+         }
+         }
+         this.isLoading=false;
+        }else if(error){
+            console.log('Error-'+error);
             this.isLoading=false;
         }
     }
@@ -87,7 +114,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             this.dispatchEvent(new RefreshEvent());
             this.isLoading=false;
           await LightningAlert.open({
-                message: 'Record Saved successfully!',
+                message: result,
                 theme: 'success', // a red theme intended for error states
                 label: 'Success!', // this is the header text
             });
@@ -96,15 +123,20 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             this.newObjectList=[];
             return refreshApex( this.getAllRecords);
             
-            refreshApex(this.objectRecordList);
-            this.wireAllRecords();
+           // refreshApex(this.objectRecordList);
+            //this.wireAllRecords();
         })
         .catch(async(error)=>{
             this.isLoading=false;
-            console.log('Error result-'+JSON.stringify(error));
+            console.log('Error result-'+JSON.stringify(error.body.message));
             if(error){
+                const errorMessage =JSON.stringify(error.body.message);
+                const startIndex = errorMessage.indexOf("first error");
+                const extractedErrorMessage = errorMessage.substring(startIndex);
+                const message =extractedErrorMessage.replace("first error: FIELD_INTEGRITY_EXCEPTION, ", "");
+                console.log('Error result-'+message);
                 await LightningAlert.open({
-                    message: JSON.stringify(error),
+                    message: JSON.stringify(message),
                     theme: 'error', // a red theme intended for error states
                     label: 'Error!', // this is the header text
                 });
@@ -144,7 +176,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             //this.dispatchEvent(new RefreshEvent());
             this.isLoading=false;
           await  LightningAlert.open({
-                message: 'Record Deleted successfully!',
+                message: res,
                 theme: 'success', 
                 label: 'Record Deleted', // this is the header text
             });

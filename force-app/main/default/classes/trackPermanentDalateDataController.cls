@@ -63,6 +63,7 @@ public with sharing class trackPermanentDalateDataController {
             
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
+
         }
     }
 
@@ -87,7 +88,7 @@ public with sharing class trackPermanentDalateDataController {
             system.debug('Delete record list-'+deleteObjectRecordList);
        // }
         delete deleteObjectRecordList;
-        return 'Record Deleted Successfully!';
+        return 'Setting updated Successfully!';
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
