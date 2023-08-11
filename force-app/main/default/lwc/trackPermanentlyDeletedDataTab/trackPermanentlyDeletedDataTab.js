@@ -14,6 +14,7 @@ import Save_rbin from '@salesforce/label/c.Save_rbin';
 export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     
     @track getAllObjectList=[];
+    @track allObjectListForIndex=[];
     @track objectRecordList=[];
     @track deleteRecordIds ;
     @track newObjectList=[];
@@ -66,11 +67,13 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     wireObjectNames({error, data}){
         console.log('In wire 2');
         if(data){
+            
         for(let key in data){
             // this.getAllObjectList.push({label : key ,value : key});
             if (!this.objectRecordList.some(obj => obj.Name === key)) {
              this.getAllObjectList.push({ label: key, value: key });
          }
+         this.allObjectListForIndex.push({label: key, value: key});
          }
          this.isLoading=false;
         }else if(error){
@@ -86,9 +89,13 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         var key = event.currentTarget.dataset.id;
        //debugger;
        const  objValue = this.newObjectList.findIndex((obj => obj.Id == key));
-
+       
        this.newObjectList[objValue].Name=selectedValue;
-        
+       console.log('All object List-',JSON.stringify(this.getAllObjectList));
+       console.log('New object List-',JSON.stringify(this.newObjectList));
+       //this.getAllObjectList.splice( this.getAllObjectList.findIndex(row => row.Name === selectedValue), 1);
+       const idxValue=this.getAllObjectList.findIndex((objct => objct.value == selectedValue));
+       this.getAllObjectList.splice(idxValue,1);
     }
 
     //the function to be called on add button click used to add new row into a datatble
@@ -103,7 +110,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     }
 
     //the function to be called on save button click used to save custom setting records
-    async onsaveclickHandler(event){
+    async onsaveclickHandler(){
         
        this.isLoading=true;
         console.log('Object List'+JSON.stringify(this.newObjectList));
@@ -118,9 +125,8 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 theme: 'success', // a red theme intended for error states
                 label: 'Success!', // this is the header text
             });
-
-           
             this.newObjectList=[];
+            this.wireObjectNames;
             return refreshApex( this.getAllRecords);
             
            // refreshApex(this.objectRecordList);
@@ -136,7 +142,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 const message =extractedErrorMessage.replace("first error: FIELD_INTEGRITY_EXCEPTION, ", "");
                 console.log('Error result-'+message);
                 await LightningAlert.open({
-                    message: JSON.stringify(message),
+                    message: message,
                     theme: 'error', // a red theme intended for error states
                     label: 'Error!', // this is the header text
                 });
@@ -149,9 +155,11 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     }
     
    async handleActionDelete(event){
-    
+    //var selectedValue =event.detail.value;
+    //const idxValue=this.getAllObjectList.findIndex((objct => objct.value == selectedValue));
     console.log('Record Id-',event.target.dataset.id);
     this.deleteRecordIds=event.target.dataset.id;
+
     const result = await LightningConfirm.open({
             message: 'Are you sure to delete this record?',
             theme: 'warning', 
@@ -164,7 +172,16 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         if(!isNaN(this.deleteRecordIds)){
             console.log('Index Value -'+this.objectRecordList.findIndex(row => row.Name === null));
             this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Name === null), 1);
-            this.newObjectList.splice( this.newObjectList.findIndex(row => row.Name === null), 1);
+            
+            console.log('New Object Value-'+JSON.stringify(this.newObjectList));
+            var newDeletedValue=this.newObjectList[this.newObjectList.findIndex(row => row.Id == this.deleteRecordIds)].Name;
+            var indexValueforDeleteObj=this.allObjectListForIndex.findIndex(idx => idx.value == newDeletedValue);
+            
+            this.getAllObjectList.splice(indexValueforDeleteObj,0,{label:newDeletedValue, value:newDeletedValue});
+        
+            this.newObjectList.splice( this.newObjectList.findIndex(row => row.Name == newDeletedValue), 1);
+            //this.getAllObjectList.push({label:deletedValue, value:deletedValue});
+            console.log('New object List-',JSON.stringify(this.getAllObjectList));
             this.isSaveBtnVisible=false;
             this.isLoading=false;
             return refreshApex(this.getAllRecords);
@@ -180,6 +197,13 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 theme: 'success', 
                 label: 'Record Deleted', // this is the header text
             });
+            console.log('Deleted Value-'+this.objectRecordList[this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds)].Name);
+            debugger;
+            var deletedValue=this.objectRecordList[this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds)].Name;
+            var indexValueforDeleteObj=this.allObjectListForIndex.findIndex(idx => idx.value == deletedValue);
+            this.getAllObjectList.splice(indexValueforDeleteObj,0,{label:deletedValue, value:deletedValue});
+            //this.getAllObjectList.push({label:deletedValue, value:deletedValue});
+            console.log('New object List-',JSON.stringify(this.getAllObjectList));
             //this.objectRecordList.splice( this.objectRecordList.findIndex(row => row.Id === this.deleteRecordIds), 1);
             return refreshApex(this.getAllRecords);
             
