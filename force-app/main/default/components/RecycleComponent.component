@@ -162,7 +162,7 @@
                     reRender="frm" oncomplete="overridePageMessages();" />
                 <apex:actionFunction id="actPurgeSelected" name="actPurgeSelected" action="{!DeleteFromRecyclebin}" status="Processing" reRender="frm"
                     oncomplete="overridePageMessages();" />
-                <div id="SearchFilters" style="margin-top:10px;">
+                <div id="SearchFilters" style="margin-top:20px;">
                     <div class="slds-form--compound" style="margin-top:20px;">
                         <div class="slds-form-element__group">
                             <div class="slds-form-element__row">
@@ -229,7 +229,7 @@
                                             </apex:selectList>-->
                                     </div>
                                 </apex:outputPanel>
-
+                                
                                 <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
                                     <label class="slds-form-element__label"></label>
                                     <div class="slds-form-element__control" style="margin-top:4px;">
@@ -240,6 +240,17 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="slds-form-element slds-size--2-of-7">
+                        <label class="slds-form-element__label">
+                            Search In:
+                        </label>
+                        <div class="slds-form-element__control">
+                            <apex:selectRadio value="{!strSearchIn}">
+                                <apex:selectOptions value="{!rowOptions}">
+                                </apex:selectOptions>
+                            </apex:selectRadio>
                         </div>
                     </div>
                 </div>
@@ -267,8 +278,11 @@
                                         </label>
                                     </span>
                                 </th>
-                                <th class="slds-size_5-of-12">
+                                <th class="slds-size_4-of-12">
                                     <b>Name</b>
+                                </th>
+                                <th class="slds-size_1-of-12">
+                                    <b>Permanently Deleted</b>
                                 </th>
                                 <th class="slds-size_2-of-12">
                                     <b>Type </b>
@@ -297,6 +311,15 @@
                                         <td>
                                             <a href="javascript:void(0);" data-url="/apex/rbin__RecordPage?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}"
                                                 onclick="openRecord(this);">{!result.Name}</a>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span class="slds-checkbox slds-checkbox_large">
+                                                <apex:inputCheckbox disabled="true" styleClass="larger-checkbox" value="{!result.isPermanentlyDeleted}" /> <!-- Add styleClass for custom styling -->
+                                                <label class="slds-checkbox__label" for="{!$Component.chkresult}">
+                                                    <span class="slds-checkbox_faux"></span>
+                                                    <span class="slds-form-element__label"></span>
+                                                </label>
+                                            </span>
                                         </td>
                                         <td>{!result.Type}</td>
                                         <td>{!result.DeletedBy}</td>

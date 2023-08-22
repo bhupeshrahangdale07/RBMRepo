@@ -23,7 +23,12 @@ global with sharing class RecyclebinController {
     public List<List<wrapResults>> lstwrapResults {get; set;}
     public boolean IsAdminUser {get; set;}
     public String searchquery;
+    public String queryString;
     public integer recordcount {get; set;}
+    public String strSearchIn { get; set; }
+    //public List<SelectOption> filterOptions { get; set; }
+    
+    
     
     private map<string,string> mapObjectNames = new map<string,string>();
     
@@ -39,12 +44,17 @@ global with sharing class RecyclebinController {
         strSelectedUser = '';
         recordcount = 0;
         CheckAdminUser();
+        strSearchIn='RecycleBin';
         
         /*lstUsers.add(new SelectOption('','--None--'));
         for(User objUser: [select Id,Name from User Where Profile.UserLicense.Name != 'Chatter Free' Order By Name limit 1000]) {
             lstUsers.add(new SelectOption(objUser.Id,objUser.Name));
         }
         doSort(lstUsers);*/
+        // filterOptions = new List<SelectOption>();
+        // filterOptions.add(new SelectOption('RecycleBinData', 'Recycle Bin Data'));
+        // filterOptions.add(new SelectOption('PermanentDeletedData', 'Permanent Deleted Data'));
+        // filterOptions.add(new SelectOption('Both', 'Both'));
 
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
@@ -118,6 +128,20 @@ global with sharing class RecyclebinController {
             SearchRecords();
         }
         
+    }
+    public List<SelectOption>  rowOptions = new List<SelectOption> ();
+    public List<SelectOption> getRowOptions() {
+           List<SelectOption> opts = new List<SelectOption>();
+        SelectOption sopt1 = new SelectOption('RecycleBin','<span title="It allows search in the recycle bin.">Recycle Bin</span>');
+        sopt1.setEscapeItem(false);
+        opts.add(sopt1);
+        SelectOption sopt2 = new SelectOption('PermanentDeletedData','<span title="It allows search in the Permanent Deleted Data.">Permanent Deleted Data</span>');
+        sopt2.setEscapeItem(false);
+        opts.add(sopt2);
+        SelectOption sopt3 = new SelectOption('Both','<span title="The search results are returned along with Permanently Deleted Data and Recycle Bin.">Both</span>');
+        sopt3.setEscapeItem(false);
+        opts.add(sopt3);
+        return opts;
     }
     
     //method to determine if the logged in user has modify all access permission
@@ -231,6 +255,10 @@ global with sharing class RecyclebinController {
     //method to search the deleted records based on the search critiera specified by the user
     public void SearchRecords(){
         try {
+            system.debug('Try Block');
+            if(this.strSearchIn == 'RecycleBin'){
+                system.debug('In Recycle Bin Data');
+                system.debug('Search Value-'+strSearchIn);
             Map<string,string>  mapFieldName = new Map<string,string>();
             for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
                 mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
@@ -343,9 +371,88 @@ global with sharing class RecyclebinController {
             //} else {
            //     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select an object'));
             //}
-        } catch (Exception ex) {
-            ApexPages.addMessages(ex);
+    } else  if(strSearchIn == 'PermanentDeletedData'){
+
+    system.debug('PermanentDeletedData');
+    
+    system.debug('Search Value-'+strSearchIn);
+    lstwrapResults = new List<List<wrapResults>>();
+
+    
+    if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
+        Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+        Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+        if(dtFromDate > dtToDate){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
+            return;
         }
+    }
+    
+    if(Apexpages.CurrentPage().getParameters().get('Keyword')!=null)
+strKeyword = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Keyword')));
+system.debug('strKeyword'+strKeyword);
+
+if(Apexpages.CurrentPage().getParameters().get('Object')!=null)
+strSelectedObject = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Object')));
+    system.debug('Object Name-'+strSelectedObject);
+    String searchKey= '%'+strKeyword+'%';
+
+system.debug('date- '+strFromDate);
+
+    String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c, rbin__Deleted_Date__c ' +
+    'FROM rbin__Deleted_Data__c WHERE Id !=null';
+
+if (strSelectedObject != null) {
+queryString += ' AND rbin__Object_Name__c = :strSelectedObject';
+}
+
+if (searchKey != null) {
+queryString += ' AND rbin__Record_Name__c LIKE :searchKey';
+}
+
+if (!string.isblank(strFromDate)) {
+Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) > :dtFromDate';
+}
+
+if (!string.isblank(strToDate)) {
+Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) < :dtToDate';
+}
+if (!string.IsBlank(strSelectedUser)){
+queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
+}
+
+List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
+
+    
+    List<wrapResults> lsttempWrap = new List<wrapResults>();
+
+
+for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {
+    system.debug('Inside For loop'+pdd.rbin__Record_Name__c);
+
+    wrapResults objW = new wrapResults();
+    
+    // Assign the field values directly to wrapper class properties
+    objW.Id = pdd.rbin__Record_ID__c != null ? string.valueof(pdd.rbin__Record_ID__c) : '';
+objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
+objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
+objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
+objW.DeletedBy = pdd.rbin__Deleted_By__c != null && pdd.rbin__Deleted_By__r.Name != null ? string.valueof(pdd.rbin__Deleted_By__r.Name) : '';
+objW.DeletedOn = pdd.rbin__Deleted_Date__c != null ? DateTime.valueof(pdd.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
+objw.isPermanentlyDeleted = true;
+
+    // Add the populated wrapper object to the list
+    lsttempWrap.add(objW);
+}
+system.debug('lsttempWrap-'+lsttempWrap);
+lstwrapResults.add(lsttempWrap);
+    system.debug('Wrapper-'+lstwrapResults);
+    }
+    } catch (Exception ex) {
+        ApexPages.addMessages(ex);
+    }
     }
     
     //method to clear the pre-selected filters 
@@ -540,8 +647,10 @@ global with sharing class RecyclebinController {
         public string SObjectAPIName {get; set;}
         public string DeletedBy {get; set;}
         public string DeletedOn {get; set;}
+        public boolean isPermanentlyDeleted {get; set;}
         public wrapResults(){
             isCheck = false;
+            isPermanentlyDeleted = false;
             Id = '';
             Name = '';
             SObjectAPIName = '';
