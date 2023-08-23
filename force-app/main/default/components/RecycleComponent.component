@@ -313,13 +313,7 @@
                                                 onclick="openRecord(this);">{!result.Name}</a>
                                         </td>
                                         <td style="text-align: center;">
-                                            <span class="slds-checkbox slds-checkbox_large">
-                                                <apex:inputCheckbox disabled="true" styleClass="larger-checkbox" value="{!result.isPermanentlyDeleted}" /> <!-- Add styleClass for custom styling -->
-                                                <label class="slds-checkbox__label" for="{!$Component.chkresult}">
-                                                    <span class="slds-checkbox_faux"></span>
-                                                    <span class="slds-form-element__label"></span>
-                                                </label>
-                                            </span>
+                                            {!result.isPermanentlyDeleted}
                                         </td>
                                         <td>{!result.Type}</td>
                                         <td>{!result.DeletedBy}</td>

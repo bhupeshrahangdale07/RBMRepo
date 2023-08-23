@@ -21,6 +21,7 @@ global with sharing class RecyclebinController {
     public string strSelectedUser {get; set;}
     public transient List<Sobject> lstAllDeletedObjects;
     public List<List<wrapResults>> lstwrapResults {get; set;}
+    public List<wrapResults> listForBothSearch {get; set;}
     public boolean IsAdminUser {get; set;}
     public String searchquery;
     public String queryString;
@@ -41,6 +42,7 @@ global with sharing class RecyclebinController {
         strSelectedObject = '';
         //lstUsers = new List<SelectOption>();
         lstwrapResults = new List<List<wrapResults>>();
+        listForBothSearch = new List<wrapResults>();
         strSelectedUser = '';
         recordcount = 0;
         CheckAdminUser();
@@ -251,127 +253,136 @@ global with sharing class RecyclebinController {
         }
         return lstSobject;
     }
+
+    public void searchInRecycleBin(){
+        
+        system.debug('In Recycle Bin Data');
+        system.debug('Search Value-'+strSearchIn);
+    Map<string,string>  mapFieldName = new Map<string,string>();
+    for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
+        mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
+    }
+
+    lstAllDeletedObjects = new List<Sobject>();
+    lstwrapResults = new List<List<wrapResults>>();
+    listForBothSearch = new List<wrapResults>()
     
-    //method to search the deleted records based on the search critiera specified by the user
-    public void SearchRecords(){
-        try {
-            system.debug('Try Block');
-            if(this.strSearchIn == 'RecycleBin'){
-                system.debug('In Recycle Bin Data');
-                system.debug('Search Value-'+strSearchIn);
-            Map<string,string>  mapFieldName = new Map<string,string>();
-            for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
-                mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
-            }
 
-            lstAllDeletedObjects = new List<Sobject>();
-            lstwrapResults = new List<List<wrapResults>>();
+    List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
+    Integer intLimit = 0;
 
-            List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
-            Integer intLimit = 0;
+    if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
+        Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+        Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+        if(dtFromDate > dtToDate){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
+            return;
+        }
+    }
 
-            if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
-                Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-                Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-                if(dtFromDate > dtToDate){
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
-                    return;
+    List<Sobject> lstSobjecttemp = new List<Sobject>();   
+    if(string.IsBlank(strSelectedObject)) {
+
+        for(rbin__RecycleSearchObjects__c o : lstCustomSettings){
+            if(intLimit == 20) break;
+            //mapObjectNames.put(o.Name,o.Name);
+            lstSobjecttemp = findAllSobjectList(o.Name);
+            if(lstSobjecttemp != null && lstSobjecttemp.size()>0)
+                lstAllDeletedObjects.addAll(lstSobjecttemp);              
+            intLimit++;
+        }
+    }else{
+         lstSobjecttemp = findAllSobjectList(strSelectedObject);
+         //system.debug('@@lstSobjecttemp@@@ ' + lstSobjecttemp);
+         if(lstSobjecttemp == null){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info, ' Salesforce currently doesn\'t support restoring  records of the ' + strSelectedObject + ' Object.'));
+            return;
+         }
+        //lstAllDeletedObjects.addAll(findAllSobjectList(strSelectedObject));
+        lstAllDeletedObjects.addAll(lstSobjecttemp);
+    }
+
+        //System.debug('lstAllDeletedObjects  :: '+lstAllDeletedObjects );
+        //System.debug('mapObjectNames  :: '+mapObjectNames );
+
+        if(lstAllDeletedObjects.size() > 0) {
+            Integer count = 0;
+            List<wrapResults> lsttempWrap = new List<wrapResults>();
+            recordcount = lstAllDeletedObjects.size();
+
+            Set<Id> ContentDocumentIds = new Set<Id>();
+            for (SObject objs : lstAllDeletedObjects) {
+                string strobjecttype =  string.valueof(objS.getSObjectType());
+                if(strobjecttype == 'ContentDocument'){
+                    ContentDocumentIds.add((Id)objS.get('Id'));
                 }
             }
 
-            List<Sobject> lstSobjecttemp = new List<Sobject>();   
-            if(string.IsBlank(strSelectedObject)) {
-
-                for(rbin__RecycleSearchObjects__c o : lstCustomSettings){
-                    if(intLimit == 20) break;
-                    //mapObjectNames.put(o.Name,o.Name);
-                    lstSobjecttemp = findAllSobjectList(o.Name);
-                    if(lstSobjecttemp != null && lstSobjecttemp.size()>0)
-                        lstAllDeletedObjects.addAll(lstSobjecttemp);              
-                    intLimit++;
-                }
-            }else{
-                 lstSobjecttemp = findAllSobjectList(strSelectedObject);
-                 //system.debug('@@lstSobjecttemp@@@ ' + lstSobjecttemp);
-                 if(lstSobjecttemp == null){
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info, ' Salesforce currently doesn\'t support restoring  records of the ' + strSelectedObject + ' Object.'));
-                    return;
-                 }
-                //lstAllDeletedObjects.addAll(findAllSobjectList(strSelectedObject));
-                lstAllDeletedObjects.addAll(lstSobjecttemp);
+            Map<Id,String> mapContentDocumentDeletedBy = new Map<Id,String>();
+            for (ContentVersion cv : [SELECT Id,LastModifiedById,LastModifiedBy.Name,ContentDocumentId FROM ContentVersion where ContentDocumentId in: ContentDocumentIds and ContentDocument.IsDeleted = true ALL ROWS]) {
+                mapContentDocumentDeletedBy.put(cv.ContentDocumentId,cv.LastModifiedBy.Name);
             }
 
-                //System.debug('lstAllDeletedObjects  :: '+lstAllDeletedObjects );
-                //System.debug('mapObjectNames  :: '+mapObjectNames );
+            for(SObject objS: lstAllDeletedObjects){
+                
+                string strobjecttype =  string.valueof(objS.getSObjectType());
+                //strSelectedObject = strobjecttype;
 
-                if(lstAllDeletedObjects.size() > 0) {
-                    Integer count = 0;
-                    List<wrapResults> lsttempWrap = new List<wrapResults>();
-                    recordcount = lstAllDeletedObjects.size();
+                wrapResults objW = new wrapResults();
+                objW.Id = string.valueof(objS.get('Id'));
 
-                    Set<Id> ContentDocumentIds = new Set<Id>();
-                    for (SObject objs : lstAllDeletedObjects) {
-                        string strobjecttype =  string.valueof(objS.getSObjectType());
-                        if(strobjecttype == 'ContentDocument'){
-                            ContentDocumentIds.add((Id)objS.get('Id'));
-                        }
+                if(mapFieldName.containsKey(strobjecttype)){
+                    objW.Name = string.valueof(objS.get(mapFieldName.get(strobjecttype)));
+                }
+                else{
+                    objW.Name = string.valueof(objS.get('Name'));
+                }     
+
+                objW.SObjectAPIName = strobjecttype;
+                if(mapObjectNames.containskey(strobjecttype)) {
+                    objW.Type = mapObjectNames.get(strobjecttype);
+                } else {
+                    objW.Type = strobjecttype;
+                }
+                
+                //System.debug('@#@strobjecttype ### ' + strobjecttype);
+                if(objW.SObjectAPIName == 'ContentDocument'){
+                    if(mapContentDocumentDeletedBy.containsKey(objW.Id)){
+                        objW.DeletedBy = mapContentDocumentDeletedBy.get(objW.Id);
                     }
-
-                    Map<Id,String> mapContentDocumentDeletedBy = new Map<Id,String>();
-                    for (ContentVersion cv : [SELECT Id,LastModifiedById,LastModifiedBy.Name,ContentDocumentId FROM ContentVersion where ContentDocumentId in: ContentDocumentIds and ContentDocument.IsDeleted = true ALL ROWS]) {
-                        mapContentDocumentDeletedBy.put(cv.ContentDocumentId,cv.LastModifiedBy.Name);
-                    }
-
-                    for(SObject objS: lstAllDeletedObjects){
-                        
-                        string strobjecttype =  string.valueof(objS.getSObjectType());
-                        //strSelectedObject = strobjecttype;
-
-                        wrapResults objW = new wrapResults();
-                        objW.Id = string.valueof(objS.get('Id'));
-
-                        if(mapFieldName.containsKey(strobjecttype)){
-                            objW.Name = string.valueof(objS.get(mapFieldName.get(strobjecttype)));
-                        }
-                        else{
-                            objW.Name = string.valueof(objS.get('Name'));
-                        }     
-
-                        objW.SObjectAPIName = strobjecttype;
-                        if(mapObjectNames.containskey(strobjecttype)) {
-                            objW.Type = mapObjectNames.get(strobjecttype);
-                        } else {
-                            objW.Type = strobjecttype;
-                        }
-                        
-                        //System.debug('@#@strobjecttype ### ' + strobjecttype);
-                        if(objW.SObjectAPIName == 'ContentDocument'){
-                            if(mapContentDocumentDeletedBy.containsKey(objW.Id)){
-                                objW.DeletedBy = mapContentDocumentDeletedBy.get(objW.Id);
-                            }
-                            
-                        }else{
-                            Sobject objR = objS.getSObject('LastModifiedBy');
-                            objW.DeletedBy = string.valueof(objR.get('Name'));
-                        }
-
-                        objW.DeletedOn = DateTime.valueof(objS.get('LastModifiedDate')).format('MM/dd/yyyy hh:mm a');
-                        if(count == 1000) {
-                            lstwrapResults.add(lsttempWrap);
-                            lsttempWrap = new List<wrapResults>();
-                            count = 0;
-                        }
-                        lsttempWrap.add(objW);
-                        count++;
-                    }  
-                    if(lsttempWrap.size() > 0) {
-                        lstwrapResults.add(lsttempWrap);
-                    }  
+                    
+                }else{
+                    Sobject objR = objS.getSObject('LastModifiedBy');
+                    objW.DeletedBy = string.valueof(objR.get('Name'));
                 }
-            //} else {
-           //     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select an object'));
-            //}
-    } else  if(strSearchIn == 'PermanentDeletedData'){
+
+                objW.DeletedOn = DateTime.valueof(objS.get('LastModifiedDate')).format('MM/dd/yyyy hh:mm a');
+                if(count == 1000) {
+                    lstwrapResults.add(lsttempWrap);
+                    lsttempWrap = new List<wrapResults>();
+                    count = 0;
+                    //listForBothSearch.addAll(lsttempWrap);
+                }
+                lsttempWrap.add(objW);
+                count++;
+            }  
+            if(lsttempWrap.size() > 0) {
+                lstwrapResults.add(lsttempWrap);
+                listForBothSearch.addAll(lsttempWrap);
+                
+            }  
+           
+        }
+    //} else {
+   //     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select an object'));
+    //}
+
+
+    }
+
+    public void searchInPermanentlyDeletedData(){
+
+        
 
     system.debug('PermanentDeletedData');
     
@@ -441,15 +452,37 @@ objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__
 objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
 objW.DeletedBy = pdd.rbin__Deleted_By__c != null && pdd.rbin__Deleted_By__r.Name != null ? string.valueof(pdd.rbin__Deleted_By__r.Name) : '';
 objW.DeletedOn = pdd.rbin__Deleted_Date__c != null ? DateTime.valueof(pdd.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
-objw.isPermanentlyDeleted = true;
+objw.isPermanentlyDeleted = 'Yes';
 
     // Add the populated wrapper object to the list
     lsttempWrap.add(objW);
 }
 system.debug('lsttempWrap-'+lsttempWrap);
 lstwrapResults.add(lsttempWrap);
+//listForBothSearch.addAll(lsttempWrap);
+
     system.debug('Wrapper-'+lstwrapResults);
+    
     }
+    
+    //method to search the deleted records based on the search critiera specified by the user
+    public void SearchRecords(){
+        try {
+            
+            system.debug('Try Block');
+            if(this.strSearchIn == 'RecycleBin'){
+                searchInRecycleBin();
+                listForBothSearch=null;
+            } else  if(strSearchIn == 'PermanentDeletedData'){
+                searchInPermanentlyDeletedData();
+                listForBothSearch=null;
+            }else if(strSearchIn == 'Both'){
+                lstwrapResults = new List<List<wrapResults>>();
+                listForBothSearch = new List<wrapResults>();
+                searchInRecycleBin();
+                searchInPermanentlyDeletedData();
+                lstwrapResults.add(listForBothSearch);
+            }
     } catch (Exception ex) {
         ApexPages.addMessages(ex);
     }
@@ -647,10 +680,10 @@ lstwrapResults.add(lsttempWrap);
         public string SObjectAPIName {get; set;}
         public string DeletedBy {get; set;}
         public string DeletedOn {get; set;}
-        public boolean isPermanentlyDeleted {get; set;}
+        public string isPermanentlyDeleted {get; set;}
         public wrapResults(){
             isCheck = false;
-            isPermanentlyDeleted = false;
+            isPermanentlyDeleted = 'No';
             Id = '';
             Name = '';
             SObjectAPIName = '';
