@@ -10,14 +10,13 @@
 */
 
 global with sharing class RecyclebinController {
-   
-   //Local variables referenced in the page 
+    
+    //Local variables referenced in the page 
     public string strKeyword {get; set;}
     public string strFromDate {get; set;}
     public string strToDate {get; set;}
     public List<SelectOption> lstObjects {get;set;}
     public string strSelectedObject {get; set;}
-    //public List<SelectOption> lstUsers {get;set;}
     public string strSelectedUser {get; set;}
     public transient List<Sobject> lstAllDeletedObjects;
     public List<List<wrapResults>> lstwrapResults {get; set;}
@@ -40,7 +39,6 @@ global with sharing class RecyclebinController {
         strToDate = '';
         lstObjects = new List<SelectOption>();
         strSelectedObject = '';
-        //lstUsers = new List<SelectOption>();
         lstwrapResults = new List<List<wrapResults>>();
         listForBothSearch = new List<wrapResults>();
         strSelectedUser = '';
@@ -48,16 +46,8 @@ global with sharing class RecyclebinController {
         CheckAdminUser();
         strSearchIn='RecycleBin';
         
-        /*lstUsers.add(new SelectOption('','--None--'));
-        for(User objUser: [select Id,Name from User Where Profile.UserLicense.Name != 'Chatter Free' Order By Name limit 1000]) {
-            lstUsers.add(new SelectOption(objUser.Id,objUser.Name));
-        }
-        doSort(lstUsers);*/
-        // filterOptions = new List<SelectOption>();
-        // filterOptions.add(new SelectOption('RecycleBinData', 'Recycle Bin Data'));
-        // filterOptions.add(new SelectOption('PermanentDeletedData', 'Permanent Deleted Data'));
-        // filterOptions.add(new SelectOption('Both', 'Both'));
-
+        
+        
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
         for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
@@ -74,28 +64,23 @@ global with sharing class RecyclebinController {
         setSobject.add('ExpressionFilter');
         setSobject.add('ExpressionFilterCriteria');
         setSobject.add('Image');
-
+        
         lstObjects.add(new SelectOption('','--Default--'));
         for(Schema.SObjectType objSType: Schema.getGlobalDescribe().Values()){
             Map<String, Schema.SObjectField> objectFields = objSType.getDescribe().fields.getMap();
             Boolean blnfield = false;
             
-             if(setSobject.Contains(string.valueof(objSType))){
+            if(setSobject.Contains(string.valueof(objSType))){
                 continue;
-             }
+            }
             
             for(string s : setFieldName){
                 if(objectFields.containskey(s)){
                     blnfield = true;
                 }
             }
-
-            //system.debug('@@@objectFields@@@ ' + objectFields);
-            // system.debug('@@@objectFields@@@ ' + objectFields);
-            // system.debug('@@@objectFields111@@@ ' + objSType.getDescribe().getName());
-
+          
             
-
             if( (blnfield)  && objectFields.containskey('isdeleted') && objectFields.containskey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting()){
                 if(lstObjects.size()<1000) 
                 {
@@ -110,19 +95,19 @@ global with sharing class RecyclebinController {
         system.debug('**constructor method**'+Apexpages.CurrentPage().getParameters().get('Object'));
         
         if(Apexpages.CurrentPage().getParameters().get('Object')!=null)
-        strSelectedObject = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Object')));
+            strSelectedObject = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Object')));
         
         if(Apexpages.CurrentPage().getParameters().get('Keyword')!=null)
-        strKeyword = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Keyword')));
+            strKeyword = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Keyword')));
         
         if(Apexpages.CurrentPage().getParameters().get('FromDate')!=null)
-        strFromDate = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('FromDate')));
+            strFromDate = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('FromDate')));
         
         if(Apexpages.CurrentPage().getParameters().get('ToDate')!=null)
-        strToDate = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('ToDate')));
+            strToDate = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('ToDate')));
         
         if(Apexpages.CurrentPage().getParameters().get('SelectedUser')!=null)
-        strSelectedUser = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('SelectedUser')));
+            strSelectedUser = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('SelectedUser')));
         
         if(!String.isBlank(strSelectedObject))
         {
@@ -133,7 +118,7 @@ global with sharing class RecyclebinController {
     }
     public List<SelectOption>  rowOptions = new List<SelectOption> ();
     public List<SelectOption> getRowOptions() {
-           List<SelectOption> opts = new List<SelectOption>();
+        List<SelectOption> opts = new List<SelectOption>();
         SelectOption sopt1 = new SelectOption('RecycleBin','<span title="It allows search in the recycle bin.">Recycle Bin</span>');
         sopt1.setEscapeItem(false);
         opts.add(sopt1);
@@ -149,167 +134,162 @@ global with sharing class RecyclebinController {
     //method to determine if the logged in user has modify all access permission
     public void CheckAdminUser(){
         IsAdminUser = false;       
-            List<PermissionSetAssignment> lstPermissionSets = new List<PermissionSetAssignment>([SELECT AssigneeId FROM PermissionSetAssignment 
-                    WHERE AssigneeId =: UserInfo.getUserId() and PermissionSet.PermissionsModifyAllData = true]);
-            if(lstPermissionSets.size() > 0) {
-                IsAdminUser = true;
-            }       
+        List<PermissionSetAssignment> lstPermissionSets = new List<PermissionSetAssignment>([SELECT AssigneeId FROM PermissionSetAssignment 
+                                                                                             WHERE AssigneeId =: UserInfo.getUserId() and PermissionSet.PermissionsModifyAllData = true]);
+        if(lstPermissionSets.size() > 0) {
+            IsAdminUser = true;
+        }       
     }
-
+    
     private List<Sobject> findAllSobjectList(string strSelectedObject){
         List<Sobject> lstSobject = new List<Sobject>();  
-
-         try{                      
         
-        //if(!string.IsBlank(strSelectedObject)) {
-        searchquery = ''; 
-        String recordname = 'Name';
-
-        
-
-        Map<string,string>  mapFieldName = new Map<string,string>();
-        for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
-            mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
-        }
-
-        if(mapFieldName.containsKey(strSelectedObject)){
-            recordname = mapFieldName.get(strSelectedObject);
-        }
-        
-        rbin__Recycle_Bin_Setting__c rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();  
-
-        string strobjectfields = 'Id';
-        if(strSelectedObject == 'ContentDocument'){
-           strobjectfields = 'Id,'+recordname+' , LastModifiedDate';
-        }else{
-            strobjectfields = 'Id,'+recordname+' , LastModifiedDate, LastModifiedBy.Name';
-        }
-
-
-        searchquery += 'select '+ String.EscapeSingleQuotes(strobjectfields) +'  from ' +string.escapeSingleQuotes(strSelectedObject)+' Where IsDeleted = true ';
-        if(!rbinsetting.rbin__Search_Inactive_Users_in_Deleted_By__c){
-            searchquery += ' and LastModifiedById not in(select id from user where isactive=false) ';
-        }
-        system.debug('@@@soql ' + searchquery);
-
-        string strWhereParam = '';
-        if(!string.IsBlank(strKeyword)) {
-            Map <String, Schema.SObjectField> mapfields = Schema.getGlobalDescribe().get(strSelectedObject).getDescribe().fields.getMap();
-            //System.debug('mapfields ::: '+mapfields);
-            strWhereParam = ' ( ';
-            for(Schema.SObjectField sfield : mapfields.Values()){
-                Schema.DescribefieldResult dfield = Sfield.getDescribe();
-                //System.debug('dfield :: '+dfield);
-                if(dfield.getType() == Schema.DisplayType.String || dfield.getType() == Schema.DisplayType.Combobox) {
-                    if(strWhereParam.length() > 3) {
-                        strWhereParam += ' OR ';
-                    }
-                    string strValue = '%' + string.escapeSingleQuotes(strKeyword) + '%';
-                    strWhereParam += string.escapeSingleQuotes(dfield.getName()) + ' like: strValue ';
-                }
+        try{                      
+            
+            //if(!string.IsBlank(strSelectedObject)) {
+            searchquery = ''; 
+            String recordname = 'Name';
+            
+            
+            
+            Map<string,string>  mapFieldName = new Map<string,string>();
+            for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
+                mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
             }
-            strWhereParam += ' ) ';
-        }
-        if(!string.IsBlank(strFromDate)){
-            Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-            if(strWhereParam.length() > 0) strWhereParam += ' and ';
-            strWhereParam += ' Day_Only(LastModifiedDate) >=: dtFromDate';  
-        }
-        if(!string.IsBlank(strToDate)){
-            Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-            if(strWhereParam.length() > 0) strWhereParam += ' and ';
-            strWhereParam += ' Day_Only(LastModifiedDate) <=: dtToDate';  
-        }
-        //strWhereParam += ' and Day_Only(LastModifiedDate) !=: system.today() ';
-        
-        //system.debug('IsAdminUser**'+ IsAdminUser);
-        
-        //string loggedinuserid = UserInfo.getUserId();
-        
-        if(!IsAdminUser) {
-            if(strWhereParam.length() > 0) strWhereParam += ' and ';
-            string loggedinuserid = UserInfo.getUserId();
-            //system.debug('userid**'+ userid);
-            strWhereParam += ' LastModifiedById =:loggedinuserid '  ;  
-        } else if(!string.IsBlank(strSelectedUser)){
-            string userid = strSelectedUser;
-            if(strWhereParam.length() > 0) strWhereParam += ' and ';
-            strWhereParam += ' LastModifiedById =: userid ' ;  
-        }
-        //system.debug('strWhereParam**'+ strWhereParam);
-        
-        if(strWhereParam.length() > 0) searchquery += ' and ';
-        searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT '+integer.valueof(System.label.Row_Count_Limit) +' ALL ROWS ';
-        System.debug('searchquery  :: '+searchquery );
-        if(!string.IsBlank(searchquery)) {
-            List<SObject> searchList;
-            searchList = Database.query(String.EscapeSingleQuotes(searchquery));
-            lstSobject.addall(searchList); 
-           
-        }
-
-         }catch(Exception ex){
+            
+            if(mapFieldName.containsKey(strSelectedObject)){
+                recordname = mapFieldName.get(strSelectedObject);
+            }
+            
+            rbin__Recycle_Bin_Setting__c rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();  
+            
+            string strobjectfields = 'Id';
+            if(strSelectedObject == 'ContentDocument'){
+                strobjectfields = 'Id,'+recordname+' , LastModifiedDate';
+            }else{
+                strobjectfields = 'Id,'+recordname+' , LastModifiedDate, LastModifiedBy.Name';
+            }
+            
+            
+            searchquery += 'select '+ String.EscapeSingleQuotes(strobjectfields) +'  from ' +string.escapeSingleQuotes(strSelectedObject)+' Where IsDeleted = true ';
+            if(!rbinsetting.rbin__Search_Inactive_Users_in_Deleted_By__c){
+                searchquery += ' and LastModifiedById not in(select id from user where isactive=false) ';
+            }
+            system.debug('@@@soql ' + searchquery);
+            
+            string strWhereParam = '';
+            if(!string.IsBlank(strKeyword)) {
+                Map <String, Schema.SObjectField> mapfields = Schema.getGlobalDescribe().get(strSelectedObject).getDescribe().fields.getMap();
+                //System.debug('mapfields ::: '+mapfields);
+                strWhereParam = ' ( ';
+                for(Schema.SObjectField sfield : mapfields.Values()){
+                    Schema.DescribefieldResult dfield = Sfield.getDescribe();
+                    //System.debug('dfield :: '+dfield);
+                    if(dfield.getType() == Schema.DisplayType.String || dfield.getType() == Schema.DisplayType.Combobox) {
+                        if(strWhereParam.length() > 3) {
+                            strWhereParam += ' OR ';
+                        }
+                        string strValue = '%' + string.escapeSingleQuotes(strKeyword) + '%';
+                        strWhereParam += string.escapeSingleQuotes(dfield.getName()) + ' like: strValue ';
+                    }
+                }
+                strWhereParam += ' ) ';
+            }
+            if(!string.IsBlank(strFromDate)){
+                Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+                if(strWhereParam.length() > 0) strWhereParam += ' and ';
+                strWhereParam += ' Day_Only(LastModifiedDate) >=: dtFromDate';  
+            }
+            if(!string.IsBlank(strToDate)){
+                Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+                if(strWhereParam.length() > 0) strWhereParam += ' and ';
+                strWhereParam += ' Day_Only(LastModifiedDate) <=: dtToDate';  
+            }
+            //strWhereParam += ' and Day_Only(LastModifiedDate) !=: system.today() ';
+            
+            
+            if(!IsAdminUser) {
+                if(strWhereParam.length() > 0) strWhereParam += ' and ';
+                string loggedinuserid = UserInfo.getUserId();
+                //system.debug('userid**'+ userid);
+                strWhereParam += ' LastModifiedById =:loggedinuserid '  ;  
+            } else if(!string.IsBlank(strSelectedUser)){
+                string userid = strSelectedUser;
+                if(strWhereParam.length() > 0) strWhereParam += ' and ';
+                strWhereParam += ' LastModifiedById =: userid ' ;  
+            }
+            //system.debug('strWhereParam**'+ strWhereParam);
+            
+            if(strWhereParam.length() > 0) searchquery += ' and ';
+            searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT '+integer.valueof(System.label.Row_Count_Limit) +' ALL ROWS ';
+            System.debug('searchquery  :: '+searchquery );
+            if(!string.IsBlank(searchquery)) {
+                List<SObject> searchList;
+                searchList = Database.query(String.EscapeSingleQuotes(searchquery));
+                lstSobject.addall(searchList); 
+                
+            }
+            
+        }catch(Exception ex){
             return null;
         }
         return lstSobject;
     }
-
+    
     public void searchInRecycleBin(){
         
         system.debug('In Recycle Bin Data');
         system.debug('Search Value-'+strSearchIn);
-    Map<string,string>  mapFieldName = new Map<string,string>();
-    for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
-        mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
-    }
-
-    lstAllDeletedObjects = new List<Sobject>();
-    lstwrapResults = new List<List<wrapResults>>();
-    listForBothSearch = new List<wrapResults>()
-    
-
-    List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
-    Integer intLimit = 0;
-
-    if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
-        Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-        Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-        if(dtFromDate > dtToDate){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
-            return;
+        Map<string,string>  mapFieldName = new Map<string,string>();
+        for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
+            mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
         }
-    }
-
-    List<Sobject> lstSobjecttemp = new List<Sobject>();   
-    if(string.IsBlank(strSelectedObject)) {
-
-        for(rbin__RecycleSearchObjects__c o : lstCustomSettings){
-            if(intLimit == 20) break;
-            //mapObjectNames.put(o.Name,o.Name);
-            lstSobjecttemp = findAllSobjectList(o.Name);
-            if(lstSobjecttemp != null && lstSobjecttemp.size()>0)
-                lstAllDeletedObjects.addAll(lstSobjecttemp);              
-            intLimit++;
+        
+        lstAllDeletedObjects = new List<Sobject>();
+        lstwrapResults = new List<List<wrapResults>>();
+        listForBothSearch = new List<wrapResults>();
+        
+        
+        List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
+        Integer intLimit = 0;
+        
+        if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
+            Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+            Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+            if(dtFromDate > dtToDate){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
+                return;
+            }
         }
-    }else{
-         lstSobjecttemp = findAllSobjectList(strSelectedObject);
-         //system.debug('@@lstSobjecttemp@@@ ' + lstSobjecttemp);
-         if(lstSobjecttemp == null){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info, ' Salesforce currently doesn\'t support restoring  records of the ' + strSelectedObject + ' Object.'));
-            return;
-         }
-        //lstAllDeletedObjects.addAll(findAllSobjectList(strSelectedObject));
-        lstAllDeletedObjects.addAll(lstSobjecttemp);
-    }
+        
+        List<Sobject> lstSobjecttemp = new List<Sobject>();   
+        if(string.IsBlank(strSelectedObject)) {
+            
+            for(rbin__RecycleSearchObjects__c o : lstCustomSettings){
+                if(intLimit == 20) break;
 
-        //System.debug('lstAllDeletedObjects  :: '+lstAllDeletedObjects );
-        //System.debug('mapObjectNames  :: '+mapObjectNames );
-
+                lstSobjecttemp = findAllSobjectList(o.Name);
+                if(lstSobjecttemp != null && lstSobjecttemp.size()>0)
+                    lstAllDeletedObjects.addAll(lstSobjecttemp);              
+                intLimit++;
+            }
+        }else{
+            lstSobjecttemp = findAllSobjectList(strSelectedObject);
+            //system.debug('@@lstSobjecttemp@@@ ' + lstSobjecttemp);
+            if(lstSobjecttemp == null){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info, ' Salesforce currently doesn\'t support restoring  records of the ' + strSelectedObject + ' Object.'));
+                return;
+            }
+            //lstAllDeletedObjects.addAll(findAllSobjectList(strSelectedObject));
+            lstAllDeletedObjects.addAll(lstSobjecttemp);
+        }
+        
+        
         if(lstAllDeletedObjects.size() > 0) {
             Integer count = 0;
             List<wrapResults> lsttempWrap = new List<wrapResults>();
             recordcount = lstAllDeletedObjects.size();
-
+            
             Set<Id> ContentDocumentIds = new Set<Id>();
             for (SObject objs : lstAllDeletedObjects) {
                 string strobjecttype =  string.valueof(objS.getSObjectType());
@@ -317,27 +297,27 @@ global with sharing class RecyclebinController {
                     ContentDocumentIds.add((Id)objS.get('Id'));
                 }
             }
-
+            
             Map<Id,String> mapContentDocumentDeletedBy = new Map<Id,String>();
             for (ContentVersion cv : [SELECT Id,LastModifiedById,LastModifiedBy.Name,ContentDocumentId FROM ContentVersion where ContentDocumentId in: ContentDocumentIds and ContentDocument.IsDeleted = true ALL ROWS]) {
                 mapContentDocumentDeletedBy.put(cv.ContentDocumentId,cv.LastModifiedBy.Name);
             }
-
+            
             for(SObject objS: lstAllDeletedObjects){
                 
                 string strobjecttype =  string.valueof(objS.getSObjectType());
                 //strSelectedObject = strobjecttype;
-
+                
                 wrapResults objW = new wrapResults();
                 objW.Id = string.valueof(objS.get('Id'));
-
+                
                 if(mapFieldName.containsKey(strobjecttype)){
                     objW.Name = string.valueof(objS.get(mapFieldName.get(strobjecttype)));
                 }
                 else{
                     objW.Name = string.valueof(objS.get('Name'));
                 }     
-
+                
                 objW.SObjectAPIName = strobjecttype;
                 if(mapObjectNames.containskey(strobjecttype)) {
                     objW.Type = mapObjectNames.get(strobjecttype);
@@ -355,13 +335,13 @@ global with sharing class RecyclebinController {
                     Sobject objR = objS.getSObject('LastModifiedBy');
                     objW.DeletedBy = string.valueof(objR.get('Name'));
                 }
-
+                
                 objW.DeletedOn = DateTime.valueof(objS.get('LastModifiedDate')).format('MM/dd/yyyy hh:mm a');
                 if(count == 1000) {
                     lstwrapResults.add(lsttempWrap);
                     lsttempWrap = new List<wrapResults>();
                     count = 0;
-                    //listForBothSearch.addAll(lsttempWrap);
+                
                 }
                 lsttempWrap.add(objW);
                 count++;
@@ -371,98 +351,88 @@ global with sharing class RecyclebinController {
                 listForBothSearch.addAll(lsttempWrap);
                 
             }  
-           
+            
         }
-    //} else {
-   //     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select an object'));
-    //}
-
-
-    }
-
-    public void searchInPermanentlyDeletedData(){
-
         
-
-    system.debug('PermanentDeletedData');
-    
-    system.debug('Search Value-'+strSearchIn);
-    lstwrapResults = new List<List<wrapResults>>();
-
-    
-    if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
-        Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-        Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-        if(dtFromDate > dtToDate){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
-            return;
-        }
+        
     }
     
-    if(Apexpages.CurrentPage().getParameters().get('Keyword')!=null)
-strKeyword = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Keyword')));
-system.debug('strKeyword'+strKeyword);
-
-if(Apexpages.CurrentPage().getParameters().get('Object')!=null)
-strSelectedObject = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Object')));
-    system.debug('Object Name-'+strSelectedObject);
-    String searchKey= '%'+strKeyword+'%';
-
-system.debug('date- '+strFromDate);
-
-    String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c, rbin__Deleted_Date__c ' +
-    'FROM rbin__Deleted_Data__c WHERE Id !=null';
-
-if (strSelectedObject != null) {
-queryString += ' AND rbin__Object_Name__c = :strSelectedObject';
-}
-
-if (searchKey != null) {
-queryString += ' AND rbin__Record_Name__c LIKE :searchKey';
-}
-
-if (!string.isblank(strFromDate)) {
-Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) > :dtFromDate';
-}
-
-if (!string.isblank(strToDate)) {
-Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) < :dtToDate';
-}
-if (!string.IsBlank(strSelectedUser)){
-queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
-}
-
-List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
-
-    
-    List<wrapResults> lsttempWrap = new List<wrapResults>();
-
-
-for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {
-    system.debug('Inside For loop'+pdd.rbin__Record_Name__c);
-
-    wrapResults objW = new wrapResults();
-    
-    // Assign the field values directly to wrapper class properties
-    objW.Id = pdd.rbin__Record_ID__c != null ? string.valueof(pdd.rbin__Record_ID__c) : '';
-objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
-objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
-objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
-objW.DeletedBy = pdd.rbin__Deleted_By__c != null && pdd.rbin__Deleted_By__r.Name != null ? string.valueof(pdd.rbin__Deleted_By__r.Name) : '';
-objW.DeletedOn = pdd.rbin__Deleted_Date__c != null ? DateTime.valueof(pdd.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
-objw.isPermanentlyDeleted = 'Yes';
-
-    // Add the populated wrapper object to the list
-    lsttempWrap.add(objW);
-}
-system.debug('lsttempWrap-'+lsttempWrap);
-lstwrapResults.add(lsttempWrap);
-//listForBothSearch.addAll(lsttempWrap);
-
-    system.debug('Wrapper-'+lstwrapResults);
-    
+    public void searchInPermanentlyDeletedData(){
+        
+        
+        lstwrapResults = new List<List<wrapResults>>();
+        
+        
+        if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
+            Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+            Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+            if(dtFromDate > dtToDate){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
+                return;
+            }
+        }
+        
+        if(Apexpages.CurrentPage().getParameters().get('Keyword')!=null)
+            strKeyword = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Keyword')));
+        system.debug('strKeyword'+strKeyword);
+        
+        if(Apexpages.CurrentPage().getParameters().get('Object')!=null)
+            strSelectedObject = string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('Object')));
+        
+        String searchKey= '%'+strKeyword+'%';
+        
+        
+        String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c, rbin__Deleted_Date__c ' +
+            'FROM rbin__Deleted_Data__c WHERE Id !=null';
+        
+        if (strSelectedObject != null) {
+            queryString += ' AND rbin__Object_Name__c = :strSelectedObject';
+        }
+        
+        if (searchKey != null) {
+            queryString += ' AND rbin__Record_Name__c LIKE :searchKey';
+        }
+        
+        if (!string.isblank(strFromDate)) {
+            Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+            queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) > :dtFromDate';
+        }
+        
+        if (!string.isblank(strToDate)) {
+            Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
+            queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) < :dtToDate';
+        }
+        if (!string.IsBlank(strSelectedUser)){
+            queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
+        }
+        
+        List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
+        
+        
+        List<wrapResults> lsttempWrap = new List<wrapResults>();
+        
+        
+        for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {
+        
+            wrapResults objW = new wrapResults();
+            
+            // Assign the field values directly to wrapper class properties
+            objW.Id = pdd.rbin__Record_ID__c != null ? string.valueof(pdd.rbin__Record_ID__c) : '';
+            objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
+            objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
+            objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
+            objW.DeletedBy = pdd.rbin__Deleted_By__c != null && pdd.rbin__Deleted_By__r.Name != null ? string.valueof(pdd.rbin__Deleted_By__r.Name) : '';
+            objW.DeletedOn = pdd.rbin__Deleted_Date__c != null ? DateTime.valueof(pdd.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
+            objw.isPermanentlyDeleted = 'Yes';
+            
+            // Add the populated wrapper object to the list
+            lsttempWrap.add(objW);
+        }
+        
+        lstwrapResults.add(lsttempWrap);
+        //listForBothSearch.addAll(lsttempWrap);
+        
+        
     }
     
     //method to search the deleted records based on the search critiera specified by the user
@@ -483,9 +453,9 @@ lstwrapResults.add(lsttempWrap);
                 searchInPermanentlyDeletedData();
                 lstwrapResults.add(listForBothSearch);
             }
-    } catch (Exception ex) {
-        ApexPages.addMessages(ex);
-    }
+        } catch (Exception ex) {
+            ApexPages.addMessages(ex);
+        }
     }
     
     //method to clear the pre-selected filters 
@@ -506,7 +476,7 @@ lstwrapResults.add(lsttempWrap);
         if (keyword != null && keyword.trim() != '') {
             keyword = '%' + keyword + '%';
             if(Schema.sObjectType.User.isAccessible()) {
-             	userlist = [Select Id, Name, Email from User where Name like :keyword and Profile.UserLicense.Name != 'Chatter Free' Order By Name limit 5];   
+                userlist = [Select Id, Name, Email from User where Name like :keyword and Profile.UserLicense.Name != 'Chatter Free' Order By Name limit 5];   
             }
         }
         return userlist;
@@ -566,33 +536,7 @@ lstwrapResults.add(lsttempWrap);
             if(lstwrapResults.size() > 0){
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
-                /*if(lstwrapResults.size() > 1) {
-                    string svalue='';
-                    Date dtfdate = null;
-                    Date dttdate = null;
-                    string uid = '';
-                    if(!string.IsBlank(strKeyword)) {
-                        svalue = '%' + string.escapeSingleQuotes(strKeyword) + '%';
-                    }
-                    if(!string.IsBlank(strFromDate)){
-                        Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-                        dtfdate = dtFromDate;
-                    }
-                    if(!string.IsBlank(strToDate)){
-                        Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-                        dttdate = dtToDate;
-                    }
-                    if(!IsAdminUser) {
-                        uid = UserInfo.getUserId();
-                    } else if(!string.IsBlank(strSelectedUser)){
-                        uid = strSelectedUser;
-                    }
-                    //system.debug('@@@debug@@@ ' + searchquery, svalue, dtfdate, dttdate,uid);
-                    BatchMassUndeleteRecords batchtoundelete = new BatchMassUndeleteRecords(searchquery, svalue, dtfdate, dttdate,uid);
-                    Database.executeBatch(batchtoundelete, 20);
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
-                    return;
-                }*/
+            
                 //added by RP on 22-11-2018
                 if(lstwrapResults.size() > 1) {
                     List<string> lstUndeleteAllRecords = new List<string>();
@@ -606,11 +550,11 @@ lstwrapResults.add(lsttempWrap);
                     }
                     BatchMassUndeleteRecords batchtoundelete = new BatchMassUndeleteRecords(lstUndeleteAllRecords);
                     Database.executeBatch(batchtoundelete, 20);
-
+                    
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                     return;
                 }
-
+                
                 for(List<wrapResults> lstWrapper: lstwrapResults){
                     for(wrapResults objW: lstWrapper) {
                         Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
@@ -633,17 +577,6 @@ lstwrapResults.add(lsttempWrap);
         }
     }
     
-    //method to undelete records via future method
-    /*@future
-    public static void UndeleteRecordsViaFuture(set<Id> setIdtoUndelete, string strObjectAPIName){
-        List<Sobject> lstUndeleteAll = new List<Sobject>();
-        for(Id strId: setIdtoUndelete) {
-            Sobject objS = Schema.getGlobalDescribe().get(strObjectAPIName).newSObject();
-            objS.Put('Id',strId);
-            lstUndeleteAll.add(objS);
-        }
-        undelete lstUndeleteAll;
-    }*/
     
     //method to purge the selected records from the recycle bin
     public void DeleteFromRecyclebin(){
@@ -701,9 +634,9 @@ lstwrapResults.add(lsttempWrap);
         Integer suffix = 1;
         for (Selectoption opt : opts) {
             mapping.put(    // Done this cryptic to save scriptlines, if this loop executes 10000 times
-                                // it would every script statement would add 1, so 3 would lead to 30000.
-                             (opt.getLabel() + suffix++), // Key using Label + Suffix Counter  
-                             opt);    
+                // it would every script statement would add 1, so 3 would lead to 30000.
+                (opt.getLabel() + suffix++), // Key using Label + Suffix Counter  
+                opt);    
         }
         
         List<String> sortKeys = new List<String>();
