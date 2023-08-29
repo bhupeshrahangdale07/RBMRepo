@@ -127,11 +127,13 @@ public with sharing class RecordPageController {
                             objWrapper.Value = '-';
                         }
                         lstAllDetails.add(objWrapper);
+                        
                         //if(fieldtype.getType() == Schema.DisplayType.Date) 
                         // else if(fieldtype.getType() == Schema.DisplayType.DateTime) 
                         count++;
                     }
                 }
+                system.debug('List of Wrapper- '+lstAllDetails);
             }
             //lstAllDetails.sort();
         }

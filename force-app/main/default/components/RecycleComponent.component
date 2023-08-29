@@ -131,6 +131,30 @@
         .slds-icon-[action-sprite]-[delete] {
             bgcolor: black;
         }
+        
+        .helpTooltip{
+            position:relative;
+            right:0%
+        }
+        
+        .helpTooltip .imgHelpText{
+            width:13px;
+            margin-top: -19px;
+            position: absolute;
+            left: 60px;
+        }
+        
+        .helpTooltipText {
+            display: inline-block !important;
+            position: absolute !important;
+        	left: 42px;
+        	top: 10px;
+        }
+        
+        .slds-scope .slds-popover--tooltip{
+        	max-width: fit-content !important;
+        }
+        
     </style>
 
     <body>
@@ -163,6 +187,28 @@
                 <apex:actionFunction id="actPurgeSelected" name="actPurgeSelected" action="{!DeleteFromRecyclebin}" status="Processing" reRender="frm"
                     oncomplete="overridePageMessages();" />
                 <div id="SearchFilters" style="margin-top:20px;">
+                    <!-- Search In selection -->
+                    <div class="slds-form-element slds-size--2-of-7">
+                        <label class="slds-form-element__label">
+                            Search In:
+                        </label>
+                        <apex:outputPanel layout="block">
+                            <div class="helperText--container helpTooltip">
+                                <img class="imgHelpText helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}"/>
+                                <div class="slds-popover slds-popover--tooltip slds-hide slds-nubbin_top-left" role="tooltip" id="help">
+                                    <div class="slds-popover__body"><pre>{!$Label.Search_In_Helptext}</pre></div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                        <div class="slds-form-element__control">
+                            <apex:selectRadio value="{!strSearchIn}">
+                                <apex:selectOptions value="{!rowOptions}">
+                                </apex:selectOptions>
+                            </apex:selectRadio>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Filter -->
                     <div class="slds-form--compound" style="margin-top:20px;">
                         <div class="slds-form-element__group">
                             <div class="slds-form-element__row">
@@ -242,17 +288,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="slds-form-element slds-size--2-of-7">
-                        <label class="slds-form-element__label">
-                            Search In:
-                        </label>
-                        <div class="slds-form-element__control">
-                            <apex:selectRadio value="{!strSearchIn}">
-                                <apex:selectOptions value="{!rowOptions}">
-                                </apex:selectOptions>
-                            </apex:selectRadio>
-                        </div>
-                    </div>
+                    
                 </div>
                 <div id="SearchResults" style="margin-top:20px;">
                     <div id="page_buttons" style="margin-top:10px;text-align:center;">
@@ -309,8 +345,11 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="javascript:void(0);" data-url="/apex/rbin__RecordPage?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}"
-                                                onclick="openRecord(this);">{!result.Name}</a>
+                                            
+                                            <apex:outputLink value="{!IF(result.isPermanentlyDeleted == 'No', '/apex/rbin__RecordPage', '/apex/PreviesPageForPermanentDeletedData')}?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}">
+                                               {!result.Name} 
+                                            </apex:outputLink>
+                                            
                                         </td>
                                         <td style="text-align: center;">
                                             {!result.isPermanentlyDeleted}
@@ -525,6 +564,15 @@
                         $(this).blur();
                         return false;
                     }
+                
+                $(document).on('mouseenter','.imgHelpText',function(){
+                    $(this).siblings('div.slds-popover').removeClass('slds-hide');
+                    $(this).siblings('div.slds-popover').addClass('helpTooltipText');
+                });
+                $(document).on('mouseleave','.imgHelpText',function(){
+                    $(this).siblings('div.slds-popover').addClass('slds-hide');
+                    $(this).siblings('div.slds-popover').removeClass('helpTooltipText');
+                });
                 </script>
             </apex:form>
             <script>

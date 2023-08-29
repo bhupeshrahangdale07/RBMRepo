@@ -1,0 +1,42 @@
+<template>
+
+    <lightning-layout multiple-rows>
+        <lightning-layout-item size="12">
+            
+            <lightning-card class="card-styling" variant="narrow">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_3-of-4">
+                        <div class="slds-media slds-no-space slds-grow">
+                            <div class="slds-media__figure slds-m-bottom_small slds-m-left_large">
+                                <lightning-icon icon-name="custom:custom8"></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <p class="slds-text-title_caps">{objName}</p>
+                                <h1 class="slds-page-header__title slds-m-right--small slds-align-middle slds-truncate">{recName}</h1>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+            </lightning-card>
+            <div style="text-align:center;" class="slds-m-top_small">
+            <lightning-button label="Restore" variant="brand"></lightning-button>
+            <lightning-button label="Cancel" variant="brand"  onclick={cancelHandler} class="slds-m-left_x-small"></lightning-button>
+        </div>
+        
+        <div class="slds-grid slds-wrap">   
+        <template for:each={recordForPreview} for:item="record">
+            <div key={record.Id} class="slds-col slds-size_6-of-12 slds-col--padded">
+            <div  class="slds-form-element slds-has-divider--bottom">
+                <label class="slds-form-element__label">{record.FieldLabel}</label>
+                <div class="slds-form-element__control">
+                    {record.Value}
+                </div>
+            </div>
+        </div>
+        </template>
+    </div> 
+        </lightning-layout-item>
+
+    </lightning-layout>
+
+</template>
