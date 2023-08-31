@@ -17,9 +17,9 @@ public with sharing class permanentDeletedRecordPreviewController {
         system.debug('JsonData-'+deletedData);
         Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
         
-        Map<String, Object> dataMap = new Map<String, Object>();
+        //Map<String, Object> dataMap = new Map<String, Object>();
         for (String key : jsonMap.keySet()) {
-            if (key != 'attributes' && key != 'BillingAddress' ) {
+            if (key != 'attributes' && key != 'BillingAddress' && key !='ShippingAddress') {
                  wrpRecordDetail objwr=new wrpRecordDetail();
                 objwr.FieldLabel=key;
                 system.debug('Label- '+key);
@@ -40,6 +40,38 @@ public with sharing class permanentDeletedRecordPreviewController {
 
         return objwrpDeletedData;
 
+    }
+
+    @AuraEnabled
+    public static Id restoreRecord(List<wrpRecordDetail> restoreData,string objName){
+        try {
+            sObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
+           set<String> allFieldName = new set<String>();
+            Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
+            for(Schema.SobjectField field : allMap.values())
+            {
+                
+                Schema.DescribeFieldResult dfr = field.getDescribe();
+                if(dfr.isCreateable() && dfr.isUpdateable())
+                    allFieldName.add(dfr.getName());
+            
+            }
+            system.debug('Set of fields- '+allFieldName);
+
+            for(wrpRecordDetail rd:restoreData){
+                if(allFieldName.contains(rd.FieldLabel) && rd.FieldLabel!='Id'){
+                obj.put(rd.FieldLabel , rd.Value);
+                
+            }
+            }
+            system.debug('Object to insert- '+obj);
+            insert obj;
+            system.debug('New record Id- '+obj.Id);
+            return obj.Id;
+            
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
     
     public class wrpDeletedData{
