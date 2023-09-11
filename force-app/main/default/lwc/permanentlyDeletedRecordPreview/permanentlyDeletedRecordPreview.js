@@ -63,7 +63,7 @@ cancelHandler(){
 
 restoreHandler(){
 console.log('In restore Handler');
-    restoreRecord({restoreData:this.recordForPreview, objName:this.objName})
+    restoreRecord({recordId:this.recId})
     .then((result)=>{
         console.log('Result- '+result);
         window.location.assign('/'+result);

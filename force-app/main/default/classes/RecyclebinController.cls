@@ -385,7 +385,7 @@ global with sharing class RecyclebinController {
         
         List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
         List<wrapResults> lsttempWrap = new List<wrapResults>();
-        
+        Integer count = 0;
         for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {
         
             wrapResults objW = new wrapResults();
@@ -399,10 +399,20 @@ global with sharing class RecyclebinController {
             objw.isPermanentlyDeleted = 'Yes';
             
             // Add the populated wrapper object to the list
+            //lsttempWrap.add(objW);
+            if(count == 1000) {
+                lstwrapResults.add(lsttempWrap);
+                lsttempWrap = new List<wrapResults>();
+                count = 0;
+            }
             lsttempWrap.add(objW);
+            //listForBothSearch.add(objw);
+            count++;
         }
-        
+        if(lsttempWrap.size()>0){
         lstwrapResults.add(lsttempWrap);
+        
+    }
     }
     
     //method to search the deleted records based on the search critiera specified by the user
@@ -456,13 +466,17 @@ global with sharing class RecyclebinController {
     //method to restore the selected records
     public void UndeleteSelectedRecords(){
         try {
+            set<String> recordIds =new set<String>();
+            
             List<Sobject> lstSobjecttoUndelete = new List<Sobject>();
             for(List<wrapResults> lstWrapper: lstwrapResults){
                 for(wrapResults objW: lstWrapper) {
-                    if(objW.isCheck) {
+                    if(objW.isCheck && objw.isPermanentlyDeleted == 'No') {
                         Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
                         objS.Put('Id',objW.Id);
                         lstSobjecttoUndelete.add(objS);
+                    }else if(objW.isCheck && objw.isPermanentlyDeleted == 'Yes'){
+                        recordIds.add(objw.Id);
                     }
                 }
             }
@@ -487,7 +501,76 @@ global with sharing class RecyclebinController {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + ' selected record(s) are in process of getting purged.',''));
                 } 
                 SearchRecords();
-            } else {
+            } else if(!recordIds.isEmpty()){
+
+                List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
+                List<String> recordDataList=new List<String>();
+                Map<Sobject,String> mapRecordData= new Map<Sobject,String>();
+                set<String> allFieldName = new set<String>();
+                List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
+                List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
+            for(rbin__Deleted_Data__c deletedRecord:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
+                //recordDataList.add(deletedRecord.rbin__Data__c);
+                Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedRecord.rbin__Data__c);
+                allRecordList.add(deletedRecord);
+                Sobject obj = Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).newSObject();
+                Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
+
+            for(Schema.SobjectField field : allMap.values())
+            {
+                Schema.DescribeFieldResult dfr = field.getDescribe();
+                if(dfr.isCreateable() && dfr.isUpdateable())
+                    allFieldName.add(dfr.getName());
+            }
+            for(String fieldName:jsonMap.keySet()){
+            if (allFieldName.contains(fieldName) && fieldName != 'Id') {
+                Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
+                if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
+                    Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
+                    obj.put(fieldName, fieldValue);
+                } else {
+                    obj.put(fieldName, jsonMap.get(fieldName));
+                }
+                
+            }
+        }
+        sobjecttoUndeleteList.add(obj);
+            }
+            system.debug('mapRecordData- '+mapRecordData);
+            system.debug('Object to insert- '+sobjecttoUndeleteList);
+            Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, false);
+
+            Integer successcount = 0;
+                Integer failcount = 0;
+                for (Integer i = 0; i < srList.size(); i++) {
+                    if (srList[i].isSuccess()) {
+                        successcount++;
+                    } else {
+                        System.debug('**' + srList[i].getErrors());
+                        failcount++;
+                    }
+                
+                    // Check if the corresponding record should be deleted
+                    if (srList[i].isSuccess()) {
+                        system.debug('allRecordList- '+allRecordList);
+                        rbin__Deleted_Data__c deleteRecord = allRecordList[i];
+                        system.debug('deletedRecord-> '+deleteRecord);
+                        // Perform the delete operation on the record
+                        // (you can add more checks or conditions here if needed)
+                        recordtoDelete.add(deleteRecord);
+                    }
+                }
+                //undelete lstSobjecttoUndelete;
+                if(successcount > 0) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) have been restored successfully.',''));
+                }
+                if(failcount > 0) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + ' record(s) failed to restore.',''));
+                } 
+                delete recordtoDelete;
+                SearchRecords();
+        //system.debug('New record Id- '+obj.Id);
+            }else {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record to undelete.',''));
             }
         } catch (Exception ex) {
@@ -505,11 +588,13 @@ global with sharing class RecyclebinController {
     public void UndeleteAllRecords(){
         try {
             if(lstwrapResults.size() > 0){
+                set<String> recordIds =new set<String>();
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
             
                 //added by RP on 22-11-2018
                 if(lstwrapResults.size() > 1) {
+                    system.debug('for 1000 records');
                     List<string> lstUndeleteAllRecords = new List<string>();
                     string strval = '';
                     for(List<wrapResults> lstWrapper: lstwrapResults){
@@ -528,9 +613,14 @@ global with sharing class RecyclebinController {
                 
                 for(List<wrapResults> lstWrapper: lstwrapResults){
                     for(wrapResults objW: lstWrapper) {
+                        if(objW.isPermanentlyDeleted == 'No'){    
                         Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
                         objS.Put('Id',objW.Id);
                         lstUndeleteAll.add(objS);
+                    }else if(objw.isPermanentlyDeleted == 'Yes'){
+                        system.debug('collecting prmnt deleted Ids');
+                        recordIds.add(objw.Id);
+                    }
                     }
                 }
                 if(lstUndeleteAll.size() > 0) {
@@ -538,6 +628,76 @@ global with sharing class RecyclebinController {
                     //undelete lstUndeleteAll;
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' All records have been restored successfully.',''));
                     SearchRecords();
+                } else if(!recordIds.isEmpty()){
+                    system.debug('In undelete prmnant function');
+                List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
+                List<String> recordDataList=new List<String>();
+                Map<Sobject,String> mapRecordData= new Map<Sobject,String>();
+                set<String> allFieldName = new set<String>();
+                List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
+                List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
+            for(rbin__Deleted_Data__c allRecords:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
+                allRecordList.add(allRecords);
+                
+        //         Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(allRecords.rbin__Data__c);
+        //         Sobject obj = Schema.getGlobalDescribe().get(allRecords.rbin__Object_Name__c).newSObject();
+        //         Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
+
+        //     for(Schema.SobjectField field : allMap.values())
+        //     {
+        //         Schema.DescribeFieldResult dfr = field.getDescribe();
+        //         if(dfr.isCreateable() && dfr.isUpdateable())
+        //             allFieldName.add(dfr.getName());
+        //     }
+        //     for(String fieldName:jsonMap.keySet()){
+        //     if (allFieldName.contains(fieldName) && fieldName != 'Id') {
+        //         Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
+        //         if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
+        //             Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
+        //             obj.put(fieldName, fieldValue);
+        //         } else {
+        //             obj.put(fieldName, jsonMap.get(fieldName));
+        //         }
+                
+        //     }
+        // }
+        sObject objt=UtilClass.createFields(allRecords.rbin__Data__c,allRecords.rbin__Object_Name__c);
+        sobjecttoUndeleteList.add(objt);
+            }
+            system.debug('mapRecordData- '+mapRecordData);
+            system.debug('Object to insert- '+sobjecttoUndeleteList);
+            Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, false);
+
+            Integer successcount = 0;
+                Integer failcount = 0;
+                for (Integer i = 0; i < srList.size(); i++) {
+                    if (srList[i].isSuccess()) {
+                        successcount++;
+                    } else {
+                        System.debug('**' + srList[i].getErrors());
+                        failcount++;
+                    }
+                
+                    // Check if the corresponding record should be deleted
+                    if (srList[i].isSuccess()) {
+                        system.debug('allRecordList- '+allRecordList);
+                        rbin__Deleted_Data__c deleteRecord = allRecordList[i];
+                        system.debug('deletedRecord-> '+deleteRecord);
+                        // Perform the delete operation on the record
+                        // (you can add more checks or conditions here if needed)
+                        recordtoDelete.add(deleteRecord);
+                    }
+                }
+                //undelete lstSobjecttoUndelete;
+                if(successcount > 0) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' record(s) have been restored successfully.',''));
+                }
+                if(failcount > 0) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + '  record(s) failed to restore.',''));
+                } 
+                delete recordtoDelete;
+                SearchRecords();
+
                 }
             } else {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record to undelete.',''));
@@ -552,11 +712,15 @@ global with sharing class RecyclebinController {
     //method to purge the selected records from the recycle bin
     public void DeleteFromRecyclebin(){
         try {
+            
             List<Id> lstIdstoDelete = new List<Id>();
             for(List<wrapResults> lstWrapper: lstwrapResults){
                 for(wrapResults objW: lstWrapper) {
-                    if(objW.isCheck) {
+                    if(objW.isCheck && objw.isPermanentlyDeleted == 'No') {
                         lstIdstoDelete.add(objW.Id);
+                    }else{
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Purge is not available in Permanent Deleted Records.',''));
+                        
                     }
                 }
             } 
@@ -566,8 +730,16 @@ global with sharing class RecyclebinController {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning,' Salesforce runs a process on a scheduled basis that physically deletes records that have been deleted from the recycle bin, if that process has not run yet, you will still see the records here.',''));
                 
             } else {
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record.',''));
+                for(List<wrapResults> lstWrapper: lstwrapResults){
+                    for(wrapResults objW: lstWrapper) {
+                        if(objw.isPermanentlyDeleted == 'No') {
+                            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record.',''));
+                        }
+                    }
+                } 
+                
             }
+            
             SearchRecords();
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
