@@ -1,12 +1,14 @@
 public with sharing class UtilClass {
     
     
-    public static Sobject createFields(string recordData, string objName){
+    public static List<Sobject> createFields(set<string> recIds){
         try {
             system.debug('In util class');
+            List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
             set<String> allFieldName = new set<String>();
-            Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(recordData);
-                Sobject obj = Schema.getGlobalDescribe().get(objName).newSObject();
+            for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recIds]){
+            Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(rec.rbin__Data__c);
+                Sobject obj = Schema.getGlobalDescribe().get(rec.rbin__Object_Name__c).newSObject();
                 Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
 
             for(Schema.SobjectField field : allMap.values())
@@ -16,7 +18,9 @@ public with sharing class UtilClass {
                     allFieldName.add(dfr.getName());
             }
             for(String fieldName:jsonMap.keySet()){
+
             if (allFieldName.contains(fieldName) && fieldName != 'Id') {
+
                 Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
                 if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
                     Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
@@ -26,9 +30,12 @@ public with sharing class UtilClass {
                 }
                 
             }
-            
+
+            }
+            allFieldName = null;
+            sobjecttoUndeleteList.add(obj);
         }
-        return obj;
+        return sobjecttoUndeleteList;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

@@ -46,6 +46,13 @@ public with sharing class trackPermanentDalateDataController {
     public static string saveTrackingObject(List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> objNameList){
         try {
             List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> prmntObjectTrackingList = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+
+            // Query for the maximum existing serial number
+            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c];
+            Decimal maxSerialNumber = (Decimal)ar[0].get('maxRecordNo');
+            system.debug('Max Record No- '+maxSerialNumber);
+    // Increment by 1 to get the next serial number
+    Decimal nextSerialNumber = maxSerialNumber + 1;
             
             for(rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c objName : objNameList){
 
@@ -53,12 +60,14 @@ public with sharing class trackPermanentDalateDataController {
 
                 prmntTrckObj.Name = objName.Name;
                 system.debug('Name'+objName.Name);
+                // Set the calculated serial number
+            prmntTrckObj.rbin__Record_No__c = nextSerialNumber++;
 
                 prmntObjectTrackingList.add(prmntTrckObj);
                 
             }
             insert prmntObjectTrackingList;
-
+            //updateSerialNumbers();
             return 'Setting Updated Successfully!';
             
         } catch (Exception e) {
@@ -88,9 +97,26 @@ public with sharing class trackPermanentDalateDataController {
             system.debug('Delete record list-'+deleteObjectRecordList);
        // }
         delete deleteObjectRecordList;
+        updateSerialNumbers();
         return 'Setting updated Successfully!';
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+    private static void updateSerialNumbers() {
+        List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> recordsToUpdate = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+        
+        // Query all records ordered by rbin__Record_No__c
+        List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c ORDER BY Name ASC];
+        
+        // Update the serial numbers
+        Integer currentSerialNumber = 1;
+        for (rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c record : allRecords) {
+            record.rbin__Record_No__c = currentSerialNumber++;
+            recordsToUpdate.add(record);
+        }
+        
+        // Perform the update
+        update recordsToUpdate;
     }
 }

@@ -29,24 +29,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     };
     
     
-
-    // connectedCallback(){
-    //     console.log('In connected callback');
-    //     getAllObjectName()
-    //     .then((result)=>{
-    //         console.log('List of existing-',JSON.stringify(this.objectRecordList));
-    //         for(let key in result){
-    //            // this.getAllObjectList.push({label : key ,value : key});
-    //         //    if (!this.objectRecordList.some(obj => obj.Name === key)) {
-    //         //     this.getAllObjectList.push({ label: key, value: key });
-    //         // }
-    //         }
-    //     })
-    //     .catch((error)=>{
-    //         console.log('Error found for Object List-'+error);
-    //     })
-        
-    // }
     @wire(fetchAllRecords)
     wireAllRecords(result){
         console.log('In wire 1');
