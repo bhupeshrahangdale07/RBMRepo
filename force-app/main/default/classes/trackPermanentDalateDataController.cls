@@ -71,7 +71,9 @@ public with sharing class trackPermanentDalateDataController {
             return 'Setting Updated Successfully!';
             
         } catch (Exception e) {
+            system.debug('Error in Line Number-'+e.getLineNumber());
             throw new AuraHandledException(e.getMessage());
+            
 
         }
     }

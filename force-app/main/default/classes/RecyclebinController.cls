@@ -28,6 +28,7 @@ public integer recordcount {get; set;}
 public String strSearchIn { get; set; }
 private map<string,string> mapObjectNames = new map<string,string>();
 public set<string> setRecordIds;
+public List<Id> lstIdstoDelete= new List<Id>();
 
 //Constructor method below
 public RecyclebinController(){
@@ -42,6 +43,7 @@ public RecyclebinController(){
     recordcount = 0;
     CheckAdminUser();
     strSearchIn='RecycleBin';
+    
     
     set<string>  setFieldName = new set<string>();
     setFieldName.add('name');
@@ -326,9 +328,11 @@ public void searchInRecycleBin(){
                 count = 0;
             
             }
+            if(!lstIdstoDelete.contains(objw.Id)){
             lsttempWrap.add(objW);
             listForBothSearch.add(objw);
             count++;
+        }
         }
         
         if(lsttempWrap.size() > 0) {
@@ -396,6 +400,7 @@ public void searchInPermanentlyDeletedData(){
     List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
     List<wrapResults> lsttempWrap = new List<wrapResults>();
     Integer count = 0;
+    recordcount=permanentDeletedDataList.size();
     for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {
     
         wrapResults objW = new wrapResults();
@@ -404,6 +409,10 @@ public void searchInPermanentlyDeletedData(){
         objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
         objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
         objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
+        // SObjectType objType = Schema.getGlobalDescribe().get(pdd.rbin__Object_Name__c);
+        // DescribeSObjectResult describe = objType.getDescribe();
+        //objw.Type = describe.getLabel();
+        
         objW.DeletedBy = pdd.rbin__Deleted_By__c != null && pdd.rbin__Deleted_By__r.Name != null ? string.valueof(pdd.rbin__Deleted_By__r.Name) : '';
         objW.DeletedOn = pdd.rbin__Deleted_Date__c != null ? DateTime.valueof(pdd.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
         objw.isPermanentlyDeleted = 'Yes';
@@ -701,11 +710,12 @@ public void UndeleteAllRecords(){
 public void DeleteFromRecyclebin(){
     try {
         
-        List<Id> lstIdstoDelete = new List<Id>();
+        //List<Id> lstIdstoDelete = new List<Id>();
         for(List<wrapResults> lstWrapper: lstwrapResults){
             for(wrapResults objW: lstWrapper) {
                 if(objW.isCheck && objw.isPermanentlyDeleted == 'No') {
                     lstIdstoDelete.add(objW.Id);
+                    
                 }else if(objW.isPermanentlyDeleted == 'Yes'){
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Purge is not available in Permanent Deleted Records.',''));
                     
@@ -716,7 +726,26 @@ public void DeleteFromRecyclebin(){
             Database.EmptyRecyclebin(lstIdstoDelete);
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' Selected records have been deleted successfully.',''));
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning,' Salesforce runs a process on a scheduled basis that physically deletes records that have been deleted from the recycle bin, if that process has not run yet, you will still see the records here.',''));
+            system.debug('lstwrapResults- '+lstwrapResults);
+            for (List<wrapResults> lstWrapper : lstwrapResults) {
+                List<wrapResults> itemsToKeep = new List<wrapResults>();
+                
+                for (wrapResults result : lstWrapper) {
+                    String s = result.Id;
+                    system.debug('Record Id to remove- ' + s);
+                    
+                    if (!lstIdstoDelete.contains(s)) {
+                        // Add the item to the list of items to keep
+                        itemsToKeep.add(result);
+                    }
+                }
+                
+                // Assign the filtered list back to lstWrapper
+                lstWrapper.clear();
+                lstWrapper.addAll(itemsToKeep);
+            }
             
+           // SearchRecords();
         } else {
             for(List<wrapResults> lstWrapper: lstwrapResults){
                 for(wrapResults objW: lstWrapper) {

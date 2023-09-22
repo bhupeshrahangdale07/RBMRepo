@@ -1,7 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import HideLightningHeader from '@salesforce/resourceUrl/noHeader';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { CurrentPageReference } from 'lightning/navigation';
 import { loadStyle, loadScript } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
 import showPreviewPage from '@salesforce/apex/permanentDeletedRecordPreviewController.showPreviewPage';

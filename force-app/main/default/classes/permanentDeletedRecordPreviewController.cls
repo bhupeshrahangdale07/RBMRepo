@@ -16,13 +16,15 @@ public with sharing class permanentDeletedRecordPreviewController {
         
         system.debug('JsonData-'+deletedData);
         Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
-        
+
+        // Query for object describe information
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
         //Map<String, Object> dataMap = new Map<String, Object>();
         for (String key : jsonMap.keySet()) {
-            if (key != 'attributes' && key != 'BillingAddress' && key !='ShippingAddress') {
+            if (key != 'attributes' && key != 'BillingAddress' && key !='ShippingAddress' && key !='MailingAddress') {
                  wrpRecordDetail objwr=new wrpRecordDetail();
-                objwr.FieldLabel=key;
-                system.debug('Label- '+key);
+                objwr.FieldLabel=fieldMap.get(key).getDescribe().getLabel();
+                system.debug('Label- '+objwr.FieldLabel);
                 if(jsonMap.get(key) != null) {
                     system.debug('Value- '+String.valueOf(jsonMap.get(key)));
                             objwr.Value = String.valueOf(jsonMap.get(key));
@@ -79,26 +81,6 @@ public with sharing class permanentDeletedRecordPreviewController {
                 }
             }
 
-
-        //     sObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
-        //    set<String> allFieldName = new set<String>();
-        //     Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
-        //     for(Schema.SobjectField field : allMap.values())
-        //     {
-                
-        //         Schema.DescribeFieldResult dfr = field.getDescribe();
-        //         if(dfr.isCreateable() && dfr.isUpdateable())
-        //             allFieldName.add(dfr.getName());
-            
-        //     }
-        //     system.debug('Set of fields- '+allFieldName);
-
-        //     for(wrpRecordDetail rd:restoreData){
-        //         if(allFieldName.contains(rd.FieldLabel) && rd.FieldLabel!='Id'){
-        //         obj.put(rd.FieldLabel , rd.Value);
-                
-        //     }
-        //     }
             system.debug('Object to insert- '+obj);
         insert obj;
         delete deletedRecord;
@@ -134,7 +116,7 @@ public with sharing class permanentDeletedRecordPreviewController {
             //FieldAPIName = '';
             FieldLabel = '';
             Value = '';
-           // isHideRow = false;
+           
         }
     } 
 }

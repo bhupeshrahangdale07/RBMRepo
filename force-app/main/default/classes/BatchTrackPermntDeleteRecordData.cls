@@ -2,6 +2,7 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
     
     public List<rbin__Track_Batch_Process__c> lstBatchProcess = new List<rbin__Track_Batch_Process__c>();
     private Integer recordNo;
+    private String objectName;
     
     public BatchTrackPermntDeleteRecordData(){
         this.recordNo=1;  
@@ -21,8 +22,10 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
         
         List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> objList=[Select Id, Name,rbin__Record_No__c From rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c Where rbin__Record_No__c=:recordNo Limit 1];
         string objName=(string)objList[0].get('Name');
+        objectName=objName;
         system.debug('objList'+objList);
         system.debug('Record No- '+recordNo);
+        system.debug('objectName--> '+objectName);
         
         String myQuery;
         SObjectType sObjType = ((SObject) Type.forName(objName).newInstance()).getSObjectType();
@@ -55,47 +58,21 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
         for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
             mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
         }
-       /* lstBatchProcess = new List<rbin__Track_Batch_Process__c>([
-            SELECT
-            rbin__Last_Run_Batch_Time__c
-            FROM rbin__Track_Batch_Process__c
-            WHERE Name = 'Track Permanent Deleted Data Batch'
-        ]);
         
-        for(rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c cs:objList){
-            system.debug('Name-'+cs.Name);
-            objNames.add(cs.Name); 
-            
-            string objName=cs.Name;
-        }
-        
-        for (String objectName : objNames) {
-            SObjectType sObjType = ((SObject) Type.forName(objectName).newInstance()).getSObjectType();
-            Schema.SObjectType convertType = Schema.getGlobalDescribe().get(objectName);
-            SObject genericObject = convertType.newSObject();
-            DescribeSObjectResult describeResult = genericObject.getSObjectType().getDescribe();
-            List<String> fieldNames = new List<String>(describeResult.fields.getMap().keySet());
-            
-            if(lstBatchProcess.size() > 0 && lstBatchProcess[0].Last_Run_Batch_Time__c != null){
-                DateTime lastRunBatch = lstBatchProcess[0].rbin__Last_Run_Batch_Time__c;
-                String myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + describeResult.getName() + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch ALL ROWS';
-                system.debug('Query- '+myQuery);
-                //recordList.add(Database.query(myQuery));
-                
-                for(SObject q:Database.query(myQuery)){
-                    recordList.add(q);
-                    system.debug('Query Result- '+q);
-                }
-                system.debug('Record List-'+recordList);
-            }
-            String jsonData = JSON.serializePretty(recordList);
-        }*/
+       // Schema.DescribeSObjectResult objDescribe;
         String jsonData = JSON.serializePretty(recordList);
+        //List<Schema.SObjectType> childObjects=new List<Schema.SObjectType>();
+        
         if(recordList.size()>0){
             for (SObject rec : recordList) {
-                recordMap.put(rec.Id, rec);
+                recordMap.put(rec.Id, rec); 
             } 
-            
+           
+           /* Schema.DescribeSObjectResult objectDescribe = Schema.getGlobalDescribe().get(objectName).getDescribe();
+            List<Schema.ChildRelationship> childRelations = objDescribe.getChildRelationships();
+            for(ChildRelationship c:childRelations){
+                childObjects.add(c.getChildSObject());
+            }*/
             system.debug('Map of Records- '+recordMap);
             
             set<Id> existRecordIds= new set<Id>();
@@ -105,10 +82,9 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
             }
             
             for (Id recordId : recordMap.keySet()) {
-                //create a record only if it's of the same type as the objectName
+                
                 SObject rec = recordMap.get(recordId);
                 
-                // if (rec.getSObjectType() == objct) {
                 if(!existRecordIds.contains(rec.Id)){
                     if(mapFieldName.containsKey(String.valueOf(rec.getSObjectType()))){
                         
@@ -133,7 +109,7 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
                     system.debug('Deleted Data- > '+JSON.serializePretty(rec));
                     newRecordList.add(newObject);
                     
-                    //}
+                    
                 }
             }
             
@@ -165,17 +141,15 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
                 }
                 updateRecordList.add(exObj);
             }
-            
-            
-            
+             
         }
+        
         system.debug('Updated List-'+updateRecordList);
         Database.Insert(newRecordList,false);
         Database.Update(updateRecordList,false);
+        
     }
     public void finish(Database.BatchableContext bc){
-        
-        
         List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> lstallObjRecords=[select id, Name from rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c];
         recordNo++;
         if(recordNo<=lstallObjRecords.size()){
@@ -186,9 +160,7 @@ public class BatchTrackPermntDeleteRecordData Implements Database.Batchable<sobj
         objBatch.rbin__Last_Run_Batch_Time__c = System.now();
         update objBatch;
         }
-        
-        
-        
+           
     }
     
     

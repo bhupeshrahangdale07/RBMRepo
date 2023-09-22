@@ -27,11 +27,13 @@ global with sharing class RecycleBinBatchProgressCtrl {
         if(batchComponentLabel== null) {
             batchComponentLabel = 'Batch Apex Jobs';
         }
+        String[] targetClassNames = new String[]{'BatchMassUndeleteRecords', 'BatchMassRestoreAllPrmntDeleted'};
+
  
         //Query the Batch apex jobs
         for(AsyncApexJob a : [select TotalJobItems, Status, NumberOfErrors, MethodName, JobType, JobItemsProcessed, Id, 
                                     CreatedDate, CreatedById, CompletedDate, ApexClassId, ApexClass.Name 
-                                    From AsyncApexJob where ApexClass.Name ='BatchMassUndeleteRecords' and jobType ='BatchApex' order by CreatedDate desc limit :numberOfJobs]) {
+                                    From AsyncApexJob where ApexClass.Name IN : targetClassNames and jobType ='BatchApex' order by CreatedDate desc limit :numberOfJobs]) {
             Double itemsProcessed = a.JobItemsProcessed;
             Double totalItems = a.TotalJobItems;
  
