@@ -14,8 +14,11 @@ public with sharing class UtilClass {
             for(Schema.SobjectField field : allMap.values())
             {
                 Schema.DescribeFieldResult dfr = field.getDescribe();
-                if(dfr.isCreateable() && dfr.isUpdateable())
+                if(dfr.isCreateable() && dfr.isUpdateable()){
                     allFieldName.add(dfr.getName());
+                }else if(dfr.getRelationshipOrder() == 1 || dfr.getRelationshipOrder() == 0){
+                    allFieldName.add(dfr.getName());
+                }
             }
             for(String fieldName:jsonMap.keySet()){
 
@@ -26,13 +29,15 @@ public with sharing class UtilClass {
                     Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                     obj.put(fieldName, fieldValue);
                 } else {
+                    system.debug('Name of Field-'+fieldName);
                     obj.put(fieldName, jsonMap.get(fieldName));
                 }
                 
             }
 
             }
-            allFieldName = null;
+            //allFieldName = null;
+            system.debug('Object- '+obj);
             sobjecttoUndeleteList.add(obj);
         }
         return sobjecttoUndeleteList;

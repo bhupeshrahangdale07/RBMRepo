@@ -64,7 +64,10 @@ console.log('In restore Handler');
     restoreRecord({recordId:this.recId})
     .then((result)=>{
         console.log('Result- '+result);
-        window.location.assign('/'+result);
+        if(result != null){
+            window.location.assign('/'+result);
+        }
+        
     }).catch((error)=>{
         console.log('Error- '+JSON.stringify(error));
     })

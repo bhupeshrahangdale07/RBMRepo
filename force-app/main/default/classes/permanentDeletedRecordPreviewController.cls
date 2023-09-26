@@ -11,14 +11,14 @@ public with sharing class permanentDeletedRecordPreviewController {
        List<wrpRecordDetail> lstDeletedRecord = new List<wrpRecordDetail>();
         rbin__Deleted_Data__c deletedRecord=[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
         string deletedData=deletedRecord.rbin__Data__c;
-        string objName=deletedRecord.rbin__Object_Name__c;
+        string objName=(String)Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().getLabel();
         string recName=deletedRecord.rbin__Record_Name__c;
         
         system.debug('JsonData-'+deletedData);
         Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
         // Query for object describe information
-        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().fields.getMap();
         //Map<String, Object> dataMap = new Map<String, Object>();
         for (String key : jsonMap.keySet()) {
             if (key != 'attributes' && key != 'BillingAddress' && key !='ShippingAddress' && key !='MailingAddress') {
@@ -49,23 +49,23 @@ public with sharing class permanentDeletedRecordPreviewController {
         try {
 
             set<String> allFieldName = new set<String>();
-            rbin__Deleted_Data__c deletedRecord=[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
-            string deletedData=deletedRecord.rbin__Data__c;
-            string objName=deletedRecord.rbin__Object_Name__c;
-            string recName=deletedRecord.rbin__Record_Name__c;
+            rbin__Deleted_Data__c previewRecord=[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
+            string deletedData=previewRecord.rbin__Data__c;
+            string objName=previewRecord.rbin__Object_Name__c;
+            string recName=previewRecord.rbin__Record_Name__c;
             
             system.debug('JsonData-'+deletedData);
             sObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
             Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
-            for(Schema.SobjectField field : allMap.values())
-            {
-                
+            For(Schema.SobjectField field : allMap.values()){
                 Schema.DescribeFieldResult dfr = field.getDescribe();
-                if(dfr.isCreateable() && dfr.isUpdateable())
+                if(dfr.isCreateable() && dfr.isUpdateable()){
                     allFieldName.add(dfr.getName());
-            
+                }else if(dfr.getRelationshipOrder() == 1 || dfr.getRelationshipOrder() == 0){
+                    allFieldName.add(dfr.getName());
+                }
             }
 
             for(String fieldName:jsonMap.keySet()){
@@ -82,10 +82,32 @@ public with sharing class permanentDeletedRecordPreviewController {
             }
 
             system.debug('Object to insert- '+obj);
-        insert obj;
-        delete deletedRecord;
-        system.debug('New record Id- '+obj.Id);
-            return obj.Id;
+
+            // TimeZone tz = UserInfo.getTimeZone();
+            //     DateTime dt = Datetime.now();
+            //     DateTime currentDt=dt.addSeconds((tz.getOffset(dt)/1000));
+
+                Database.SaveResult sr = Database.insert(obj, false);
+                Id recId;
+                if (sr.isSuccess()) {
+                    // Record was successfully inserted
+                    System.debug('Account ID: ' + sr.getId());
+                    recId = sr.getId();
+                    previewRecord.rbin__Restored_Record_Id__c =sr.getId();
+                    previewRecord.rbin__Has_Restored__c =true;
+                    //previewRecord.rbin__Restored_Date_Time__c =currentDt;
+                        update previewRecord;
+                        delete previewRecord;
+                        return recId;
+                } else {
+                    // Handle errors
+                    for (Database.Error error : sr.getErrors()) {
+                        System.debug('Error message: ' + error.getMessage());
+                    }
+                    return recId;
+                }
+                    // return sr.getId();
+        
             
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
