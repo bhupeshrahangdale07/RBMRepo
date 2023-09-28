@@ -83,9 +83,9 @@ public with sharing class permanentDeletedRecordPreviewController {
 
             system.debug('Object to insert- '+obj);
 
-            // TimeZone tz = UserInfo.getTimeZone();
-            //     DateTime dt = Datetime.now();
-            //     DateTime currentDt=dt.addSeconds((tz.getOffset(dt)/1000));
+            TimeZone tz = UserInfo.getTimeZone();
+                DateTime dt = Datetime.now();
+                DateTime currentDt=dt.addSeconds((tz.getOffset(dt)/1000));
 
                 Database.SaveResult sr = Database.insert(obj, false);
                 Id recId;

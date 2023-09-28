@@ -2,6 +2,7 @@ import { LightningElement, api, track, wire } from 'lwc';
 import HideLightningHeader from '@salesforce/resourceUrl/noHeader';
 import { loadStyle, loadScript } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
+import LightningAlert from 'lightning/alert';
 import showPreviewPage from '@salesforce/apex/permanentDeletedRecordPreviewController.showPreviewPage';
 import restoreRecord from '@salesforce/apex/permanentDeletedRecordPreviewController.restoreRecord';
 
@@ -15,6 +16,7 @@ export default class PermanentlyDeletedRecordPreview extends NavigationMixin(Lig
     objName;
     recName;
     isLoading;
+    baseURL;
 
     connectedCallback(){
         console.log('RecId>>'+this.recId);
@@ -47,28 +49,26 @@ recordPreview(){
 
 cancelHandler(){
     console.log('In cancel click Handler');
-    // this[NavigationMixin.GenerateUrl]({
-    //     type: 'standard__webPage',
-    //     attributes: {
-    //         url: '/apex/Recycle_Bin_Manager'
-    //     }
-    // });
-    this.isLoading=true;
-    window.location.assign('/apex/Recycle_Bin_Manager');
-    this.isLoading=false;
-
+    
+     window.location.assign('/lightning/n/rbin__Recycle_Bin_Manager');
+     
 }
 
 restoreHandler(){
 console.log('In restore Handler');
     restoreRecord({recordId:this.recId})
-    .then((result)=>{
+    .then(async(result)=>{
         console.log('Result- '+result);
         if(result != null){
             window.location.assign('/'+result);
         }
         
-    }).catch((error)=>{
+    }).catch(async(error)=>{
+        await  LightningAlert.open({
+            message: 'Failed to restore a record!!',
+            theme: 'error', 
+            label: 'Error', // this is the header text
+        });
         console.log('Error- '+JSON.stringify(error));
     })
 }
