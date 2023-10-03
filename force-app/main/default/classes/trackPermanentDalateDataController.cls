@@ -2,7 +2,6 @@ public with sharing class trackPermanentDalateDataController {
     
     
     @AuraEnabled(cacheable = true)
-
     public static Map<string,string> getAllObjectName(){
 
         Map<string,string> mapOfAllObj = new Map<string,string>();

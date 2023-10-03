@@ -61,6 +61,12 @@ console.log('In restore Handler');
         console.log('Result- '+result);
         if(result != null){
             window.location.assign('/'+result);
+        }else {
+            await  LightningAlert.open({
+                message: 'Failed to restore a record!!',
+                theme: 'error', 
+                label: 'Error', // this is the header text
+            });
         }
         
     }).catch(async(error)=>{

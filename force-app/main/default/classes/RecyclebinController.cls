@@ -27,7 +27,7 @@ global with sharing class RecyclebinController {
     public integer recordcount {get; set;}
     public String strSearchIn { get; set; }
     private map<string,string> mapObjectNames = new map<string,string>();
-    public set<string> setRecordIds;
+    public set<string> setRecordIds= new set<string>();
     public List<Id> lstIdstoDelete= new List<Id>();
     public List<wrapResults> lstBothSearchRslt;
 
@@ -151,6 +151,7 @@ global with sharing class RecyclebinController {
             String recordname = 'Name';
             Map<string,string>  mapFieldName = new Map<string,string>();
             
+             //TODO: Make it public and call from Constructor.
             for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
                 mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
             }
@@ -159,6 +160,7 @@ global with sharing class RecyclebinController {
                 recordname = mapFieldName.get(strSelectedObject);
             }
             
+            //TODO: Make it public
             rbin__Recycle_Bin_Setting__c rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();  
             
             string strobjectfields = 'Id';
@@ -219,7 +221,7 @@ global with sharing class RecyclebinController {
             searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT '+integer.valueof(System.label.Row_Count_Limit) +' ALL ROWS ';
             
             if(!string.IsBlank(searchquery)) {
-                List<SObject> searchList;
+                List<SObject> searchList; //TODO: Remove this unecessary list and use lstSobject this instead of it
                 searchList = Database.query(String.EscapeSingleQuotes(searchquery));
                 lstSobject.addall(searchList);
             }
@@ -238,6 +240,7 @@ global with sharing class RecyclebinController {
         List<wrapResults> lstBothSearchRslt = new List<wrapResults>();
         setRecordIds = new set<string>();
         
+        //TODO: Make it public variable
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
         Integer intLimit = 0;
         
@@ -329,9 +332,9 @@ global with sharing class RecyclebinController {
                     
                 }
                 
-                    lsttempWrap.add(objW);
-                    lstBothSearchRslt.add(objw);
-                    count++;
+                lsttempWrap.add(objW);
+                lstBothSearchRslt.add(objw);
+                count++;
                
             }
             
@@ -346,10 +349,11 @@ global with sharing class RecyclebinController {
         searchInRecycleBin();
         system.debug('setRecordIds- '+setRecordIds);
         lstwrapResults = new List<List<wrapResults>>();
-        set<string> lstRecIdsToRemove =new set<string>();
+        set<string> lstRecIdsToRemove =new set<string>(); //TODO: remove this 
         List<sObject> lstOfRecords= new List<sObject>();
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
         
+        //TODO: remove this 
         for(rbin__RecycleSearchObjects__c obj:lstCustomSettings){
             string queryStr = 'select id From '+obj.Name+' WHERE IsDeleted=true ALL ROWS';
             List<sObject> records=Database.query(queryStr);
@@ -357,6 +361,7 @@ global with sharing class RecyclebinController {
             system.debug('queryStr- '+queryStr);
         }
         
+        //TODO: remove this 
         for(sObject lst:lstOfRecords){
             lstRecIdsToRemove.add(lst.id);
         }
@@ -406,13 +411,13 @@ global with sharing class RecyclebinController {
         Integer count = 0;
         recordcount=permanentDeletedDataList.size();
         
-List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomizable = TRUE AND IsDeprecatedAndHidden = FALSE];
-
-for (EntityDefinition obj : objectInfoList) {
-    String objectAPIName = obj.QualifiedApiName;
-    String objectLabel = obj.Label;
-    mapObjectLabelName.put(objectAPIName,objectLabel);
-}
+        List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomizable = TRUE AND IsDeprecatedAndHidden = FALSE];
+        
+        for (EntityDefinition obj : objectInfoList) {
+            String objectAPIName = obj.QualifiedApiName;
+            String objectLabel = obj.Label;
+            mapObjectLabelName.put(objectAPIName,objectLabel);
+        }
         
         for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {    
             wrapResults objW = new wrapResults();
@@ -522,7 +527,7 @@ for (EntityDefinition obj : objectInfoList) {
                     if(result.isSuccess()){
                         successcount++;
                     } else {
-                        system.debug('*get Error*'+result.getErrors());
+                        system.debug('**'+result.getErrors());
                         failcount++;
                     }
                 }
@@ -536,10 +541,10 @@ for (EntityDefinition obj : objectInfoList) {
                 SearchRecords();
             } else if(!recordIds.isEmpty()){
                 
-                //List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
-               // List<String> recordDataList=new List<String>();
-                //Map<Sobject,String> mapRecordData= new Map<Sobject,String>();
-                //set<String> allFieldName = new set<String>();
+                List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
+                List<String> recordDataList=new List<String>();
+                Map<Sobject,String> mapRecordData= new Map<Sobject,String>();
+                set<String> allFieldName = new set<String>();
                 List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                 List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
                 

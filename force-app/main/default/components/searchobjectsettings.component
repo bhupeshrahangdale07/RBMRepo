@@ -571,7 +571,7 @@
 
                 function openPermntDelTab(){
                    // $('#perdeltbody').empty();
-                    $Lightning.use("c:vfToLwcForPreviewPage", function() {
+                    $Lightning.use("c:permanentDeletedDataApp", function() {
         $Lightning.createComponent("c:trackPermanentlyDeletedDataTab",
           { 
           },

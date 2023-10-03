@@ -179,7 +179,7 @@
             </div>
 
             <apex:form id="frm">
-                <apex:pagemessages ></apex:pagemessages>
+                <apex:pagemessages id="messages"></apex:pagemessages>
                 <apex:actionFunction id="actUndeleteAll" name="actUndeleteAll" action="{!UndeleteAllRecords}" status="Processing" reRender="frm"
                     oncomplete="overridePageMessages();" />
                 <apex:actionFunction id="actUndeleteSelected" name="actUndeleteSelected" action="{!UndeleteSelectedRecords}" status="Processing"
@@ -573,6 +573,16 @@
                     $(this).siblings('div.slds-popover').addClass('slds-hide');
                     $(this).siblings('div.slds-popover').removeClass('helpTooltipText');
                 });
+
+                window.onload = function() {
+        setTimeout(function() {
+            debugger;
+            var messages = document.getElementById('messages');
+            if (messages) {
+                messages.style.display = 'none';
+            }
+        }, 15000); // 15 seconds (15000 milliseconds)
+    };
                 </script>
             </apex:form>
             <script>

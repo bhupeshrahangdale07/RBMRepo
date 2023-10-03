@@ -103,6 +103,7 @@ public with sharing class permanentDeletedRecordPreviewController {
                     // Handle errors
                     for (Database.Error error : sr.getErrors()) {
                         System.debug('Error message: ' + error.getMessage());
+                        System.debug('Error message: ' + error.getFields());
                     }
                     return recId;
                 }
