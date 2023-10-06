@@ -11,7 +11,7 @@
 public with sharing class UtilityCls {
 	
     //TODO: change the method name
-    public static List<Sobject> createFields(Set<String> recIds){
+    public static List<Sobject> sObjectsToRestore(Set<String> recIds){
 
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
         set<String> allFieldName = new set<String>();

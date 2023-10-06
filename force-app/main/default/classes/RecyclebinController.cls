@@ -20,7 +20,7 @@ global with sharing class RecyclebinController {
     public string strSelectedUser {get; set;}
     public transient List<Sobject> lstAllDeletedObjects;
     public List<List<wrapResults>> lstwrapResults {get; set;}
-    public List<List<wrapResults>> listForBothSearch {get; set;}
+    //public List<List<wrapResults>> listForBothSearch {get; set;}
     public boolean IsAdminUser {get; set;}
     public String searchquery;
     public String queryString;
@@ -29,7 +29,10 @@ global with sharing class RecyclebinController {
     private map<string,string> mapObjectNames = new map<string,string>();
     public set<string> setRecordIds= new set<string>();
     public List<Id> lstIdstoDelete= new List<Id>();
-    public List<wrapResults> lstBothSearchRslt;
+    //public List<wrapResults> lstBothSearchRslt;
+    public Map<string,string> mapFieldName; 
+    public rbin__Recycle_Bin_Setting__c rbinsetting;
+    public List<rbin__RecycleSearchObjects__c> lstCustomSettings;
 
 	//Constructor method below
     public RecyclebinController(){
@@ -39,7 +42,10 @@ global with sharing class RecyclebinController {
         lstObjects = new List<SelectOption>();
         strSelectedObject = '';
         lstwrapResults = new List<List<wrapResults>>();
-        listForBothSearch = new List<List<wrapResults>>();
+        //listForBothSearch = new List<List<wrapResults>>();
+        mapFieldName = new Map<string,string>();
+        rbinsetting = new rbin__Recycle_Bin_Setting__c();
+        lstCustomSettings = new List<rbin__RecycleSearchObjects__c>();
         strSelectedUser = '';
         recordcount = 0;
         CheckAdminUser();
@@ -47,9 +53,15 @@ global with sharing class RecyclebinController {
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
         
+        //To identify those sobjects where we are not considering the "Name" standard fields.
         for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
             setFieldName.add(o.rbin__Field_Name__c.tolowercase());
+            mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
         }
+
+
+        rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();
+        lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
         
         Set<string> setSobject = new Set<string>();
         setSobject.add('Address');
@@ -111,6 +123,8 @@ global with sharing class RecyclebinController {
     }
 
     public List<SelectOption>  rowOptions = new List<SelectOption> ();
+
+    //method to show help text for search in options
     public List<SelectOption> getRowOptions() {
         List<SelectOption> opts = new List<SelectOption>();
         
@@ -149,19 +163,10 @@ global with sharing class RecyclebinController {
         try{
             searchquery = ''; 
             String recordname = 'Name';
-            Map<string,string>  mapFieldName = new Map<string,string>();
-            
-             //TODO: Make it public and call from Constructor.
-            for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
-                mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
-            }
             
             if(mapFieldName.containsKey(strSelectedObject)){
                 recordname = mapFieldName.get(strSelectedObject);
             }
-            
-            //TODO: Make it public
-            rbin__Recycle_Bin_Setting__c rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();  
             
             string strobjectfields = 'Id';
             if(strSelectedObject == 'ContentDocument'){
@@ -221,9 +226,9 @@ global with sharing class RecyclebinController {
             searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT '+integer.valueof(System.label.Row_Count_Limit) +' ALL ROWS ';
             
             if(!string.IsBlank(searchquery)) {
-                List<SObject> searchList; //TODO: Remove this unecessary list and use lstSobject this instead of it
-                searchList = Database.query(String.EscapeSingleQuotes(searchquery));
-                lstSobject.addall(searchList);
+            
+                lstSobject = Database.query(String.EscapeSingleQuotes(searchquery));
+                
             }
         }catch(Exception ex){
             return null;
@@ -231,17 +236,16 @@ global with sharing class RecyclebinController {
         return lstSobject;
     }
     
+    // method to make search in recycle Bin
     public void searchInRecycleBin() {
         Map<string,string> objectKeyFieldMap = UtilityCls.fetchObjectKeyFields();
         
         lstAllDeletedObjects = new List<Sobject>();
-        lstwrapResults = new List<List<wrapResults>>();
-        listForBothSearch = new List<List<wrapResults>>();
-        List<wrapResults> lstBothSearchRslt = new List<wrapResults>();
+        
+        //listForBothSearch = new List<List<wrapResults>>();
+        //List<wrapResults> lstBothSearchRslt = new List<wrapResults>();
         setRecordIds = new set<string>();
         
-        //TODO: Make it public variable
-        List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
         Integer intLimit = 0;
         
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
@@ -326,45 +330,34 @@ global with sharing class RecyclebinController {
                 if(count == 1000) {
                     lstwrapResults.add(lsttempWrap);
                     lsttempWrap = new List<wrapResults>();
-                    listForBothSearch.add(lstBothSearchRslt);
-                    lstBothSearchRslt = new List<wrapResults>();
+                    //listForBothSearch.add(lstBothSearchRslt);
+                   //lstBothSearchRslt = new List<wrapResults>();
                     count = 0;
                     
                 }
                 
                 lsttempWrap.add(objW);
-                lstBothSearchRslt.add(objw);
+                //lstBothSearchRslt.add(objw);
                 count++;
                
             }
             
             if(lsttempWrap.size() > 0) {
-                lstwrapResults.add(lsttempWrap); 
+                lstwrapResults.add(lsttempWrap);
+                
+                //listForBothSearch.add(lstBothSearchRslt);
             }
         }
     }
 
+    //Method to make search in Permanently Deleted Data
     public void searchInPermanentlyDeletedData(){
-        setRecordIds=null;
-        searchInRecycleBin();
+        //setRecordIds=null;
+       // searchInRecycleBin();
         system.debug('setRecordIds- '+setRecordIds);
-        lstwrapResults = new List<List<wrapResults>>();
-        set<string> lstRecIdsToRemove =new set<string>(); //TODO: remove this 
+        List<wrapResults> lstBothWrap= new List<wrapResults>();
         List<sObject> lstOfRecords= new List<sObject>();
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
-        
-        //TODO: remove this 
-        for(rbin__RecycleSearchObjects__c obj:lstCustomSettings){
-            string queryStr = 'select id From '+obj.Name+' WHERE IsDeleted=true ALL ROWS';
-            List<sObject> records=Database.query(queryStr);
-            lstOfRecords.addAll(records);
-            system.debug('queryStr- '+queryStr);
-        }
-        
-        //TODO: remove this 
-        for(sObject lst:lstOfRecords){
-            lstRecIdsToRemove.add(lst.id);
-        }
         
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)){
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
@@ -436,16 +429,18 @@ global with sharing class RecyclebinController {
             if(count == 1000) {
                 lstwrapResults.add(lsttempWrap);
                 lsttempWrap = new List<wrapResults>();
+                //listForBothSearch.add(lstBothWrap);
+                //lstBothWrap = new List<wrapResults>();
                 count = 0;
             }
             lsttempWrap.add(objW);
-            
+            //lstBothWrap.add(objw);
             count++;
         }
         
         if(lsttempWrap.size()>0){
             lstwrapResults.add(lsttempWrap);
-            
+           // listForBothSearch.add(lstBothWrap);
         }
     }
 
@@ -454,22 +449,30 @@ global with sharing class RecyclebinController {
         try {
             
             if(this.strSearchIn == 'RecycleBin'){
+                lstwrapResults = new List<List<wrapResults>>();
                 searchInRecycleBin();
-                listForBothSearch=null;
+                //lstBothSearchRslt=null;
                 
             } else  if(strSearchIn == 'PermanentDeletedData'){
+                lstwrapResults = new List<List<wrapResults>>();
                 searchInPermanentlyDeletedData();
-                listForBothSearch=null;
+                //lstBothSearchRslt=null;
                 
             }else if(strSearchIn == 'Both'){
-                //lstwrapResults = new List<List<wrapResults>>();
-                //listForBothSearch = new List<wrapResults>();
+                lstwrapResults = new List<List<wrapResults>>();
+                //lstBothSearchRslt = new List<wrapResults>();
                 searchInRecycleBin();
                 searchInPermanentlyDeletedData();
-                for(List<wrapResults> lstBothSearch:listForBothSearch){
-                    lstwrapResults.add(lstBothSearch);
-                }
-                //lstwrapResults.add(listForBothSearch);
+                
+                //lstwrapResults.add(lstBothSearchRslt);
+                // if(lstBothSearchRslt.size() > 1000){
+                //     system.debug('In if block');
+                // for(List<wrapResults> lst:listForBothSearch){
+                //     lstwrapResults.add(lst);
+                // }
+           //}
+                
+                
             }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
@@ -552,7 +555,7 @@ global with sharing class RecyclebinController {
                     allRecordList.add(rec);
                 }
                 
-                List<Sobject> lstobjectToRestore=UtilityCls.createFields(recordIds);
+                List<Sobject> lstobjectToRestore=UtilityCls.sObjectsToRestore(recordIds);
                 
                 //toAdd restored DateTime
                 TimeZone tz = UserInfo.getTimeZone();
@@ -615,8 +618,8 @@ global with sharing class RecyclebinController {
                 set<String> recordIds =new set<String>();
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 List<string> recordIdsList = new List<string>(); 
+
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
-                
                 //added by RP on 22-11-2018
                 if(lstwrapResults.size() > 1) {
                     system.debug('for 1000 records');
@@ -653,7 +656,6 @@ global with sharing class RecyclebinController {
                             objS.Put('Id',objW.Id);
                             lstUndeleteAll.add(objS);
                         }else if(objw.isPermanentlyDeleted == 'Yes'){
-                            system.debug('collecting prmnt deleted Ids');
                             recordIds.add(objw.Id);
                         }
                     }
@@ -679,7 +681,8 @@ global with sharing class RecyclebinController {
                     DateTime dt = Datetime.now();
                     DateTime currentDt=dt.addSeconds((tz.getOffset(dt)/1000));
                     
-                    List<Sobject> lstobjectToRestore=UtilityCls.createFields(recordIds);
+                    //call sObjectsToRestore from utility class to get sobject for restoring
+                    List<Sobject> lstobjectToRestore=UtilityCls.sObjectsToRestore(recordIds);
                     
                     Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
                     Integer successcount = 0;
