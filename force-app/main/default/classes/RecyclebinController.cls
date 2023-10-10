@@ -10,8 +10,8 @@
 */
 
 global with sharing class RecyclebinController {
-
-	//Local variables referenced in the page 
+    
+    //Local variables referenced in the page 
     public string strKeyword {get; set;}
     public string strFromDate {get; set;}
     public string strToDate {get; set;}
@@ -20,7 +20,6 @@ global with sharing class RecyclebinController {
     public string strSelectedUser {get; set;}
     public transient List<Sobject> lstAllDeletedObjects;
     public List<List<wrapResults>> lstwrapResults {get; set;}
-    //public List<List<wrapResults>> listForBothSearch {get; set;}
     public boolean IsAdminUser {get; set;}
     public String searchquery;
     public String queryString;
@@ -29,12 +28,11 @@ global with sharing class RecyclebinController {
     private map<string,string> mapObjectNames = new map<string,string>();
     public set<string> setRecordIds= new set<string>();
     public List<Id> lstIdstoDelete= new List<Id>();
-    //public List<wrapResults> lstBothSearchRslt;
     public Map<string,string> mapFieldName; 
     public rbin__Recycle_Bin_Setting__c rbinsetting;
     public List<rbin__RecycleSearchObjects__c> lstCustomSettings;
-
-	//Constructor method below
+    
+    //Constructor method below
     public RecyclebinController(){
         strKeyword = '';
         strFromDate = '';
@@ -42,7 +40,6 @@ global with sharing class RecyclebinController {
         lstObjects = new List<SelectOption>();
         strSelectedObject = '';
         lstwrapResults = new List<List<wrapResults>>();
-        //listForBothSearch = new List<List<wrapResults>>();
         mapFieldName = new Map<string,string>();
         rbinsetting = new rbin__Recycle_Bin_Setting__c();
         lstCustomSettings = new List<rbin__RecycleSearchObjects__c>();
@@ -58,8 +55,7 @@ global with sharing class RecyclebinController {
             setFieldName.add(o.rbin__Field_Name__c.tolowercase());
             mapFieldName.put(o.MasterLabel,o.rbin__Field_Name__c);
         }
-
-
+        
         rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();
         lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
         
@@ -121,9 +117,9 @@ global with sharing class RecyclebinController {
             SearchRecords();
         }
     }
-
+    
     public List<SelectOption>  rowOptions = new List<SelectOption> ();
-
+    
     //method to show help text for search in options
     public List<SelectOption> getRowOptions() {
         List<SelectOption> opts = new List<SelectOption>();
@@ -140,13 +136,13 @@ global with sharing class RecyclebinController {
         
         return opts;
     }
-
+    
     //method to determine if the logged in user has modify all access permission
     public void CheckAdminUser(){
         IsAdminUser = false;       
         List<PermissionSetAssignment> lstPermissionSets = new List<PermissionSetAssignment>([
             SELECT 
-            	AssigneeId 
+            AssigneeId 
             FROM PermissionSetAssignment 
             WHERE AssigneeId =: UserInfo.getUserId() 
             AND PermissionSet.PermissionsModifyAllData = true
@@ -156,7 +152,7 @@ global with sharing class RecyclebinController {
             IsAdminUser = true;
         }       
     }
-
+    
     private List<Sobject> findAllSobjectList(string strSelectedObject){
         List<Sobject> lstSobject = new List<Sobject>();  
         
@@ -226,7 +222,7 @@ global with sharing class RecyclebinController {
             searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT '+integer.valueof(System.label.Row_Count_Limit) +' ALL ROWS ';
             
             if(!string.IsBlank(searchquery)) {
-            
+                
                 lstSobject = Database.query(String.EscapeSingleQuotes(searchquery));
                 
             }
@@ -241,9 +237,6 @@ global with sharing class RecyclebinController {
         Map<string,string> objectKeyFieldMap = UtilityCls.fetchObjectKeyFields();
         
         lstAllDeletedObjects = new List<Sobject>();
-        
-        //listForBothSearch = new List<List<wrapResults>>();
-        //List<wrapResults> lstBothSearchRslt = new List<wrapResults>();
         setRecordIds = new set<string>();
         
         Integer intLimit = 0;
@@ -330,30 +323,25 @@ global with sharing class RecyclebinController {
                 if(count == 1000) {
                     lstwrapResults.add(lsttempWrap);
                     lsttempWrap = new List<wrapResults>();
-                    //listForBothSearch.add(lstBothSearchRslt);
-                   //lstBothSearchRslt = new List<wrapResults>();
                     count = 0;
                     
                 }
                 
                 lsttempWrap.add(objW);
-                //lstBothSearchRslt.add(objw);
                 count++;
-               
+                
             }
             
             if(lsttempWrap.size() > 0) {
                 lstwrapResults.add(lsttempWrap);
-                
-                //listForBothSearch.add(lstBothSearchRslt);
             }
         }
     }
-
+    
     //Method to make search in Permanently Deleted Data
     public void searchInPermanentlyDeletedData(){
         //setRecordIds=null;
-       // searchInRecycleBin();
+        // searchInRecycleBin();
         system.debug('setRecordIds- '+setRecordIds);
         List<wrapResults> lstBothWrap= new List<wrapResults>();
         List<sObject> lstOfRecords= new List<sObject>();
@@ -415,7 +403,7 @@ global with sharing class RecyclebinController {
         for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {    
             wrapResults objW = new wrapResults();
             // Assign the field values directly to wrapper class properties
-            objW.Id = pdd.rbin__Record_ID__c != null ? string.valueof(pdd.rbin__Record_ID__c) : '';
+            objW.Id = pdd.Id != null ? string.valueof(pdd.Id) : '';
             objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
             objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
             //objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
@@ -429,21 +417,17 @@ global with sharing class RecyclebinController {
             if(count == 1000) {
                 lstwrapResults.add(lsttempWrap);
                 lsttempWrap = new List<wrapResults>();
-                //listForBothSearch.add(lstBothWrap);
-                //lstBothWrap = new List<wrapResults>();
                 count = 0;
             }
             lsttempWrap.add(objW);
-            //lstBothWrap.add(objw);
             count++;
         }
         
         if(lsttempWrap.size()>0){
             lstwrapResults.add(lsttempWrap);
-           // listForBothSearch.add(lstBothWrap);
         }
     }
-
+    
     //method to search the deleted records based on the search critiera specified by the user
     public void SearchRecords(){
         try {
@@ -451,34 +435,21 @@ global with sharing class RecyclebinController {
             if(this.strSearchIn == 'RecycleBin'){
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInRecycleBin();
-                //lstBothSearchRslt=null;
                 
             } else  if(strSearchIn == 'PermanentDeletedData'){
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInPermanentlyDeletedData();
-                //lstBothSearchRslt=null;
                 
             }else if(strSearchIn == 'Both'){
                 lstwrapResults = new List<List<wrapResults>>();
-                //lstBothSearchRslt = new List<wrapResults>();
                 searchInRecycleBin();
-                searchInPermanentlyDeletedData();
-                
-                //lstwrapResults.add(lstBothSearchRslt);
-                // if(lstBothSearchRslt.size() > 1000){
-                //     system.debug('In if block');
-                // for(List<wrapResults> lst:listForBothSearch){
-                //     lstwrapResults.add(lst);
-                // }
-           //}
-                
-                
+                searchInPermanentlyDeletedData();  
             }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
         }
     }
-
+    
     //method to clear the pre-selected filters 
     public void Clear(){
         strKeyword = '';
@@ -489,7 +460,7 @@ global with sharing class RecyclebinController {
         lstAllDeletedObjects = new List<Sobject>();
         lstwrapResults = new List<List<wrapResults>>();
     }
-
+    
     //Remote action method to get Users
     @RemoteAction
     global static List<User> queryUsers(String keyword) {
@@ -502,13 +473,13 @@ global with sharing class RecyclebinController {
         }
         return userlist;
     }
-
+    
     //method to restore the selected records
     public void UndeleteSelectedRecords(){
         try {
             set<String> recordIds =new set<String>();
-            
             List<Sobject> lstSobjecttoUndelete = new List<Sobject>();
+            
             for(List<wrapResults> lstWrapper: lstwrapResults){
                 for(wrapResults objW: lstWrapper) {
                     if(objW.isCheck && objw.isPermanentlyDeleted == 'No') {
@@ -551,10 +522,11 @@ global with sharing class RecyclebinController {
                 List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                 List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
                 
-                for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
+                for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where id in: recordIds]){
                     allRecordList.add(rec);
                 }
                 
+                //here we are calling  UtilityCls class method sObjectsToRestore which will return the sobject list which we have to restore
                 List<Sobject> lstobjectToRestore=UtilityCls.sObjectsToRestore(recordIds);
                 
                 //toAdd restored DateTime
@@ -610,7 +582,7 @@ global with sharing class RecyclebinController {
             return;
         }
     }
-
+    
     //method to restore all the records returned by the serach query
     public void UndeleteAllRecords(){
         try {
@@ -618,7 +590,7 @@ global with sharing class RecyclebinController {
                 set<String> recordIds =new set<String>();
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 List<string> recordIdsList = new List<string>(); 
-
+                
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
                 //added by RP on 22-11-2018
                 if(lstwrapResults.size() > 1) {
@@ -672,7 +644,7 @@ global with sharing class RecyclebinController {
                     set<String> allFieldName = new set<String>();
                     List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                     List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
-                    for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
+                    for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where id in: recordIds]){
                         allRecordList.add(rec);
                     }
                     
@@ -727,7 +699,7 @@ global with sharing class RecyclebinController {
             return;
         }
     }
-
+    
     //method to purge the selected records from the recycle bin
     public void DeleteFromRecyclebin(){
         try {
@@ -786,7 +758,7 @@ global with sharing class RecyclebinController {
             return;
         }
     }
-
+    
     //wrapper class
     public class wrapResults {
         public boolean isCheck {get; set;}
