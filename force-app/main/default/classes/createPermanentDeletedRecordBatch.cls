@@ -131,36 +131,13 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
             }
         }
 		
-        // Insert/Update Deleted Data Record
+        // Insert/Update Deleted Data
         Database.Upsert(upsertToDeletedData,false);
         
          List<contentDocument> existedContentDoc =[select id, Title from contentDocument where Title In: setExistedRecordIds];
         delete existedContentDoc;
         
-        Map<String,Id> mapContentVersion=new Map<String,String>();      
-        List<ContentVersion> lstContentVersion=new List<ContentVersion>();
-        List<ContentDocumentLink> lstContentDocLnk= new List<ContentDocumentLink>();
-        for(rbin__Deleted_Data__c insertedDeletedData:[select id,rbin__Record_ID__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: mapRecordData.keySet()]){
-            ContentVersion cVersion = new ContentVersion();
-        cVersion.ContentLocation = 'S'; 
-        cVersion.PathOnClient = insertedDeletedData.rbin__Record_ID__c+'.txt';
-        cVersion.Origin = 'H';
-        cVersion.Title = insertedDeletedData.rbin__Record_ID__c;
-        Blob body = Blob.valueOf(mapRecordData.get(insertedDeletedData.rbin__Record_ID__c));
-        cVersion.VersionData = body;
-            lstContentVersion.add(cVersion);
-            mapContentVersion.put(cVersion.Title,insertedDeletedData.Id);
-        }
-        insert lstContentVersion;
-       
-        for(string title:mapContentVersion.keySet()){
-           ContentDocumentLink cdl = new ContentDocumentLink();
-        cdl.ContentDocumentId = [SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title].ContentDocumentId;
-        cdl.LinkedEntityId = mapContentVersion.get(title);
-        cdl.ShareType = 'V'; 
-            lstContentDocLnk.add(cdl);
-        }
-        insert lstContentDocLnk;
+       createFileAttachment(mapRecordData,setExistedRecordIds);
         
     }
     
@@ -181,5 +158,33 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                 Update objTrackBatchProcess;
             }
         }
+    }
+    
+    private static void createFileAttachment(Map<string,string> mapDeletedData,set<string> setUpdatedRecIds){
+        
+         Map<String,Id> mapContentVersion=new Map<String,String>();      
+        List<ContentVersion> lstContentVersion=new List<ContentVersion>();
+        List<ContentDocumentLink> lstContentDocLnk= new List<ContentDocumentLink>();
+        for(rbin__Deleted_Data__c insertedDeletedData:[select id,rbin__Record_ID__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: mapDeletedData.keySet()]){
+            ContentVersion cVersion = new ContentVersion();
+        cVersion.ContentLocation = 'S'; 
+        cVersion.PathOnClient = insertedDeletedData.rbin__Record_ID__c+'.txt';
+        cVersion.Origin = 'H';
+        cVersion.Title = insertedDeletedData.rbin__Record_ID__c;
+        Blob body = Blob.valueOf(mapDeletedData.get(insertedDeletedData.rbin__Record_ID__c));
+        cVersion.VersionData = body;
+            lstContentVersion.add(cVersion);
+            mapContentVersion.put(cVersion.Title,insertedDeletedData.Id);
+        }
+        insert lstContentVersion;
+       
+        for(string title:mapContentVersion.keySet()){
+           ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = [SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title].ContentDocumentId;
+        cdl.LinkedEntityId = mapContentVersion.get(title);
+        cdl.ShareType = 'V'; 
+            lstContentDocLnk.add(cdl);
+        }
+        insert lstContentDocLnk;
     }
 }

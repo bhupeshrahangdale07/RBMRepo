@@ -403,7 +403,7 @@ global with sharing class RecyclebinController {
         for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {    
             wrapResults objW = new wrapResults();
             // Assign the field values directly to wrapper class properties
-            objW.Id = pdd.Id != null ? string.valueof(pdd.Id) : '';
+            objW.Id = pdd.rbin__Record_ID__c != null ? string.valueof(pdd.rbin__Record_ID__c) : '';
             objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
             objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
             //objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
@@ -522,7 +522,7 @@ global with sharing class RecyclebinController {
                 List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                 List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
                 
-                for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where id in: recordIds]){
+                for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
                     allRecordList.add(rec);
                 }
                 
@@ -644,7 +644,7 @@ global with sharing class RecyclebinController {
                     set<String> allFieldName = new set<String>();
                     List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                     List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
-                    for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where id in: recordIds]){
+                    for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
                         allRecordList.add(rec);
                     }
                     
