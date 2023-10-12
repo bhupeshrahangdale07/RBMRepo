@@ -15,6 +15,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
     public List<rbin__Track_Batch_Process__c> lstTrackBatchProcess = new List<rbin__Track_Batch_Process__c>();
     public Map<string,string> objectKeyFieldMap = new Map<string,string>();
     private Integer recordNo = 1;
+    private string objectName;
     
     public createPermanentDeletedRecordBatch(Integer RecNo){
         this.recordNo = RecNo;
@@ -46,6 +47,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         ]);
         
         String objName = (string)lstTrackDeletedObjects[0].get('Name');
+        objectName = objName;
         String myQuery = '';
         
         // fetch object fields
@@ -61,11 +63,21 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
     public void execute(Database.BatchableContext bc, List<SObject> sObjectRecords){
         string recordName;
         List<rbin__Deleted_Data__c> upsertToDeletedData = new List<rbin__Deleted_Data__c>();
-        
+        List<Schema.SObjectType> childObjects=new List<Schema.SObjectType>();
         //get list of Ids from List
         Set<Id> sObjectRecordIds = (new Map<Id,SObject>(sObjectRecords)).keySet();
+        Map<string,string> mapRecordData = new Map<string,string>();
+        //Map<string,string> mapExistRecordData = new Map<string,string>();
+        set<string> setExistedRecordIds = new set<string>();
         
         if(sObjectRecords.size() > 0){
+             Schema.DescribeSObjectResult objectDescribe = Schema.getGlobalDescribe().get(objectName).getDescribe();
+            List<Schema.ChildRelationship> childRelations = objectDescribe.getChildRelationships();
+            for(ChildRelationship c:childRelations){
+                childObjects.add(c.getChildSObject());
+            }
+            system.debug('Child Object Names- '+ childObjects);
+            
             Map<String,rbin__Deleted_Data__c> existingDeletedDataMap= new Map<String,rbin__Deleted_Data__c>();
             
             //fetch Existing Deleted Data
@@ -89,6 +101,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                     newObject.rbin__Object_Name__c = String.valueOf(rec.getSObjectType());
                     newObject.rbin__Deleted_Date__c = (DateTime)rec.get('LastModifiedDate');
                     newObject.rbin__Data__c = JSON.serializePretty(rec);
+                    mapRecordData.put(rec.Id,JSON.serializePretty(rec));
                     
                     //insert new deleted record
                     upsertToDeletedData.add(newObject);
@@ -103,9 +116,12 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                             }else{
                                 existDeletedDataObj.rbin__Record_Name__c = (String)rec.get('Name');
                             }
-                            existDeletedDataObj.Id = rec.Id;
+                            existDeletedDataObj.Id = existingDeletedDataMap.get(rec.Id).Id;
                             existDeletedDataObj.rbin__Deleted_Date__c = (DateTime)rec.get('LastModifiedDate');
                             existDeletedDataObj.rbin__Data__c = JSON.serializePretty(rec);
+                            mapRecordData.put(rec.Id,JSON.serializePretty(rec));
+                            setExistedRecordIds.add(rec.Id);
+                            
                         }
                         
                         //update new deleted record
@@ -115,8 +131,37 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
             }
         }
 		
-        // Insert/Update Deleted Data
-        Database.Upsert(upsertToDeletedData,false); 
+        // Insert/Update Deleted Data Record
+        Database.Upsert(upsertToDeletedData,false);
+        
+         List<contentDocument> existedContentDoc =[select id, Title from contentDocument where Title In: setExistedRecordIds];
+        delete existedContentDoc;
+        
+        Map<String,Id> mapContentVersion=new Map<String,String>();      
+        List<ContentVersion> lstContentVersion=new List<ContentVersion>();
+        List<ContentDocumentLink> lstContentDocLnk= new List<ContentDocumentLink>();
+        for(rbin__Deleted_Data__c insertedDeletedData:[select id,rbin__Record_ID__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: mapRecordData.keySet()]){
+            ContentVersion cVersion = new ContentVersion();
+        cVersion.ContentLocation = 'S'; 
+        cVersion.PathOnClient = insertedDeletedData.rbin__Record_ID__c+'.txt';
+        cVersion.Origin = 'H';
+        cVersion.Title = insertedDeletedData.rbin__Record_ID__c;
+        Blob body = Blob.valueOf(mapRecordData.get(insertedDeletedData.rbin__Record_ID__c));
+        cVersion.VersionData = body;
+            lstContentVersion.add(cVersion);
+            mapContentVersion.put(cVersion.Title,insertedDeletedData.Id);
+        }
+        insert lstContentVersion;
+       
+        for(string title:mapContentVersion.keySet()){
+           ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = [SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title].ContentDocumentId;
+        cdl.LinkedEntityId = mapContentVersion.get(title);
+        cdl.ShareType = 'V'; 
+            lstContentDocLnk.add(cdl);
+        }
+        insert lstContentDocLnk;
+        
     }
     
     public void finish(Database.BatchableContext bc){
