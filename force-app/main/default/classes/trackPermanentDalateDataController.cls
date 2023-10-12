@@ -45,14 +45,18 @@ public with sharing class trackPermanentDalateDataController {
     public static string saveTrackingObject(List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> objNameList){
         try {
             List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> prmntObjectTrackingList = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
-
+            Decimal nextSerialNumber;
             // Query for the maximum existing serial number
             List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c];
+            
             Decimal maxSerialNumber = (Decimal)ar[0].get('maxRecordNo');
+            if(maxSerialNumber != null){
             system.debug('Max Record No- '+maxSerialNumber);
     // Increment by 1 to get the next serial number
-    Decimal nextSerialNumber = maxSerialNumber + 1;
-            
+     nextSerialNumber = maxSerialNumber + 1;
+}else if(maxSerialNumber == null){
+     nextSerialNumber = 1;
+}
             for(rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c objName : objNameList){
 
                 rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c prmntTrckObj = new rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c();
