@@ -6,7 +6,7 @@ public with sharing class UtilClass {
             system.debug('In util class');
             List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
             set<String> allFieldName = new set<String>();
-            for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recIds]){
+            for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where id in: recIds]){
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(rec.rbin__Data__c);
                 Sobject obj = Schema.getGlobalDescribe().get(rec.rbin__Object_Name__c).newSObject();
                 Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
