@@ -7,7 +7,7 @@ public class BatchMassRestoreAllPrmntDeleted Implements Database.batchable<sObje
     public Database.QueryLocator start(Database.BatchableContext bc){
         system.debug('In batchclass');
         system.debug('Total Records-'+lstIds.size());
-        return Database.getQueryLocator('select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c IN:lstIds');
+        return Database.getQueryLocator('select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where id IN:lstIds');
     }
     public void execute(Database.BatchableContext bc,List<rbin__Deleted_Data__c> lstRecords){
         system.debug('List Of Records - '+lstRecords);
@@ -15,9 +15,20 @@ public class BatchMassRestoreAllPrmntDeleted Implements Database.batchable<sObje
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
         List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
         List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
+        set<string> setDeletedRecIds= new set<string>();
+        Map<string,string> mapVersionData= new Map<string,string>();
+        
+        for(rbin__Deleted_Data__c rec:lstRecords){
+            setDeletedRecIds.add(rec.rbin__Record_ID__c);
+        }
+        
+        for(ContentVersion recVersionData:[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:setDeletedRecIds]){
+                     string versionDataToString = (recVersionData.VersionData).toString();
+                     mapVersionData.put(recVersionData.Title,versionDataToString);
+        }
         
         for(rbin__Deleted_Data__c lst:lstRecords){
-            Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(lst.rbin__Data__c);
+            Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(mapVersionData.get(lst.rbin__Record_ID__c));
             allRecordList.add(lst);
             Sobject obj = Schema.getGlobalDescribe().get(lst.rbin__Object_Name__c).newSObject();
             Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();

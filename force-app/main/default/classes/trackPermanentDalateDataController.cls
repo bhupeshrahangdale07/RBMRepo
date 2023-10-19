@@ -42,12 +42,12 @@ public with sharing class trackPermanentDalateDataController {
     }
 
     @AuraEnabled
-    public static string saveTrackingObject(List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> objNameList){
+    public static string saveTrackingObject(List<rbin__Permanent_Deleted_Tracking_Object__c> objNameList){
         try {
-            List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> prmntObjectTrackingList = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+            List<rbin__Permanent_Deleted_Tracking_Object__c> prmntObjectTrackingList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
             Decimal nextSerialNumber;
             // Query for the maximum existing serial number
-            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c];
+            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM 	rbin__Permanent_Deleted_Tracking_Object__c];
             
             Decimal maxSerialNumber = (Decimal)ar[0].get('maxRecordNo');
             if(maxSerialNumber != null){
@@ -57,9 +57,9 @@ public with sharing class trackPermanentDalateDataController {
 }else if(maxSerialNumber == null){
      nextSerialNumber = 1;
 }
-            for(rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c objName : objNameList){
+            for(rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList){
 
-                rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c prmntTrckObj = new rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c();
+                rbin__Permanent_Deleted_Tracking_Object__c prmntTrckObj = new rbin__Permanent_Deleted_Tracking_Object__c();
 
                 prmntTrckObj.Name = objName.Name;
                 system.debug('Name'+objName.Name);
@@ -82,9 +82,9 @@ public with sharing class trackPermanentDalateDataController {
     }
 
     @AuraEnabled (cacheable = true)
-    public static List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> fetchAllRecords(){
+    public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords(){
         try {
-            list<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> lst = new list<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>([select id,name from rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c order by Name]);
+            list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([select id,name from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
             return lst;
             
         } catch (Exception e) {
@@ -94,11 +94,11 @@ public with sharing class trackPermanentDalateDataController {
     @AuraEnabled
     public static string deleteObject(String removeObjectIds){
         try {
-            List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> deleteObjectRecordList = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+            List<rbin__Permanent_Deleted_Tracking_Object__c> deleteObjectRecordList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
             system.debug('Id List-'+removeObjectIds);
            // if(String.isNotBlank(removeObjectIds)){
             // List<Id> objectIds = removeObjectIds.split(',');
-            deleteObjectRecordList = [SELECT Id FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c WHERE Id =: removeObjectIds];
+            deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id =: removeObjectIds];
             system.debug('Delete record list-'+deleteObjectRecordList);
        // }
         delete deleteObjectRecordList;
@@ -109,14 +109,14 @@ public with sharing class trackPermanentDalateDataController {
         }
     }
     private static void updateSerialNumbers() {
-        List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> recordsToUpdate = new List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c>();
+        List<	rbin__Permanent_Deleted_Tracking_Object__c> recordsToUpdate = new List<	rbin__Permanent_Deleted_Tracking_Object__c>();
         
         // Query all records ordered by rbin__Record_No__c
-        List<rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c ORDER BY Name ASC];
+        List<	rbin__Permanent_Deleted_Tracking_Object__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM 	rbin__Permanent_Deleted_Tracking_Object__c ORDER BY Name ASC];
         
         // Update the serial numbers
         Integer currentSerialNumber = 1;
-        for (rbin__Recycle_Bin_Permnt_Delate_Tracking_Obj__c record : allRecords) {
+        for (	rbin__Permanent_Deleted_Tracking_Object__c record : allRecords) {
             record.rbin__Record_No__c = currentSerialNumber++;
             recordsToUpdate.add(record);
         }

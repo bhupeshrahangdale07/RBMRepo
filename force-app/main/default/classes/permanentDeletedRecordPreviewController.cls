@@ -9,7 +9,7 @@ public with sharing class permanentDeletedRecordPreviewController {
         system.debug('RecordId>>>'+recordId);
         
        List<wrpRecordDetail> lstDeletedRecord = new List<wrpRecordDetail>();
-        rbin__Deleted_Data__c deletedRecord=[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
+        rbin__Deleted_Data__c deletedRecord=[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
         ContentVersion cv=[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:recordId];
 
         string deletedData=(cv.VersionData).toString();
@@ -51,7 +51,7 @@ public with sharing class permanentDeletedRecordPreviewController {
         try {
 
             set<String> allFieldName = new set<String>();
-            rbin__Deleted_Data__c previewRecord=[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
+            rbin__Deleted_Data__c previewRecord=[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
             ContentVersion cv=[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:recordId];
             
             string deletedData=(cv.VersionData).toString();

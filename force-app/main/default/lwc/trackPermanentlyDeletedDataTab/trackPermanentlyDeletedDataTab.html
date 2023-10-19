@@ -1,12 +1,18 @@
 <template>
 
     <lightning-card>
-        <template if:true={isLoading}>
-            <lightning-spinner variant="brand" alternative-text="Loading" size="medium" class="spinnerClass"></lightning-spinner>
-         </template>
+       
        <div class="slds-m-around_medium">
+        
            <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label" style="width: fit-content;">
                <thead>
+                <div class="slds-box slds-m-bottom_small">
+                    <p>
+                        <i>
+                            <b>Note:</b>
+                        </i> Please select the objects you would like to track the records after permanemt delete.
+                    </p>
+                </div>
                    <tr class="slds-line-height_reset">
                     <th class="" scope="col" style="width: 10%;">
                         <div class="slds-truncate" title="Action">ACTION</div>

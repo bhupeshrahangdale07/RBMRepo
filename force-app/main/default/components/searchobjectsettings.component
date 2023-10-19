@@ -58,10 +58,10 @@
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-3"
                                        id="tab-scoped-3__item">FAQs</a>
                                 </li>
-                                <li class="slds-tabs_scoped__item" title="Track Deleted Records" role="presentation" onclick="gettrackingobjects()">
+                               <!-- <li class="slds-tabs_scoped__item" title="Track Deleted Records" role="presentation" onclick="gettrackingobjects()">
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-4"
                                        id="tab-scoped-4__item">Track Deleted Records</a>
-                                </li>
+                                </li>-->
                                 <li class="slds-tabs_scoped__item" title="Track Permanently Deleted Data" role="presentation">
                                     <a class="slds-tabs_scoped__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-scoped-5"
                                        id="tab-scoped-5__item">Track Permanently Deleted Data</a>
@@ -440,7 +440,7 @@
                                 </div>
                             </div>
                             
-                            <div id="tab-scoped-4" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-4__item">
+                            <!--<div id="tab-scoped-4" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-4__item">
                                 <div id="enabletrackingobjnotes" class="slds-box">
                                     <p>
                                         <i>
@@ -482,7 +482,7 @@
                                     </fieldset>
                                 </div>-->
                                 
-                                <div id="trackingobjtable" class="slds-hide">
+                                <!--<div id="trackingobjtable" class="slds-hide">
                                     <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal slds-m-top_small sldstbodysectionfortracking">
                                         <thead>
                                             <tr class="slds-line-height_reset">
@@ -508,7 +508,7 @@
                                         </tfoot>
                                     </table>
                                 </div>
-                            </div>
+                            </div>-->
                             <div id="tab-scoped-5" style="padding-bottom:1px" class="slds-tabs_scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-5__item">
                                 <div>
                                     <div id="LightningComponentid" /> 

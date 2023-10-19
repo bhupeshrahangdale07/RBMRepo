@@ -21,7 +21,7 @@ public with sharing class UtilityCls {
                      mapVersionData.put(recVersionData.Title,vData);
         }
         
-        for(rbin__Deleted_Data__c rec : [Select id, rbin__Data__c, rbin__Record_ID__c, rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in :recIds]){
+        for(rbin__Deleted_Data__c rec : [Select id, rbin__Record_ID__c, rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in :recIds]){
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(mapVersionData.get(rec.rbin__Record_ID__c));
             Sobject obj = Schema.getGlobalDescribe().get(rec.rbin__Object_Name__c).newSObject();
             Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
@@ -57,6 +57,7 @@ public with sharing class UtilityCls {
     
     //return object fields
     public static Map<String, Schema.SObjectField> fetchObjectFieldMap(String sObjectName){
+        system.debug('Object Name- '+sObjectName);
         Map<String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
         Schema.SObjectType objSchema = schemaMap.get(sObjectName);
         Map<String, Schema.SObjectField> fieldMap = objSchema.getDescribe().fields.getMap();
@@ -71,5 +72,36 @@ public with sharing class UtilityCls {
             objectKeyFieldMap.put(objectKeyFieldMdt.MasterLabel,objectKeyFieldMdt.rbin__Field_Name__c);
         }
         return objectKeyFieldMap;
+    }
+    public static void createFileAttachment(Map<string,string> mapDeletedData,set<string> setRecIds){
+        system.debug('Rec Ids'+setRecIds);
+        List<contentDocument> existedContentDoc =[select id, Title from contentDocument where Title In: setRecIds];
+        delete existedContentDoc;
+        
+        Map<String,Id> mapContentVersion=new Map<String,String>();      
+        List<ContentVersion> lstContentVersion=new List<ContentVersion>();
+        List<ContentDocumentLink> lstContentDocLnk= new List<ContentDocumentLink>();
+        for(rbin__Deleted_Data__c insertedDeletedData:[select id,rbin__Record_ID__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: mapDeletedData.keySet()]){
+            ContentVersion cVersion = new ContentVersion();
+            cVersion.ContentLocation = 'S'; 
+            cVersion.PathOnClient = insertedDeletedData.rbin__Record_ID__c+'.txt';
+            cVersion.Origin = 'H';
+            cVersion.Title = insertedDeletedData.rbin__Record_ID__c;
+            Blob body = Blob.valueOf(mapDeletedData.get(insertedDeletedData.rbin__Record_ID__c));
+            cVersion.VersionData = body;
+            lstContentVersion.add(cVersion);
+            mapContentVersion.put(cVersion.Title,insertedDeletedData.Id);
+        }
+        insert lstContentVersion;
+        
+        for(string title:mapContentVersion.keySet()){
+            ContentDocumentLink cdl = new ContentDocumentLink();
+            system.debug('List of content version-'+[SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title]);
+            cdl.ContentDocumentId = [SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title].ContentDocumentId;
+            cdl.LinkedEntityId = mapContentVersion.get(title);
+            cdl.ShareType = 'V'; 
+            lstContentDocLnk.add(cdl);
+        }
+        insert lstContentDocLnk;
     }
 }

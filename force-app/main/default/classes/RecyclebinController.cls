@@ -359,7 +359,7 @@ global with sharing class RecyclebinController {
         
         String searchKey= '%'+strKeyword+'%';
         
-        String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c, rbin__Deleted_Date__c ' +
+        String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c ' +
             'FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c NOT IN :setRecordIds';
         
         if (strSelectedObject != null) {
@@ -522,7 +522,7 @@ global with sharing class RecyclebinController {
                 List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                 List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
                 
-                for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
+                for(rbin__Deleted_Data__c rec:[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
                     allRecordList.add(rec);
                 }
                 
@@ -644,7 +644,7 @@ global with sharing class RecyclebinController {
                     set<String> allFieldName = new set<String>();
                     List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                     List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
-                    for(rbin__Deleted_Data__c rec:[select id,rbin__Data__c,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
+                    for(rbin__Deleted_Data__c rec:[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
                         allRecordList.add(rec);
                     }
                     
