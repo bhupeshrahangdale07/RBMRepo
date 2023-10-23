@@ -9,16 +9,16 @@
 
 */
 public with sharing class UtilityCls {
-	
+    
     //TODO: change the method name
     public static List<Sobject> sObjectsToRestore(Set<String> recIds){
-
+        
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
         set<String> allFieldName = new set<String>();
         Map<string,string> mapVersionData= new Map<string,string>();
         for(ContentVersion recVersionData:[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:recIds]){
-                     string vData = (recVersionData.VersionData).toString();
-                     mapVersionData.put(recVersionData.Title,vData);
+            string vData = (recVersionData.VersionData).toString();
+            mapVersionData.put(recVersionData.Title,vData);
         }
         
         for(rbin__Deleted_Data__c rec : [Select id, rbin__Record_ID__c, rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in :recIds]){

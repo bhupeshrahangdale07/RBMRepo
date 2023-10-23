@@ -1,0 +1,15 @@
+<apex:page controller="permanentDeletedRecordPreviewController" showHeader="false" sidebar="false">
+    <apex:includeLightning />    
+    <div id="LightningComponentid" />    
+    <script>
+    $Lightning.use("c:permanentDeletedDataApp", function() {
+        $Lightning.createComponent("c:permanentlyDeletedRecordPreview",
+          {  recId:'{!$CurrentPage.parameters.id}'
+          },
+          "LightningComponentid",
+          function(cmp) {
+             console.log('LWC Componenet added in VF page');
+          });
+    });
+    </script>
+</apex:page>

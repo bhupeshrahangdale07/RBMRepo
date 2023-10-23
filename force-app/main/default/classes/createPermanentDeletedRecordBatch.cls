@@ -71,17 +71,15 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         List<Schema.SObjectType> childObjects=new List<Schema.SObjectType>();
         //get list of Ids from List
         Set<Id> sObjectRecordIds = (new Map<Id,SObject>(sObjectRecords)).keySet();
+        //MAP to store deleted record Id and all data In JSON form
         Map<string,string> mapRecordData = new Map<string,string>();
-        //Map<string,string> mapExistRecordData = new Map<string,string>();
+        //set of ids to perform delete operation on existed contentDocument records
         set<string> setExistedRecordIds = new set<string>();
         
         if(sObjectRecords.size() > 0){
             Schema.DescribeSObjectResult objectDescribe = Schema.getGlobalDescribe().get(objectName).getDescribe();
             List<Schema.ChildRelationship> childRelations = objectDescribe.getChildRelationships();
-            /* for(ChildRelationship c:childRelations){
-			childObjects.add(c.getChildSObject());
-			mapChildObjects.put();
-			}*/
+            
             Integer objNumber = 1;
             for(Integer i=1; i<=childRelations.size(); i++){
                 if(childRelations[i-1].isCascadeDelete() && childRelations[i-1].getChildSObject().getDescribe().isDeletable()){
@@ -93,7 +91,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                 }
             }
             system.debug('Map Child Obj Names '+mapChildObjects);
-            //system.debug('Child Object Names- '+ childObjects);
+            
             
             Map<String,rbin__Deleted_Data__c> existingDeletedDataMap= new Map<String,rbin__Deleted_Data__c>();
             
@@ -117,10 +115,10 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                     newObject.rbin__Deleted_By__c = (String)rec.get('LastModifiedById');
                     newObject.rbin__Object_Name__c = String.valueOf(rec.getSObjectType());
                     newObject.rbin__Deleted_Date__c = (DateTime)rec.get('LastModifiedDate');
-                    //newObject.rbin__Data__c = JSON.serializePretty(rec);
+                    //add deleted record Id and all data in Json form in the 'mapRecordData' 
                     mapRecordData.put(rec.Id,JSON.serializePretty(rec));
                     setExistedRecordIds.add(rec.Id);
-                    //insert new deleted record
+                    //add new deleted record to the list
                     upsertToDeletedData.add(newObject);
                 }else{
                     //fetch existing deleted record
@@ -135,7 +133,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                             }
                             existDeletedDataObj.Id = existingDeletedDataMap.get(rec.Id).Id;
                             existDeletedDataObj.rbin__Deleted_Date__c = (DateTime)rec.get('LastModifiedDate');
-                            //existDeletedDataObj.rbin__Data__c = JSON.serializePretty(rec);
+                            //add deleted record Id and all data in Json form in the 'mapRecordData'
                             mapRecordData.put(rec.Id,JSON.serializePretty(rec));
                             setExistedRecordIds.add(rec.Id);
                             
@@ -160,13 +158,12 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         Integer countTPDObjects = Database.countQuery('SELECT Count() FROM 	rbin__Permanent_Deleted_Tracking_Object__c');
         this.recordNo++;
         if(!this.mapChildObjects.isEmpty()){
-                 system.debug('Inside calling batch');
             batchCreateChildObjectRecords childBatch= new batchCreateChildObjectRecords(this.mapChildObjects);
             database.executeBatch(childBatch);
-            }
+        }
         if(this.recordNo <= countTPDObjects){
             // run batch till complete all track Permanent Deleted Objects.
-             
+            
             createPermanentDeletedRecordBatch bt= new createPermanentDeletedRecordBatch(recordNo);
             Database.executeBatch(bt);
         }else{
@@ -180,35 +177,4 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         }
     }
     
-    /*private static void createFileAttachment(Map<string,string> mapDeletedData,set<string> setRecIds){
-        system.debug('Rec Ids'+setRecIds);
-        List<contentDocument> existedContentDoc =[select id, Title from contentDocument where Title In: setRecIds];
-        delete existedContentDoc;
-        
-        Map<String,Id> mapContentVersion=new Map<String,String>();      
-        List<ContentVersion> lstContentVersion=new List<ContentVersion>();
-        List<ContentDocumentLink> lstContentDocLnk= new List<ContentDocumentLink>();
-        for(rbin__Deleted_Data__c insertedDeletedData:[select id,rbin__Record_ID__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: mapDeletedData.keySet()]){
-            ContentVersion cVersion = new ContentVersion();
-            cVersion.ContentLocation = 'S'; 
-            cVersion.PathOnClient = insertedDeletedData.rbin__Record_ID__c+'.txt';
-            cVersion.Origin = 'H';
-            cVersion.Title = insertedDeletedData.rbin__Record_ID__c;
-            Blob body = Blob.valueOf(mapDeletedData.get(insertedDeletedData.rbin__Record_ID__c));
-            cVersion.VersionData = body;
-            lstContentVersion.add(cVersion);
-            mapContentVersion.put(cVersion.Title,insertedDeletedData.Id);
-        }
-        insert lstContentVersion;
-        
-        for(string title:mapContentVersion.keySet()){
-            ContentDocumentLink cdl = new ContentDocumentLink();
-            system.debug('List of content version-'+[SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title]);
-            cdl.ContentDocumentId = [SELECT Id, ContentDocumentId,Title FROM ContentVersion WHERE Title =: title].ContentDocumentId;
-            cdl.LinkedEntityId = mapContentVersion.get(title);
-            cdl.ShareType = 'V'; 
-            lstContentDocLnk.add(cdl);
-        }
-        insert lstContentDocLnk;
-    }*/
 }

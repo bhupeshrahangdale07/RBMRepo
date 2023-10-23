@@ -340,9 +340,7 @@ global with sharing class RecyclebinController {
     
     //Method to make search in Permanently Deleted Data
     public void searchInPermanentlyDeletedData(){
-        //setRecordIds=null;
-        // searchInRecycleBin();
-        system.debug('setRecordIds- '+setRecordIds);
+        
         List<wrapResults> lstBothWrap= new List<wrapResults>();
         List<sObject> lstOfRecords= new List<sObject>();
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
@@ -359,16 +357,14 @@ global with sharing class RecyclebinController {
         
         String searchKey= '%'+strKeyword+'%';
         
-        String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c ' +
+        String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c,rbin__Deleted_Date__c ' +
             'FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c NOT IN :setRecordIds';
         
         if (strSelectedObject != null) {
-            system.debug('Selected Object Name- '+strSelectedObject);
             queryString += ' AND rbin__Object_Name__c = :strSelectedObject';
         }
         
         if (!string.isblank(strKeyword)) {
-            system.debug('Search Key- '+searchKey);
             queryString += ' AND rbin__Record_Name__c LIKE :searchKey';
         }
         
@@ -385,7 +381,6 @@ global with sharing class RecyclebinController {
         if (!string.IsBlank(strSelectedUser)){
             queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
         }
-        system.debug('Query string-'+queryString);
         List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
         List<wrapResults> lsttempWrap = new List<wrapResults>();
         map<string,string> mapObjectLabelName =new map<string,string>();
@@ -548,9 +543,7 @@ global with sharing class RecyclebinController {
                     
                     // Check if the corresponding record should be deleted
                     if (srList[i].isSuccess()) {
-                        system.debug('allRecordList- '+allRecordList);
                         rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                        system.debug('deletedRecord-> '+deleteRecord);
                         // add records to the list for delete operation on the record
                         deleteRecord.rbin__Restored_Record_Id__c =srList[i].getId();
                         deleteRecord.rbin__Has_Restored__c =true;
@@ -594,7 +587,6 @@ global with sharing class RecyclebinController {
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
                 //added by RP on 22-11-2018
                 if(lstwrapResults.size() > 1) {
-                    system.debug('for 1000 records');
                     List<string> lstUndeleteAllRecords = new List<string>();
                     string strval = '';
                     for(List<wrapResults> lstWrapper: lstwrapResults){
@@ -638,7 +630,6 @@ global with sharing class RecyclebinController {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' All records have been restored successfully.',''));
                     SearchRecords();
                 } else if(!recordIds.isEmpty()){
-                    system.debug('In undelete prmnant function');
                     
                     Map<Sobject,String> mapRecordData= new Map<Sobject,String>();
                     set<String> allFieldName = new set<String>();
@@ -669,9 +660,7 @@ global with sharing class RecyclebinController {
                         
                         // Check if the corresponding record should be deleted
                         if (srList[i].isSuccess()) {
-                            system.debug('allRecordList- '+allRecordList);
                             rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                            system.debug('deletedRecord-> '+deleteRecord);
                             deleteRecord.rbin__Restored_Record_Id__c =srList[i].getId();
                             deleteRecord.rbin__Has_Restored__c =true;
                             deleteRecord.rbin__Restored_Date_Time__c =currentDt;
@@ -721,25 +710,6 @@ global with sharing class RecyclebinController {
                 Database.EmptyRecyclebin(lstIdstoDelete);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' Selected records have been deleted successfully.',''));
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning,' Salesforce runs a process on a scheduled basis that physically deletes records that have been deleted from the recycle bin, if that process has not run yet, you will still see the records here.',''));
-                system.debug('lstwrapResults- '+lstwrapResults);
-                
-                for (List<wrapResults> lstWrapper : lstwrapResults) {
-                    List<wrapResults> itemsToKeep = new List<wrapResults>();
-                    
-                    for (wrapResults result : lstWrapper) {
-                        String s = result.Id;
-                        system.debug('Record Id to remove- ' + s);
-                        
-                        if (!lstIdstoDelete.contains(s)) {
-                            // Add the item to the list of items to keep
-                            itemsToKeep.add(result);
-                        }
-                    }
-                    
-                    // Assign the filtered list back to lstWrapper
-                    lstWrapper.clear();
-                    lstWrapper.addAll(itemsToKeep);
-                }
                 
                 // SearchRecords();
             } else {

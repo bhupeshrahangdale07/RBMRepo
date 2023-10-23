@@ -101,9 +101,7 @@ public class batchCreateChildObjectRecords Implements Database.Batchable<sobject
         
     }
     public void finish(Database.BatchableContext bc){
-        this.objectNo++;
-        batchCreateChildObjectRecords bt = new batchCreateChildObjectRecords(this.mapChildObjNames);
-        Database.executeBatch(bt);
+       
         
     }
 }

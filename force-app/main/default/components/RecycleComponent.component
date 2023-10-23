@@ -346,7 +346,7 @@
                                         </td>
                                         <td>
                                             
-                                            <apex:outputLink value="{!IF(result.isPermanentlyDeleted == 'No', '/apex/rbin__RecordPage', '/apex/PreviesPageForPermanentDeletedData')}?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}">
+                                            <apex:outputLink value="{!IF(result.isPermanentlyDeleted == 'No', '/apex/rbin__RecordPage', '/apex/PermanentDeletedRecordPreview')}?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}">
                                                {!result.Name} 
                                             </apex:outputLink>
                                             
