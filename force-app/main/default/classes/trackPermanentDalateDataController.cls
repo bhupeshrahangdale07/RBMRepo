@@ -3,10 +3,10 @@ public with sharing class trackPermanentDalateDataController {
     
     @AuraEnabled(cacheable = true)
     public static Map<string,string> getAllObjectName(){
-
+        
         Map<string,string> mapOfAllObj = new Map<string,string>();
         List<String> ignorsObjects = new List<String>{'Partner','CaseComment','FeedComment','FeedItem','IdeaComment','FeedComment','FeedItem','EngagementChannelType','DataUsePurpose'};
-        String endpoint = URL.getSalesforceBaseUrl().toExternalForm()+'/services/data/v48.0/sobjects/';
+            String endpoint = URL.getSalesforceBaseUrl().toExternalForm()+'/services/data/v48.0/sobjects/';
         HttpRequest req = new HttpRequest();
         endpoint += '';
         req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionID());
@@ -21,26 +21,26 @@ public with sharing class trackPermanentDalateDataController {
             Map<String, Object> real = (Map<String, Object>)o;
             if((Boolean)real.get('triggerable')){
                 if(!ignorsObjects.contains(String.valueOf(real.get('name')))){
-                   
+                    
                     //trackingobject trackobj = new trackingobject();
                     String objLabel = String.valueOf(real.get('label'));
                     String name = String.valueOf(real.get('name'));
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
                     if(schemaType != null){
-                    if(schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting()) {
-                    String label = String.valueOf(real.get('label'));
-                        mapOfAllObj.put(name,label);  
-                    } 
-                        }
+                        if(schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting()) {
+                            String label = String.valueOf(real.get('label'));
+                            mapOfAllObj.put(name,label);  
+                        } 
+                    }
                 }
             }
-           
+            
         }
         
         return mapOfAllObj;
-         
+        
     }
-
+    
     @AuraEnabled
     public static string saveTrackingObject(List<rbin__Permanent_Deleted_Tracking_Object__c> objNameList){
         try {
@@ -51,21 +51,21 @@ public with sharing class trackPermanentDalateDataController {
             
             Decimal maxSerialNumber = (Decimal)ar[0].get('maxRecordNo');
             if(maxSerialNumber != null){
-            system.debug('Max Record No- '+maxSerialNumber);
-    // Increment by 1 to get the next serial number
-     nextSerialNumber = maxSerialNumber + 1;
-}else if(maxSerialNumber == null){
-     nextSerialNumber = 1;
-}
+                system.debug('Max Record No- '+maxSerialNumber);
+                // Increment by 1 to get the next serial number
+                nextSerialNumber = maxSerialNumber + 1;
+            }else if(maxSerialNumber == null){
+                nextSerialNumber = 1;
+            }
             for(rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList){
-
+                
                 rbin__Permanent_Deleted_Tracking_Object__c prmntTrckObj = new rbin__Permanent_Deleted_Tracking_Object__c();
-
+                
                 prmntTrckObj.Name = objName.Name;
                 system.debug('Name'+objName.Name);
                 // Set the calculated serial number
-            prmntTrckObj.rbin__Record_No__c = nextSerialNumber++;
-
+                prmntTrckObj.rbin__Record_No__c = nextSerialNumber++;
+                
                 prmntObjectTrackingList.add(prmntTrckObj);
                 
             }
@@ -77,10 +77,10 @@ public with sharing class trackPermanentDalateDataController {
             system.debug('Error in Line Number-'+e.getLineNumber());
             throw new AuraHandledException(e.getMessage());
             
-
+            
         }
     }
-
+    
     @AuraEnabled (cacheable = true)
     public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords(){
         try {
@@ -96,14 +96,14 @@ public with sharing class trackPermanentDalateDataController {
         try {
             List<rbin__Permanent_Deleted_Tracking_Object__c> deleteObjectRecordList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
             system.debug('Id List-'+removeObjectIds);
-           // if(String.isNotBlank(removeObjectIds)){
+            // if(String.isNotBlank(removeObjectIds)){
             // List<Id> objectIds = removeObjectIds.split(',');
             deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id =: removeObjectIds];
             system.debug('Delete record list-'+deleteObjectRecordList);
-       // }
-        delete deleteObjectRecordList;
-        updateSerialNumbers();
-        return 'Setting updated Successfully!';
+            // }
+            delete deleteObjectRecordList;
+            updateSerialNumbers();
+            return 'Setting updated Successfully!';
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

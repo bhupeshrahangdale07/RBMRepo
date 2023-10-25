@@ -44,10 +44,10 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         //getting single object from track deleted object data
         List<rbin__Permanent_Deleted_Tracking_Object__c> lstTrackDeletedObjects = new List<	rbin__Permanent_Deleted_Tracking_Object__c>([
             Select 
-            Id, 
-            Name,
-            rbin__Record_No__c 
-            From 	rbin__Permanent_Deleted_Tracking_Object__c 
+            	Id, 
+            	Name,
+            	rbin__Record_No__c 
+            From rbin__Permanent_Deleted_Tracking_Object__c 
             Where rbin__Record_No__c = :recordNo Limit 1
         ]);
         
@@ -68,7 +68,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
     public void execute(Database.BatchableContext bc, List<SObject> sObjectRecords){
         string recordName;
         List<rbin__Deleted_Data__c> upsertToDeletedData = new List<rbin__Deleted_Data__c>();
-        List<Schema.SObjectType> childObjects=new List<Schema.SObjectType>();
+        List<Schema.SObjectType> childObjects = new List<Schema.SObjectType>();
         //get list of Ids from List
         Set<Id> sObjectRecordIds = (new Map<Id,SObject>(sObjectRecords)).keySet();
         //MAP to store deleted record Id and all data In JSON form
@@ -81,7 +81,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
             List<Schema.ChildRelationship> childRelations = objectDescribe.getChildRelationships();
             
             Integer objNumber = 1;
-            for(Integer i=1; i<=childRelations.size(); i++){
+            for(Integer i = 1; i <= childRelations.size(); i++){
                 if(childRelations[i-1].isCascadeDelete() && childRelations[i-1].getChildSObject().getDescribe().isDeletable()){
                     string childObjName=string.valueOf(childRelations[i-1].getChildSObject());
                     if(!setChildObjToIgnore.contains(childObjName)){

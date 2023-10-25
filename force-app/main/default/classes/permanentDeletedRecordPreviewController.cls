@@ -6,8 +6,6 @@ public with sharing class permanentDeletedRecordPreviewController {
 
         wrpDeletedData objwrpDeletedData = new wrpDeletedData();
         
-        system.debug('RecordId>>>'+recordId);
-        
        List<wrpRecordDetail> lstDeletedRecord = new List<wrpRecordDetail>();
         rbin__Deleted_Data__c deletedRecord=[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
         ContentVersion cv=[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:recordId];
@@ -16,12 +14,11 @@ public with sharing class permanentDeletedRecordPreviewController {
         string objName=(String)Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().getLabel();
         string recName=deletedRecord.rbin__Record_Name__c;
         
-        system.debug('JsonData-'+deletedData);
         Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
         // Query for object describe information
         Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().fields.getMap();
-        //Map<String, Object> dataMap = new Map<String, Object>();
+        
         for (String key : jsonMap.keySet()) {
             if (key != 'attributes' && key != 'BillingAddress' && key !='ShippingAddress' && key !='MailingAddress') {
                  wrpRecordDetail objwr=new wrpRecordDetail();
@@ -34,10 +31,8 @@ public with sharing class permanentDeletedRecordPreviewController {
                             objwr.Value = '-';
                         }
                 lstDeletedRecord.add(objwr);
-                system.debug('Wrapper Obj>>'+objwr);
             }
         }
-        system.debug('List of wrapper- '+lstDeletedRecord);
         objwrpDeletedData.lstWrpData = lstDeletedRecord;
         objwrpDeletedData.objectName = objName;
         objwrpDeletedData.recordName = recName;
@@ -58,7 +53,6 @@ public with sharing class permanentDeletedRecordPreviewController {
             string objName=previewRecord.rbin__Object_Name__c;
             string recName=previewRecord.rbin__Record_Name__c;
             
-            system.debug('JsonData-'+deletedData);
             sObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
@@ -85,7 +79,6 @@ public with sharing class permanentDeletedRecordPreviewController {
                 }
             }
 
-            system.debug('Object to insert- '+obj);
 
             TimeZone tz = UserInfo.getTimeZone();
                 DateTime dt = Datetime.now();
