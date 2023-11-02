@@ -1,12 +1,12 @@
-public with sharing class trackPermanentDalateDataController {
+public with sharing class trackPermanentDeletedDataCtrl {
     
     
     @AuraEnabled(cacheable = true)
-    public static Map<string,string> getAllObjectName(){
+    public static Map<string, string> getAllObjectName() {
         
-        Map<string,string> mapOfAllObj = new Map<string,string>();
-        List<String> ignorsObjects = new List<String>{'Partner','CaseComment','FeedComment','FeedItem','IdeaComment','FeedComment','FeedItem','EngagementChannelType','DataUsePurpose'};
-            String endpoint = URL.getSalesforceBaseUrl().toExternalForm()+'/services/data/v48.0/sobjects/';
+        Map<string, string> mapOfAllObj = new Map<string, string>();
+        List<String> ignorsObjects = new List<String>{'Partner', 'CaseComment', 'FeedComment', 'FeedItem', 'IdeaComment', 'FeedComment', 'FeedItem', 'EngagementChannelType', 'DataUsePurpose'};
+            String endpoint = URL.getSalesforceBaseUrl().toExternalForm() + '/services/data/v48.0/sobjects/';
         HttpRequest req = new HttpRequest();
         endpoint += '';
         req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionID());
@@ -17,19 +17,18 @@ public with sharing class trackPermanentDalateDataController {
         HttpResponse  res  = httpreq.send(req);
         Map<String, Object> m = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
         List<Object> ob = (List<Object>)m.get('sobjects');
-        for(Object o : ob){
+        for (Object o : ob){
             Map<String, Object> real = (Map<String, Object>)o;
-            if((Boolean)real.get('triggerable')){
-                if(!ignorsObjects.contains(String.valueOf(real.get('name')))){
-                    
-                    //trackingobject trackobj = new trackingobject();
+            if ((Boolean)real.get('triggerable')) {
+                if(!ignorsObjects.contains(String.valueOf(real.get('name')))) {
+
                     String objLabel = String.valueOf(real.get('label'));
                     String name = String.valueOf(real.get('name'));
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
-                    if(schemaType != null){
-                        if(schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting()) {
+                    if (schemaType != null) {
+                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting()) {
                             String label = String.valueOf(real.get('label'));
-                            mapOfAllObj.put(name,label);  
+                            mapOfAllObj.put(name, label);  
                         } 
                     }
                 }
@@ -42,27 +41,25 @@ public with sharing class trackPermanentDalateDataController {
     }
     
     @AuraEnabled
-    public static string saveTrackingObject(List<rbin__Permanent_Deleted_Tracking_Object__c> objNameList){
+    public static string saveTrackingObject(List<rbin__Permanent_Deleted_Tracking_Object__c> objNameList) {
         try {
             List<rbin__Permanent_Deleted_Tracking_Object__c> prmntObjectTrackingList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
             Decimal nextSerialNumber;
             // Query for the maximum existing serial number
-            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM 	rbin__Permanent_Deleted_Tracking_Object__c];
+            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM rbin__Permanent_Deleted_Tracking_Object__c];
             
             Decimal maxSerialNumber = (Decimal)ar[0].get('maxRecordNo');
-            if(maxSerialNumber != null){
-                system.debug('Max Record No- '+maxSerialNumber);
+            if (maxSerialNumber != null) { 
                 // Increment by 1 to get the next serial number
                 nextSerialNumber = maxSerialNumber + 1;
-            }else if(maxSerialNumber == null){
+            }else if (maxSerialNumber == null) {
                 nextSerialNumber = 1;
             }
-            for(rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList){
+            for (rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList) {
                 
                 rbin__Permanent_Deleted_Tracking_Object__c prmntTrckObj = new rbin__Permanent_Deleted_Tracking_Object__c();
-                
+
                 prmntTrckObj.Name = objName.Name;
-                system.debug('Name'+objName.Name);
                 // Set the calculated serial number
                 prmntTrckObj.rbin__Record_No__c = nextSerialNumber++;
                 
@@ -70,21 +67,19 @@ public with sharing class trackPermanentDalateDataController {
                 
             }
             insert prmntObjectTrackingList;
-            //updateSerialNumbers();
+
             return 'Setting Updated Successfully!';
             
         } catch (Exception e) {
             system.debug('Error in Line Number-'+e.getLineNumber());
             throw new AuraHandledException(e.getMessage());
-            
-            
         }
     }
     
     @AuraEnabled (cacheable = true)
-    public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords(){
+    public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords() {
         try {
-            list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([select id,name from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
+            list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([Select id,name from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
             return lst;
             
         } catch (Exception e) {
@@ -92,15 +87,10 @@ public with sharing class trackPermanentDalateDataController {
         }
     }
     @AuraEnabled
-    public static string deleteObject(String removeObjectIds){
+    public static string deleteObject(String removeObjectIds) {
         try {
             List<rbin__Permanent_Deleted_Tracking_Object__c> deleteObjectRecordList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
-            system.debug('Id List-'+removeObjectIds);
-            // if(String.isNotBlank(removeObjectIds)){
-            // List<Id> objectIds = removeObjectIds.split(',');
-            deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id =: removeObjectIds];
-            system.debug('Delete record list-'+deleteObjectRecordList);
-            // }
+            deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id = :removeObjectIds];
             delete deleteObjectRecordList;
             updateSerialNumbers();
             return 'Setting updated Successfully!';
@@ -108,19 +98,18 @@ public with sharing class trackPermanentDalateDataController {
             throw new AuraHandledException(e.getMessage());
         }
     }
-    private static void updateSerialNumbers() {
-        List<	rbin__Permanent_Deleted_Tracking_Object__c> recordsToUpdate = new List<	rbin__Permanent_Deleted_Tracking_Object__c>();
-        
+    
+    public static void updateSerialNumbers() {
+        List<rbin__Permanent_Deleted_Tracking_Object__c> recordsToUpdate = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
         // Query all records ordered by rbin__Record_No__c
-        List<	rbin__Permanent_Deleted_Tracking_Object__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM 	rbin__Permanent_Deleted_Tracking_Object__c ORDER BY Name ASC];
-        
+        List<rbin__Permanent_Deleted_Tracking_Object__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM 	rbin__Permanent_Deleted_Tracking_Object__c ORDER BY Name ASC];
+
         // Update the serial numbers
         Integer currentSerialNumber = 1;
-        for (	rbin__Permanent_Deleted_Tracking_Object__c record : allRecords) {
+        for (rbin__Permanent_Deleted_Tracking_Object__c record : allRecords) {
             record.rbin__Record_No__c = currentSerialNumber++;
             recordsToUpdate.add(record);
         }
-        
         // Perform the update
         update recordsToUpdate;
     }

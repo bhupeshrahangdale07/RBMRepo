@@ -1,13 +1,12 @@
 import { LightningElement, track, wire } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import { RefreshEvent } from 'lightning/refresh';
 import LightningConfirm from "lightning/confirm";
 import LightningAlert from 'lightning/alert';
-import getAllObjectName from '@salesforce/apex/trackPermanentDalateDataController.getAllObjectName';
-import saveTrackingObject from '@salesforce/apex/trackPermanentDalateDataController.saveTrackingObject';
-import fetchAllRecords from '@salesforce/apex/trackPermanentDalateDataController.fetchAllRecords';
-import deleteObject from '@salesforce/apex/trackPermanentDalateDataController.deleteObject';
+import getAllObjectName from '@salesforce/apex/trackPermanentDeletedDataCtrl.getAllObjectName';
+import saveTrackingObject from '@salesforce/apex/trackPermanentDeletedDataCtrl.saveTrackingObject';
+import fetchAllRecords from '@salesforce/apex/trackPermanentDeletedDataCtrl.fetchAllRecords';
+import deleteObject from '@salesforce/apex/trackPermanentDeletedDataCtrl.deleteObject';
 import AddNewButton from '@salesforce/label/c.AddNewButton';
 import Save_rbin from '@salesforce/label/c.Save_rbin';
 
@@ -196,7 +195,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 label: 'Record Deleted', // this is the header text
             });
             console.log('Deleted Value-'+this.objectRecordList[this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds)].Name);
-            debugger;
             var deletedValue=this.objectRecordList[this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds)].Name;
             var indexValueforDeleteObj=this.allObjectListForIndex.findIndex(idx => idx.value == deletedValue);
             this.getAllObjectList.splice(indexValueforDeleteObj,0,{label:deletedValue, value:deletedValue});

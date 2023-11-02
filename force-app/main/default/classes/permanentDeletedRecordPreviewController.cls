@@ -1,73 +1,85 @@
 public with sharing class permanentDeletedRecordPreviewController {
 
-    
-   @AuraEnabled(cacheable = true)
-    public static wrpDeletedData showPreviewPage( Id recordId){
-
+    @AuraEnabled(cacheable = true)
+    public static wrpDeletedData showPreviewPage(Id recordId) {
         wrpDeletedData objwrpDeletedData = new wrpDeletedData();
-        
-       List<wrpRecordDetail> lstDeletedRecord = new List<wrpRecordDetail>();
-        rbin__Deleted_Data__c deletedRecord=[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
-        ContentVersion cv=[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:recordId];
+        List<wrpRecordDetail> lstDeletedRecord = new List<wrpRecordDetail>();
+        rbin__Deleted_Data__c deletedRecord = [
+            SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c
+            FROM rbin__Deleted_Data__c
+            WHERE rbin__Record_ID__c = :recordId
+            LIMIT 1
+        ];
+        ContentVersion cv = [
+            SELECT Id, ContentDocumentId, VersionData, Title
+            FROM ContentVersion
+            WHERE Title = :recordId
+        ];
 
-        string deletedData=(cv.VersionData).toString();
-        string objName=(String)Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().getLabel();
-        string recName=deletedRecord.rbin__Record_Name__c;
-        
+        String deletedData = (cv.VersionData).toString();
+        String objName = (String) Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().getLabel();
+        String recName = deletedRecord.rbin__Record_Name__c;
+
         Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
-        // Query for object describe information
         Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(deletedRecord.rbin__Object_Name__c).getDescribe().fields.getMap();
-        
+
         for (String key : jsonMap.keySet()) {
-            if (key != 'attributes' && key != 'BillingAddress' && key !='ShippingAddress' && key !='MailingAddress') {
-                 wrpRecordDetail objwr=new wrpRecordDetail();
-                objwr.FieldLabel=fieldMap.get(key).getDescribe().getLabel();
-                system.debug('Label- '+objwr.FieldLabel);
-                if(jsonMap.get(key) != null) {
-                    system.debug('Value- '+String.valueOf(jsonMap.get(key)));
-                            objwr.Value = String.valueOf(jsonMap.get(key));
-                        } else {
-                            objwr.Value = '-';
-                        }
+            if (key != 'attributes' && key != 'BillingAddress' && key != 'ShippingAddress' && key != 'MailingAddress') {
+                wrpRecordDetail objwr = new wrpRecordDetail();
+                objwr.FieldLabel = fieldMap.get(key).getDescribe().getLabel();
+                System.debug('Label- ' + objwr.FieldLabel);
+                if (jsonMap.get(key) != null) {
+                    System.debug('Value- ' + String.valueOf(jsonMap.get(key)));
+                    objwr.Value = String.valueOf(jsonMap.get(key));
+                } else {
+                    objwr.Value = '-';
+                }
                 lstDeletedRecord.add(objwr);
             }
         }
+
         objwrpDeletedData.lstWrpData = lstDeletedRecord;
         objwrpDeletedData.objectName = objName;
         objwrpDeletedData.recordName = recName;
 
         return objwrpDeletedData;
-
     }
 
     @AuraEnabled
-    public static Id restoreRecord(Id recordId){
+    public static Id restoreRecord(Id recordId) {
         try {
+            Set<String> allFieldName = new Set<String>();
+            rbin__Deleted_Data__c previewRecord = [
+                SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c
+                FROM rbin__Deleted_Data__c
+                WHERE rbin__Record_ID__c = :recordId
+                LIMIT 1
+            ];
+            ContentVersion cv = [
+                SELECT Id, ContentDocumentId, VersionData, Title
+                FROM ContentVersion
+                WHERE Title = :recordId
+            ];
 
-            set<String> allFieldName = new set<String>();
-            rbin__Deleted_Data__c previewRecord=[select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c=: recordId Limit 1];
-            ContentVersion cv=[SELECT Id, ContentDocumentId,VersionData,Title FROM ContentVersion WHERE Title =:recordId];
-            
-            string deletedData=(cv.VersionData).toString();
-            string objName=previewRecord.rbin__Object_Name__c;
-            string recName=previewRecord.rbin__Record_Name__c;
-            
-            sObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
+            String deletedData = (cv.VersionData).toString();
+            String objName = previewRecord.rbin__Object_Name__c;
+            String recName = previewRecord.rbin__Record_Name__c;
+
+            SObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
-            Map<String, Schema.SobjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
-            For(Schema.SobjectField field : allMap.values()){
+            Map<String, Schema.SObjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
+            for (Schema.SObjectField field : allMap.values()) {
                 Schema.DescribeFieldResult dfr = field.getDescribe();
-                if(dfr.isCreateable() && dfr.isUpdateable()){
+                if (dfr.isCreateable() && dfr.isUpdateable()) {
                     allFieldName.add(dfr.getName());
-                }else if(dfr.getRelationshipOrder() == 1 || dfr.getRelationshipOrder() == 0){
+                } else if (dfr.getRelationshipOrder() == 1 || dfr.getRelationshipOrder() == 0) {
                     allFieldName.add(dfr.getName());
                 }
             }
 
-            for(String fieldName:jsonMap.keySet()){
-
+            for (String fieldName : jsonMap.keySet()) {
                 if (allFieldName.contains(fieldName) && fieldName != 'Id') {
                     Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
                     if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
@@ -79,19 +91,17 @@ public with sharing class permanentDeletedRecordPreviewController {
                 }
             }
 
-
             TimeZone tz = UserInfo.getTimeZone();
-                DateTime dt = Datetime.now();
-                DateTime currentDt=dt.addSeconds((tz.getOffset(dt)/1000));
+            DateTime dt = Datetime.now();
+            DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
 
                 Database.SaveResult sr = Database.insert(obj, false);
                 Id recId;
                 if (sr.isSuccess()) {
                     // Record was successfully inserted
-                    System.debug('Account ID: ' + sr.getId());
                     recId = sr.getId();
-                    previewRecord.rbin__Restored_Record_Id__c =sr.getId();
-                    previewRecord.rbin__Has_Restored__c =true;
+                    previewRecord.rbin__Restored_Record_Id__c = sr.getId();
+                    previewRecord.rbin__Has_Restored__c = true;
                     //previewRecord.rbin__Restored_Date_Time__c =currentDt;
                         update previewRecord;
                         delete previewRecord;
@@ -107,36 +117,29 @@ public with sharing class permanentDeletedRecordPreviewController {
                     // return sr.getId();
         
             
-        } catch (Exception e) {
+       } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
     }
-    
-    public class wrpDeletedData{
+
+    public class wrpDeletedData {
         @AuraEnabled
         public List<wrpRecordDetail> lstWrpData = null;
         @AuraEnabled
-        public string objectName {get; set;}
+        public String objectName { get; set; }
         @AuraEnabled
-        public string recordName {get; set;}
-        
+        public String recordName { get; set; }
     }
-    
 
-
-    //WrapperRecordDetailFroPreview
     public class wrpRecordDetail {
-        //public string FieldAPIName {get; set;}
         @AuraEnabled
-        public string FieldLabel {get; set;}
+        public String FieldLabel { get; set; }
         @AuraEnabled
-        public string Value {get; set;}
-        //public boolean isHideRow {get; set;} 
-        public wrpRecordDetail(){
-            //FieldAPIName = '';
+        public String Value { get; set; }
+
+        public wrpRecordDetail() {
             FieldLabel = '';
             Value = '';
-           
         }
-    } 
+    }
 }
