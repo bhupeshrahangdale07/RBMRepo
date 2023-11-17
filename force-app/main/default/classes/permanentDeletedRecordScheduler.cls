@@ -3,7 +3,7 @@
 public class permanentDeletedRecordScheduler implements Schedulable {
 
     public void execute(SchedulableContext sc) {
-        createPermanentDeletedRecordBatch batchClass = new createPermanentDeletedRecordBatch();
+        createPermanentDeletedRecordBatch batchClass = new createPermanentDeletedRecordBatch(1);
         Database.executeBatch(batchClass); 
     }
 }

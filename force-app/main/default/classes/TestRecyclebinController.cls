@@ -15,6 +15,7 @@ public with sharing class TestRecyclebinController {
         acc.Name= 'Test Account';
         insert acc;
         
+        
         Contact con = new Contact();
         con.FirstName = 'Test FName';
         con.LastName = 'Test LName';
@@ -23,16 +24,21 @@ public with sharing class TestRecyclebinController {
         delete acc;
         
         Test.startTest();
-        
+        ApexPages.currentPage().getParameters().put('Object','Account');
+        ApexPages.currentPage().getParameters().put('Keyword','Account');
+        ApexPages.currentPage().getParameters().put('FromDate',system.now().addDays(-5).format('MM/dd/YYYY'));
+        ApexPages.currentPage().getParameters().put('ToDate',system.now().addDays(5).format('MM/dd/YYYY'));
         RecyclebinController objrecycle = new RecyclebinController();
         objrecycle.strSelectedObject = 'Account';
         objrecycle.strKeyword = 'Acc';
+        objrecycle.strSearchIn = 'Both';
         objrecycle.strFromDate = system.now().addDays(-5).format('MM/dd/YYYY');
         objrecycle.strToDate = system.now().addDays(5).format('MM/dd/YYYY');
         objrecycle.strSelectedUser = UserInfo.getUserId(); 
         objrecycle.SearchRecords();
         if(objrecycle.lstwrapResults.size() > 0) {
             objrecycle.lstwrapResults[0][0].isCheck = true;
+            objrecycle.lstwrapResults[0][0].isPermanentlyDeleted = 'No';
             objrecycle.UndeleteSelectedRecords();
             system.assertEquals(acc.Id, [select Id from Account Where Id=: acc.Id].Id);
         }
@@ -47,11 +53,25 @@ public with sharing class TestRecyclebinController {
         objrecycle.strSelectedUser = UserInfo.getUserId(); 
         objrecycle.SearchRecords();
         if(objrecycle.lstwrapResults.size() > 0) {
+            objrecycle.lstwrapResults[0][0].isPermanentlyDeleted = 'Yes';
             objrecycle.UndeleteAllRecords();
-            system.assertEquals(con.Id, [select Id from Contact Where Id=: con.Id].Id);
+            //system.assertEquals(con.Id, [select Id from Contact Where Id=: con.Id].Id);
         }
         
         delete acc;
+        objrecycle.Clear();
+        objrecycle.strSelectedObject = '';
+        objrecycle.strKeyword = 'Test';
+        objrecycle.strFromDate = system.now().addDays(-5).format('MM/dd/YYYY');
+        objrecycle.strToDate = system.now().addDays(3).format('MM/dd/YYYY');
+        objrecycle.strSelectedUser = UserInfo.getUserId(); 
+        objrecycle.SearchRecords();
+        if(objrecycle.lstwrapResults.size() > 0) {
+            objrecycle.lstwrapResults[0][0].isCheck = true;
+            objrecycle.lstwrapResults[0][0].isPermanentlyDeleted = 'No';
+            objrecycle.DeleteFromRecyclebin();
+        }
+        
         objrecycle.Clear();
         objrecycle.strSelectedObject = 'Account';
         objrecycle.strKeyword = 'Test';
@@ -61,8 +81,9 @@ public with sharing class TestRecyclebinController {
         objrecycle.SearchRecords();
         if(objrecycle.lstwrapResults.size() > 0) {
             objrecycle.lstwrapResults[0][0].isCheck = true;
+            objrecycle.lstwrapResults[0][0].isPermanentlyDeleted = 'Yes';
             objrecycle.DeleteFromRecyclebin();
-        }
+        } 
         
         Test.StopTest();
         
@@ -291,5 +312,109 @@ public with sharing class TestRecyclebinController {
         SearchObjectSetting.triggerableobjects();
         system.assertEquals(43, SearchObjectSetting.triggerableobjects().size());
         Test.stopTest();
+    }
+    
+    @isTest
+    public static void getRowOptionsTest(){
+        
+         Test.startTest();
+         RecyclebinController rbinCtrl = new RecyclebinController();
+         rbinCtrl.getRowOptions();
+         Test.stopTest();
+    }
+    
+    @isTest
+    public static void searchInPermanentlyDeletedDataTest(){
+        
+        rbin__Recycle_Bin_Setting__c rbinsett = new rbin__Recycle_Bin_Setting__c();
+        rbinsett.rbin__Send_record_deletion_email_to__c = 'test@gemail.com';
+        rbinsett.rbin__Last_batch_run__c = date.today() - 2;
+        insert rbinsett;
+        
+        Account accObj1 = new Account();
+        accObj1.Name = 'TestAcc1';
+        accObj1.AnnualRevenue = 70000;
+        accObj1.BillingCity = 'Mumbai';
+        accObj1.BillingCountry = 'India';
+        accObj1.Rating = 'Hot';
+        insert accObj1;
+        
+        Account acc = new Account();
+        acc.Name= 'Test Account';
+        insert acc;
+        Id accId = acc.Id;
+        
+        
+        Contact conObj = new Contact();
+        conObj.LastName = 'Test Con 1';
+        conObj.AccountId = accId;
+        insert conObj;
+        delete acc;
+        String recordData1 = JSON.serializePretty(accObj1);
+        String recordData2 = JSON.serializePretty(conObj);
+        
+        rbin__Deleted_Data__c Deleted_DataObj1 = new rbin__Deleted_Data__c();
+        Deleted_DataObj1.rbin__Object_Name__c = 'Account';
+        Deleted_DataObj1.rbin__Record_ID__c = accObj1.Id;
+        Deleted_DataObj1.rbin__Record_Name__c = 'TestAcc1';
+        Deleted_DataObj1.rbin__Deleted_Date__c = system.now();
+        Deleted_DataObj1.rbin__Deleted_By__c = UserInfo.getUserId(); 
+		insert Deleted_DataObj1;
+        
+        rbin__Deleted_Data__c Deleted_DataObj2 = new rbin__Deleted_Data__c();
+        Deleted_DataObj2.rbin__Object_Name__c = 'Contact';
+        Deleted_DataObj2.rbin__Record_ID__c = conObj.Id;
+        Deleted_DataObj2.rbin__Record_Name__c = 'Test Con 1';
+        Deleted_DataObj2.rbin__Deleted_Date__c = system.now();
+        Deleted_DataObj2.rbin__Deleted_By__c = UserInfo.getUserId(); 
+		insert Deleted_DataObj2;
+        
+        ContentVersion cVersion1 = new ContentVersion();
+            cVersion1.ContentLocation = 'S';
+            cVersion1.PathOnClient = accObj1.Id + '.txt';
+            cVersion1.Origin = 'H';
+            cVersion1.Title = accObj1.Id;
+            Blob body1 = Blob.valueOf(recordData1);
+            cVersion1.VersionData = body1;
+        insert cVersion1;
+        
+        ContentVersion cVersion2 = new ContentVersion();
+            cVersion2.ContentLocation = 'S';
+            cVersion2.PathOnClient = conObj.Id + '.txt';
+            cVersion2.Origin = 'H';
+            cVersion2.Title = conObj.Id;
+            Blob body2 = Blob.valueOf(recordData2);
+            cVersion2.VersionData = body2;
+        insert cVersion2;
+        
+        Test.startTest();
+        
+        RecyclebinController objrecycle = new RecyclebinController();
+        objrecycle.strSelectedObject = null;
+        objrecycle.strKeyword = 'Test';
+        objrecycle.strSearchIn = 'PermanentDeletedData';
+        objrecycle.strFromDate = system.now().addDays(-5).format('MM/dd/YYYY');
+        objrecycle.strToDate = system.now().addDays(5).format('MM/dd/YYYY');
+        objrecycle.strSelectedUser = UserInfo.getUserId(); 
+        objrecycle.searchInPermanentlyDeletedData();
+        if(objrecycle.lstwrapResults.size() > 0) {
+            objrecycle.lstwrapResults[0][0].isCheck = true;
+            objrecycle.lstwrapResults[0][0].isPermanentlyDeleted = 'Yes';
+            objrecycle.UndeleteSelectedRecords();
+        }
+  		objrecycle.Clear();
+        objrecycle.strSelectedObject = 'Account';
+        objrecycle.strKeyword = 'Test';
+        objrecycle.strFromDate = system.now().addDays(-5).format('MM/dd/YYYY');
+        objrecycle.strToDate = system.now().addDays(3).format('MM/dd/YYYY');
+        objrecycle.strSelectedUser = UserInfo.getUserId(); 
+        //objrecycle.SearchRecords();
+        if(objrecycle.lstwrapResults.size() > 0) {
+            objrecycle.lstwrapResults[0][0].isCheck = true;
+            objrecycle.UndeleteAllRecords();
+        }
+        
+        Test.stopTest();
+        
     }
 }

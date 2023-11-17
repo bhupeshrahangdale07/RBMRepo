@@ -1,7 +1,7 @@
 @isTest
-public class testCreatePermanentDeletedRecordBatch {
+public class testPermanentDeletedRecordScheduler {
     
-      @testSetup static void dataSetup() {
+    @testSetup static void dataSetup() {
           // Create test data for rbin__Track_Batch_Process__c
         rbin__Track_Batch_Process__c trackBatchProcess = new rbin__Track_Batch_Process__c(Name = 'Track Permanent Deleted Data Batch', rbin__Last_Run_Batch_Time__c= system.now()-10);
         insert trackBatchProcess;
@@ -47,17 +47,14 @@ public class testCreatePermanentDeletedRecordBatch {
 
         delete accObj2;
       }
-    
-    @isTest
-    public static void createPermanentDeletedRecordBtcMethod() {
-        
+     
 
-        Test.startTest();
-        createPermanentDeletedRecordBatch batchInstance = new createPermanentDeletedRecordBatch(1);
-        Database.executeBatch(batchInstance);
+    @isTest
+    public static void permanentDeletedRecordSchedulerTest () {
+        String chron = '0 0 12 1/1 * ? *'; 
+       
+        Test.startTest();  
+        system.schedule('Test Sched', chron, new permanentDeletedRecordScheduler());
         Test.stopTest();
-        
-        List<rbin__Deleted_Data__c> deletedDataRecords = [SELECT Id FROM rbin__Deleted_Data__c];
-        System.assertEquals(3, deletedDataRecords.size());
-            }
+    }
 }

@@ -22,14 +22,15 @@ public class batchCreateChildObjectRecords Implements Database.Batchable<sobject
         }
         if(!setTrackingObjects.contains(objectName) && objectName!=null){
          List<String> fieldNames = new List<String>(UtilityCls.fetchObjectFieldMap(objectName).keySet());
-        
+        system.debug('myQuery1- '+myQuery);
           myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objectName + ' WHERE IsDeleted = true ALL ROWS';
+            system.debug('myQuery2- '+myQuery);
         }
         return Database.getQueryLocator(myQuery); 
     }
     
     public void execute(Database.BatchableContext bc, List<SObject> sObjectRecords){
-        
+        system.debug('Inside execute');
          string recordName;
         List<rbin__Deleted_Data__c> upsertToDeletedData = new List<rbin__Deleted_Data__c>();
         List<Schema.SObjectType> childObjects=new List<Schema.SObjectType>();
@@ -40,7 +41,7 @@ public class batchCreateChildObjectRecords Implements Database.Batchable<sobject
         set<string> setExistedRecordIds = new set<string>();
         
         if(sObjectRecords.size() > 0){
-            
+            system.debug('sObjectRecords- '+sObjectRecords.size());
             Map<String,rbin__Deleted_Data__c> existingDeletedDataMap= new Map<String,rbin__Deleted_Data__c>();
             
             //fetch Existing Deleted Data
@@ -54,15 +55,15 @@ public class batchCreateChildObjectRecords Implements Database.Batchable<sobject
                     if(objectKeyFieldMap.containsKey(String.valueOf(rec.getSObjectType()))){
                         recordName = (String)rec.get(objectKeyFieldMap.get(String.valueOf(rec.getSObjectType())));
                     }else{
-                        recordName = (String)rec.get('Name');
+                        recordName = '';//(String)rec.get('Name');
                     }
                     
                     rbin__Deleted_Data__c newObject = new rbin__Deleted_Data__c();
                     newObject.rbin__Record_ID__c = rec.Id;  
                     newObject.rbin__Record_Name__c = recordName; 
-                    newObject.rbin__Deleted_By__c = (String)rec.get('LastModifiedById');
+                    //newObject.rbin__Deleted_By__c = (String)rec.get('LastModifiedById');
                     newObject.rbin__Object_Name__c = String.valueOf(rec.getSObjectType());
-                    newObject.rbin__Deleted_Date__c = (DateTime)rec.get('LastModifiedDate');
+                    newObject.rbin__Deleted_Date__c = (DateTime)rec.get('SystemModstamp');
                     //newObject.rbin__Data__c = JSON.serializePretty(rec);
                     mapRecordData.put(rec.Id,JSON.serializePretty(rec));
                     setExistedRecordIds.add(rec.Id);
@@ -93,7 +94,7 @@ public class batchCreateChildObjectRecords Implements Database.Batchable<sobject
                 }
             }
         }
-        
+        system.debug('Data upsert');
         // Insert/Update Deleted Data
         Database.Upsert(upsertToDeletedData,false);
         

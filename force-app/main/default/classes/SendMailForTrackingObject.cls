@@ -26,6 +26,7 @@ global with sharing class SendMailForTrackingObject {
         Date d = date.today();
         String edt = d.month() + '/' + d.day() + '/' + d.year();
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        system.debug('Mail- ' + toMail);
         if(toMail.contains(',')) {
             sendtomails.addAll(toMail.split(','));
         } else {
