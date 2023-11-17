@@ -85,7 +85,7 @@ global with sharing class RecyclebinController {
                 }
             }
 
-            if (blnfield && objectFields.containsKey('isdeleted') && objectFields.containsKey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting()) {
+            if (blnfield && objectFields.containsKey('isdeleted') && objectFields.containsKey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting() && objSType.getDescribe().getName() != 'rbin__Deleted_Data__c') {
                 if (lstObjects.size() < 1000) {
                     lstObjects.add(new SelectOption(objSType.getDescribe().getName(), objSType.getDescribe().getLabel()));
                     mapObjectNames.put(objSType.getDescribe().getName(), objSType.getDescribe().getLabel());
@@ -528,6 +528,7 @@ global with sharing class RecyclebinController {
                 TimeZone tz = UserInfo.getTimeZone();
                 DateTime dt = Datetime.now();
                 DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
+                system.debug('lstobjectToRestore- '+lstobjectToRestore);
                 
                 Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
                 
@@ -535,15 +536,16 @@ global with sharing class RecyclebinController {
                 Integer successcount = 0;
                 Integer failcount = 0;
                 Integer deleteRecordcount = 0;
+                Integer duplicateRecordCount = 0;
                 for (Integer i = 0; i < srList.size(); i++) {
                     if (srList[i].isSuccess()) {
                         successcount++;
                     } else {
-                        system.debug('Error- '+srList[i].getErrors()[i].getFields());
-                        if (string.valueOf(srList[i].getErrors()[i].getStatusCode()) == 'ENTITY_IS_DELETED'){ 
+                        if (string.valueOf(srList[i].getErrors()).contains('ENTITY_IS_DELETED')){ 
                             deleteRecordcount++;
-                            lstRecordsToDelete.add(srList[i].getId());
-                            system.debug('Id to delete-  '+srList[i].getId());
+                            //lstRecordsToDelete.add(srList[i].getId());
+                        } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {
+                            duplicateRecordCount++;
                         } else {
                             failcount++;
                         }
@@ -568,14 +570,20 @@ global with sharing class RecyclebinController {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + ' record(s) failed to restore.',''));
                 }
                 if (deleteRecordcount > 0) {
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' failed to restore '+deleteRecordcount + ' record(s), this will get deleted, as their parent are not avilable.',''));
-                } 
+                    system.debug('deleteRecordcount-'+deleteRecordcount);
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+deleteRecordcount + ' record(s), as the parent record is not available for this records.',''));
+
+                } if (duplicateRecordCount > 0) {
+                    system.debug('duplicateRecordCount-'+duplicateRecordCount);
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
+
+                }
                 update recordtoDelete;
                 delete recordtoDelete;
                 SearchRecords();
-                if (!lstRecordsToDelete.contains(null)) {
-                Database.delete(lstRecordsToDelete, false);
-                }
+                // if (!lstRecordsToDelete.contains(null)) {
+                // Database.delete(lstRecordsToDelete, false);
+                // }
                 
             } else {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record to undelete.',''));
@@ -586,6 +594,8 @@ global with sharing class RecyclebinController {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning,' Salesforce runs a process on a scheduled basis that physically deletes records that have been deleted from the recycle bin, if that process has not run yet, you will still see the records here.',''));
             } else {
                 ApexPages.addMessages(ex);
+                system.debug('Line No- '+ex.getLineNumber());
+                system.debug('Error message- '+ex.getMessage());
             }
             return;
         }
@@ -630,7 +640,6 @@ global with sharing class RecyclebinController {
                 
                 for (List<wrapResults> lstWrapper : lstwrapResults) {
                     for(wrapResults objW : lstWrapper) {
-                        system.debug('isPermanentlyDeleted- '+objW.isPermanentlyDeleted);
                         if (objW.isPermanentlyDeleted == 'No') {    
                             Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
                             objS.Put('Id', objW.Id);
@@ -666,13 +675,22 @@ global with sharing class RecyclebinController {
                     Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
                     Integer successcount = 0;
                     Integer failcount = 0;
+                    Integer deleteRecordcount = 0;
+                    Integer duplicateRecordCount = 0;
                     for (Integer i = 0; i < srList.size(); i++) {
                         if (srList[i].isSuccess()) {
                             successcount++;
                         } else {
-                            failcount++;
+                            if (string.valueOf(srList[i].getErrors()).contains('ENTITY_IS_DELETED')){ 
+                                deleteRecordcount++;
+                                //lstRecordsToDelete.add(srList[i].getId());
+                            } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {
+                                duplicateRecordCount++;
+                            } else {
+                                failcount++;
+                            }
+                            
                         }
-                        
                         // Check if the corresponding record should be deleted
                         if (srList[i].isSuccess()) {
                             rbin__Deleted_Data__c deleteRecord = allRecordList[i];
@@ -689,6 +707,15 @@ global with sharing class RecyclebinController {
                     if (failcount > 0) {
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + '  record(s) failed to restore.',''));
                     } 
+                    if (deleteRecordcount > 0) {
+                        system.debug('deleteRecordcount-'+deleteRecordcount);
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+deleteRecordcount + ' record(s), as the parent record is not available for this records.',''));
+    
+                    } if (duplicateRecordCount > 0) {
+                        system.debug('duplicateRecordCount-'+duplicateRecordCount);
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
+    
+                    }
                     
                     update recordtoDelete;
                     delete recordtoDelete;

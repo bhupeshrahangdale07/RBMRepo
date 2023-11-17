@@ -13,7 +13,7 @@ public with sharing class UtilityCls {
     public static List<Sobject> sObjectsToRestore(Set<String> recIds) {
 
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
-        Set<String> allFieldName = new Set<String>();
+        
         Map<String, String> mapVersionData = new Map<String, String>();
         Map<String, Id> mapMasterFieldValue = new Map<String, Id>();
         for (ContentVersion recVersionData : [
@@ -30,6 +30,7 @@ public with sharing class UtilityCls {
             FROM rbin__Deleted_Data__c
             WHERE rbin__Record_ID__c IN :recIds
         ]) {
+            Set<String> allFieldName = new Set<String>();
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(mapVersionData.get(rec.rbin__Record_ID__c));
             Sobject obj = Schema.getGlobalDescribe().get(rec.rbin__Object_Name__c).newSObject();
             Map<String, Schema.SObjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
@@ -49,6 +50,8 @@ public with sharing class UtilityCls {
                         Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                         obj.put(fieldName, fieldValue);
                     } else {
+                       //system.debug('fieldName- '+fieldName);
+                        //system.debug('jsonMap.get(fieldName) '+jsonMap.get(fieldName));
                         obj.put(fieldName, jsonMap.get(fieldName));
                     }
                     if(fieldDescribe.getRelationshipOrder() == 1 || fieldDescribe.getRelationshipOrder() == 0){
@@ -117,10 +120,11 @@ public with sharing class UtilityCls {
         }
         insert lstContentVersion;
 
-        for (String title : mapContentVersion.keySet()) {
+        
+        for (ContentVersion cv : [SELECT Id, ContentDocumentId, Title FROM ContentVersion WHERE Title IN :mapContentVersion.keySet()]) {
             ContentDocumentLink cdl = new ContentDocumentLink();
-            cdl.ContentDocumentId = [SELECT Id, ContentDocumentId, Title FROM ContentVersion WHERE Title = :title].ContentDocumentId;
-            cdl.LinkedEntityId = mapContentVersion.get(title);
+            cdl.ContentDocumentId = cv.ContentDocumentId;
+            cdl.LinkedEntityId = mapContentVersion.get(cv.Title);
             cdl.ShareType = 'V';
             lstContentDocLnk.add(cdl);
         }

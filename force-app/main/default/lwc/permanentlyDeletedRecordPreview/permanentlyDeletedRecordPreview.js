@@ -48,24 +48,22 @@ recordPreview(){
 }
 
 cancelHandler(){
-    console.log('In cancel click Handler');
-    
      window.location.assign('/lightning/n/rbin__Recycle_Bin_Manager');
      
 }
 
 restoreHandler(){
-console.log('In restore Handler');
+    console.log('In restore Handler');
     restoreRecord({recordId:this.recId})
     .then(async(result)=>{
-        console.log('Result- '+result);
-        if(result != null){
-            window.location.assign('/'+result);
+        console.log('Result id- '+result.recordId);
+        if(result.recordId != null){
+            window.location.assign('/'+result.recordId);
         }else {
             await  LightningAlert.open({
-                message: 'Failed to restore a record!!',
+                message: result.errorMessage,
                 theme: 'error', 
-                label: 'Error', // this is the header text
+                label: 'Error', 
             });
         }
         
@@ -73,7 +71,7 @@ console.log('In restore Handler');
         await  LightningAlert.open({
             message: 'Failed to restore a record!!',
             theme: 'error', 
-            label: 'Error', // this is the header text
+            label: 'Error', 
         });
         console.log('Error- '+JSON.stringify(error));
     })

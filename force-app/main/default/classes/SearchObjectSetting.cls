@@ -109,7 +109,7 @@ global with sharing class SearchObjectSetting {
                     }
                 }
                 
-                if( (blnfield)  && objectFields.containskey('isdeleted') && objectFields.containskey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting() && !objSType.getDescribe().getName().containsignorecase('feed') && objSType.getDescribe().isQueryable()){
+                if( (blnfield)  && objectFields.containskey('isdeleted') && objectFields.containskey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting() && !objSType.getDescribe().getName().containsignorecase('feed') && objSType.getDescribe().isQueryable() && objSType.getDescribe().getName() != 'rbin__Deleted_Data__c'){
                     if(lst.size()<1000) 
                     {
                         lst.add(new SelectOption(objSType.getDescribe().getName(),objSType.getDescribe().getLabel()));                    

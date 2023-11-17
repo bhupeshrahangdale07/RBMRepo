@@ -47,7 +47,7 @@ public with sharing class permanentDeletedRecordPreviewController {
     }
 
     @AuraEnabled
-    public static Id restoreRecord(Id recordId) {
+    public static wrpDeletedData restoreRecord(Id recordId) {
         try {
             Set<String> allFieldName = new Set<String>();
             rbin__Deleted_Data__c previewRecord = [
@@ -65,7 +65,7 @@ public with sharing class permanentDeletedRecordPreviewController {
             String deletedData = (cv.VersionData).toString();
             String objName = previewRecord.rbin__Object_Name__c;
             String recName = previewRecord.rbin__Record_Name__c;
-
+            wrpDeletedData recWrapData = new wrpDeletedData();
             SObject obj = Schema.getGlobalDescribe().get(objName).newSObject();
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
 
@@ -105,15 +105,19 @@ public with sharing class permanentDeletedRecordPreviewController {
                     //previewRecord.rbin__Restored_Date_Time__c =currentDt;
                         update previewRecord;
                         delete previewRecord;
-                        return recId;
+                        recWrapData.recordId = recId;
+                       // return recId;
                 } else {
                     // Handle errors
                     for (Database.Error error : sr.getErrors()) {
                         System.debug('Error message: ' + error.getMessage());
                         System.debug('Error field: ' + error.getFields());
+                        recWrapData.errorMessage = error.getMessage();
                     }
-                    return recId;
+                    //return recId;
                 }
+
+                return recWrapData;
                     // return sr.getId();
         
             
@@ -129,6 +133,10 @@ public with sharing class permanentDeletedRecordPreviewController {
         public String objectName { get; set; }
         @AuraEnabled
         public String recordName { get; set; }
+        @AuraEnabled
+        public Id recordId { get; set; }
+        @AuraEnabled
+        public String errorMessage { get; set; }
     }
 
     public class wrpRecordDetail {
