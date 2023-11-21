@@ -7,6 +7,7 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
     }
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
+        system.debug('lstIds--->>>'+lstIds);
         return Database.getQueryLocator('SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c IN :lstIds');
     }
 

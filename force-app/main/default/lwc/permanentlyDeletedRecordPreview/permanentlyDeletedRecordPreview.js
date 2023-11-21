@@ -56,15 +56,26 @@ restoreHandler(){
     console.log('In restore Handler');
     restoreRecord({recordId:this.recId})
     .then(async(result)=>{
-        console.log('Result id- '+result.recordId);
+        
         if(result.recordId != null){
+            console.log('Result id-- '+result.recordId);
             window.location.assign('/'+result.recordId);
         }else {
+            if(result.errorMessage.contains('entity is deleted')){
+                console.log('Entity is deleted');
+                await  LightningAlert.open({
+                    message: 'Faild to restore the the record, Parent Record is not avilable',
+                    theme: 'error', 
+                    label: 'Error', 
+                });
+            }
+            else {
             await  LightningAlert.open({
                 message: result.errorMessage,
                 theme: 'error', 
                 label: 'Error', 
             });
+        }
         }
         
     }).catch(async(error)=>{

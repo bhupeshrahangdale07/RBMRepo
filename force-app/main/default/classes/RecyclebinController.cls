@@ -612,6 +612,7 @@ global with sharing class RecyclebinController {
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
                 //added by RP on 22-11-2018
                 if (lstwrapResults.size() > 1) {
+                    system.debug('lstwrapResults size-- '+lstwrapResults.size());
                     List<string> lstUndeleteAllRecords = new List<string>();
                     string strval = '';
                     for (List<wrapResults> lstWrapper: lstwrapResults) {
@@ -632,9 +633,12 @@ global with sharing class RecyclebinController {
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
                     } else if (recordIdsList.size() > 0) {
+                        System.debug('recordIdsList--'+recordIdsList);
                         BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
                         Database.executeBatch(batchToRestoreAll, 20);
+                        system.debug('Batch In Process');
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
+                        return;
                     }
                 }
                 
