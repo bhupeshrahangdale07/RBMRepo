@@ -12,7 +12,7 @@ public with sharing class RecordPageController {
           rPage.getParameters().put('ToDate', ToDate);
           rPage.getParameters().put('SelectedUser', SelectedUser);
           
-          rPage.setRedirect(true);          
+          rPage.setRedirect(true);
           return rPage;            
     }
 

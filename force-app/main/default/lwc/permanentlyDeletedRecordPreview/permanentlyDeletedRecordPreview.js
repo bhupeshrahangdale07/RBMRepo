@@ -8,7 +8,6 @@ import restoreRecord from '@salesforce/apex/permanentDeletedRecordPreviewControl
 
 export default class PermanentlyDeletedRecordPreview extends NavigationMixin(LightningElement) {
 
-
    // recordIdFroPreview;
     error;
     @track recordForPreview;
@@ -53,7 +52,6 @@ cancelHandler(){
 }
 
 restoreHandler(){
-    console.log('In restore Handler');
     restoreRecord({recordId:this.recId})
     .then(async(result)=>{
         

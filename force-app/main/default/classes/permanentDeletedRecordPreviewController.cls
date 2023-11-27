@@ -120,7 +120,7 @@ public with sharing class permanentDeletedRecordPreviewController {
                 return recWrapData;
                     // return sr.getId();
         
-            
+
        } catch (Exception e) {
         system.debug('In catch handler');
             throw new AuraHandledException(e.getMessage());

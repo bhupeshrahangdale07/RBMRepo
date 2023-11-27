@@ -46,7 +46,7 @@ global with sharing class RecyclebinController {
         strSelectedUser = '';
         recordcount = 0;
         CheckAdminUser();
-        strSearchIn='RecycleBin';
+        strSearchIn = 'RecycleBin';
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
 
@@ -338,7 +338,6 @@ global with sharing class RecyclebinController {
     
     //Method to make search in Permanently Deleted Data
     public void searchInPermanentlyDeletedData(){
-        
         List<wrapResults> lstBothWrap= new List<wrapResults>();
         List<sObject> lstOfRecords= new List<sObject>();
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
@@ -547,6 +546,7 @@ global with sharing class RecyclebinController {
                         } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {
                             duplicateRecordCount++;
                         } else {
+                            system.debug('Error-'+srList[i].getErrors());
                             failcount++;
                         }
                         
