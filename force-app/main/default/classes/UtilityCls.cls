@@ -13,7 +13,6 @@ public with sharing class UtilityCls {
     public static List<Sobject> sObjectsToRestore(Set<String> recIds) {
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
         Map<String, String> mapVersionData = new Map<String, String>();
-        //Map<String, Id> mapMasterFieldValue = new Map<String, Id>();
         
         for (ContentVersion recVersionData : [
             SELECT Id, ContentDocumentId, VersionData, 
@@ -23,7 +22,6 @@ public with sharing class UtilityCls {
             mapVersionData.put(recVersionData.Title, vData);
         }
 		
-        //Set<String> allFieldName = new Set<String>();
         Map<String, Object> jsonMap = new Map<String, Object>();
        
         for (rbin__Deleted_Data__c rec : [
@@ -51,7 +49,6 @@ public with sharing class UtilityCls {
                 } 
             }
             sobjecttoUndeleteList.add(obj);
-            //allFieldName = null;
             allMap = null;
         }
         return sobjecttoUndeleteList;
