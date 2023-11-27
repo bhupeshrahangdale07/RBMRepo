@@ -29,33 +29,29 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         }
 
         for (rbin__Deleted_Data__c lst : lstRecords) {
+            Map<String, Schema.SObjectField> allMap = new Map<String, Schema.SObjectField>();
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(mapVersionData.get(lst.rbin__Record_ID__c));
             allRecordList.add(lst);
             SObject obj = Schema.getGlobalDescribe().get(lst.rbin__Object_Name__c).newSObject();
-            Map<String, Schema.SObjectField> allMap = obj.getSObjectType().getDescribe().fields.getMap();
-
-            for (Schema.SObjectField field : allMap.values()) {
-                Schema.DescribeFieldResult dfr = field.getDescribe();
-                if (dfr.isCreateable() && dfr.isUpdateable()) {
-                    allFieldName.add(dfr.getName());
-                } else if (dfr.getRelationshipOrder() == 1 || dfr.getRelationshipOrder() == 0) {
-                    allFieldName.add(dfr.getName());
-                }
-            }
+            allMap = UtilityCls.fetchObjectFieldMap(lst.rbin__Object_Name__c);
             
             for (String fieldName : jsonMap.keySet()) {
-                if (allFieldName.contains(fieldName) && fieldName != 'Id') {
+                if (fieldName != 'Id'  && allMap.containsKey(fieldName)) {
                     Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
-                    if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
-                        Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
-                        obj.put(fieldName, fieldValue);
-                    } else {
-                        obj.put(fieldName, jsonMap.get(fieldName));
+                    if ((fieldDescribe.isCreateable() && fieldDescribe.isUpdateable()) 
+                        || (fieldDescribe.getRelationshipOrder() == 1 || fieldDescribe.getRelationshipOrder() == 0)) {
+                        if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
+                            Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
+                            obj.put(fieldName, fieldValue);
+                        } else {
+                            obj.put(fieldName, jsonMap.get(fieldName));
+                        }
                     }
-                }
+                } 
             }
             
             sobjecttoUndeleteList.add(obj);
+            allMap = null;
         }
 
         // Add restored DateTime
