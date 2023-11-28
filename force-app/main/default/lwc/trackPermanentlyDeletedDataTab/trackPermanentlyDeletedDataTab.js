@@ -47,7 +47,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     @wire(getAllObjectName)
     wireObjectNames({error, data}){
         if(data){
-            
         for(let key in data){
             if (!this.objectRecordList.some(obj => obj.Name === key)) {
              this.getAllObjectList.push({ label: key, value: key });
@@ -66,7 +65,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         console.log('in handle change',event.detail.value);
         var selectedValue =event.detail.value; 
         var key = event.currentTarget.dataset.id;
-       //debugger;
+       
 
        const  objValue = this.newObjectList.findIndex((obj => obj.Id == key));
        
