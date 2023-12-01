@@ -1,4 +1,15 @@
-import { LightningElement, api, track, wire } from 'lwc';
+/*
+// --------------------------------------------------------------------------------------------------------------
+
+// This component is used preview of the record
+// Version#     Date                            Author                                  Description
+// --------------------------------------------------------------------------------------------------------------
+// 1.0         24/8/2023                     Kandisa Technologies                    Initial Version 1.0
+// --------------------------------------------------------------------------------------------------------------
+
+*/
+
+import { LightningElement, api, track } from 'lwc';
 import HideLightningHeader from '@salesforce/resourceUrl/noHeader';
 import { loadStyle, loadScript } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
@@ -14,74 +25,67 @@ export default class PermanentlyDeletedRecordPreview extends NavigationMixin(Lig
     @api recId;
     objName;
     recName;
-    isLoading;
+    isLoading = false;
     baseURL;
 
     connectedCallback(){
-        console.log('RecId>>'+this.recId);
         Promise.all([loadStyle(this, HideLightningHeader)])
         .then(() => {
             // CSS loaded
         }).catch(error => {
             this.error = error;
             this.showLoading = false;
-            console.log('error-->', error);
             this.showToast("Something Went Wrong in Loading 'noHeader' .",error,'error','dismissable');
         });
         this.recordPreview();
       
 }
-
+// this function get called for record preview
 recordPreview(){
-    
+    this.isLoading = true;
     showPreviewPage({recordId:this.recId})
     .then((result)=>{
-        console.log('recordForPreview>> '+JSON.stringify(result.lstWrpData));
         this.recordForPreview=result.lstWrpData;
         this.objName=result.objectName;
         this.recName=result.recordName;
-
+        this.isLoading = false;
     }).catch((error)=>{
         console.log('Error-->'+JSON.stringify(error));
     })
 }
 
+// a function to be called on cancel button click 
 cancelHandler(){
+    this.isLoading = true;
      window.location.assign('/lightning/n/rbin__Recycle_Bin_Manager');
-     
+     this.isLoading = false;
 }
 
+// this function get called on restore click, it will restore a record
 restoreHandler(){
     restoreRecord({recordId:this.recId})
     .then(async(result)=>{
-        
-        if(result.recordId != null){
-            console.log('Result id-- '+result.recordId);
-            window.location.assign('/'+result.recordId);
+        this.isLoading = true;
+        if(result != null){
+
+            console.log('Result id-- '+result);
+            window.location.assign('/'+result);
         }else {
-            if(result.errorMessage.contains('entity is deleted')){
-                console.log('Entity is deleted');
-                await  LightningAlert.open({
-                    message: 'Faild to restore the the record, Parent Record is not avilable',
-                    theme: 'error', 
-                    label: 'Error', 
-                });
-            }
-            else {
             await  LightningAlert.open({
-                message: result.errorMessage,
+                message: 'Failed to restore a record',
                 theme: 'error', 
                 label: 'Error', 
             });
         }
-        }
-        
+            this.isLoading = false;
     }).catch(async(error)=>{
+        this.isLoading = true;
         await  LightningAlert.open({
-            message: 'Failed to restore a record!!',
+            message: error.body.message,
             theme: 'error', 
             label: 'Error', 
         });
+        this.isLoading = false;
         console.log('Error- '+JSON.stringify(error));
     })
 }

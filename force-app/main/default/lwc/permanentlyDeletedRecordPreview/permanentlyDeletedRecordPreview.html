@@ -4,6 +4,11 @@
         <lightning-layout-item size="12">
 
             <lightning-card class="card-styling" variant="narrow">  
+                <div if:true={isLoading} class="slds-is-relative">
+                    <lightning-spinner
+                        alternative-text="Loading..." variant="brand">
+                    </lightning-spinner>
+                </div>
                 <div class="slds-grid slds-wrap">
                     <div class="slds-col slds-size_3-of-4">
                         <div class="slds-media slds-no-space slds-grow">

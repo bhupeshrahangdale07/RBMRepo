@@ -9,19 +9,22 @@
 
 */
 public with sharing class UtilityCls {
-
+	
+    //deserialize json data and used it to restore in SFDC
     public static List<Sobject> sObjectsToRestore(Set<String> recIds) {
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
         Map<String, String> mapVersionData = new Map<String, String>();
         
+        String vData = '';
         for (ContentVersion recVersionData : [
             SELECT Id, ContentDocumentId, VersionData, 
             Title FROM ContentVersion WHERE Title = :recIds
         ]) {
-            String vData = (recVersionData.VersionData).toString();
+            vData = (recVersionData.VersionData).toString();
             mapVersionData.put(recVersionData.Title, vData);
         }
 		
+        Map<String, Schema.SObjectField> allMap = new Map<String, Schema.SObjectField>();
         Map<String, Object> jsonMap = new Map<String, Object>();
        
         for (rbin__Deleted_Data__c rec : [
@@ -29,7 +32,6 @@ public with sharing class UtilityCls {
             rbin__Record_Name__c FROM rbin__Deleted_Data__c
             WHERE rbin__Record_ID__c IN :recIds
         ]) {
-            Map<String, Schema.SObjectField> allMap = new Map<String, Schema.SObjectField>();
             jsonMap = (Map<String, Object>) JSON.deserializeUntyped(mapVersionData.get(rec.rbin__Record_ID__c));
             Sobject obj = Schema.getGlobalDescribe().get(rec.rbin__Object_Name__c).newSObject();
             allMap = fetchObjectFieldMap(rec.rbin__Object_Name__c);
@@ -37,8 +39,10 @@ public with sharing class UtilityCls {
             for (String fieldName : jsonMap.keySet()) {
                 if (fieldName != 'Id'  && allMap.containsKey(fieldName)) {
                     Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
+                    
                     if ((fieldDescribe.isCreateable() && fieldDescribe.isUpdateable()) 
                         || (fieldDescribe.getRelationshipOrder() == 1 || fieldDescribe.getRelationshipOrder() == 0)) {
+                            
                         if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
                             Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                             obj.put(fieldName, fieldValue);
@@ -74,7 +78,8 @@ public with sharing class UtilityCls {
         }
         return objectKeyFieldMap;
     }
-
+	
+    //create attachment to store record data for the delete record
     public static void createFileAttachment(Map<String, String> mapDeletedData, Set<String> setRecIds) {
         List<ContentDocument> existedContentDoc = [SELECT Id, Title FROM ContentDocument WHERE Title IN :setRecIds];
         Delete existedContentDoc;

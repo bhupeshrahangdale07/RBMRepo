@@ -1,12 +1,22 @@
+/*
+// --------------------------------------------------------------------------------------------------------------
+
+// This class is the controller apex class to support the trackPermanentlyDeletedDataTab LWC Component
+// Version#     Date                            Author                                  Description
+// --------------------------------------------------------------------------------------------------------------
+// 1.0         08-09-2023                     Kandisa Technologies                    Initial Version 1.0
+// --------------------------------------------------------------------------------------------------------------
+
+*/
 public with sharing class trackPermanentDeletedDataCtrl {
     
-    
+    // method to be called for getting all the object names as an option for selection
     @AuraEnabled(cacheable = true)
     public static Map<string, string> getAllObjectName() {
-        
         Map<string, string> mapOfAllObj = new Map<string, string>();
         List<String> ignorsObjects = new List<String>{'Partner', 'CaseComment', 'FeedComment', 'FeedItem', 'IdeaComment', 'FeedComment', 'FeedItem', 'EngagementChannelType', 'DataUsePurpose'};
             String endpoint = URL.getSalesforceBaseUrl().toExternalForm() + '/services/data/v48.0/sobjects/';
+        
         HttpRequest req = new HttpRequest();
         endpoint += '';
         req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionID());
@@ -15,16 +25,20 @@ public with sharing class trackPermanentDeletedDataCtrl {
         req.setMethod('GET');
         Http httpreq = new Http();
         HttpResponse  res  = httpreq.send(req);
+        
         Map<String, Object> m = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
         List<Object> ob = (List<Object>)m.get('sobjects');
+        
         for (Object o : ob){
             Map<String, Object> real = (Map<String, Object>)o;
+            
             if ((Boolean)real.get('triggerable')) {
                 if(!ignorsObjects.contains(String.valueOf(real.get('name')))) {
 
                     String objLabel = String.valueOf(real.get('label'));
                     String name = String.valueOf(real.get('name'));
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
+                    
                     if (schemaType != null) {
                         if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()) {
                             String label = String.valueOf(real.get('label'));
@@ -33,13 +47,11 @@ public with sharing class trackPermanentDeletedDataCtrl {
                     }
                 }
             }
-            
         }
-        
         return mapOfAllObj;
-        
     }
     
+    // this method will save the record to rbin__Permanent_Deleted_Tracking_Object__c custom setting
     @AuraEnabled
     public static string saveTrackingObject(List<rbin__Permanent_Deleted_Tracking_Object__c> objNameList) {
         try {
@@ -55,14 +67,12 @@ public with sharing class trackPermanentDeletedDataCtrl {
             }else if (maxSerialNumber == null) {
                 nextSerialNumber = 1;
             }
+            
             for (rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList) {
-                
                 rbin__Permanent_Deleted_Tracking_Object__c prmntTrckObj = new rbin__Permanent_Deleted_Tracking_Object__c();
-
                 prmntTrckObj.Name = objName.Name;
                 // Set the calculated serial number
                 prmntTrckObj.rbin__Record_No__c = nextSerialNumber++;
-                
                 prmntObjectTrackingList.add(prmntTrckObj);
                 
             }
@@ -76,29 +86,35 @@ public with sharing class trackPermanentDeletedDataCtrl {
         }
     }
     
+    // this method will fetch all the records present in rbin__Permanent_Deleted_Tracking_Object__c custom setting
     @AuraEnabled (cacheable = true)
     public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords() {
         try {
             list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([Select id,name from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
             return lst;
-            
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    // this method will delete the record from rbin__Permanent_Deleted_Tracking_Object__c custom setting
     @AuraEnabled
     public static string deleteObject(String removeObjectIds) {
         try {
             List<rbin__Permanent_Deleted_Tracking_Object__c> deleteObjectRecordList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
+            
             deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id = :removeObjectIds];
             delete deleteObjectRecordList;
+            
             updateSerialNumbers();
+            
             return 'Setting updated Successfully!';
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
     }
-    
+
+    // this method will update the serial numbers of the records
     public static void updateSerialNumbers() {
         List<rbin__Permanent_Deleted_Tracking_Object__c> recordsToUpdate = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
         // Query all records ordered by rbin__Record_No__c

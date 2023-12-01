@@ -50,7 +50,7 @@ global with sharing class RecyclebinController {
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
 
-        // To identify those sobjects where we are not considering the "Name" standard fields.
+        // this will fetch those sobjects where we are not considering the "Name" as standard fields.
         for (rbin__ObjectKeyField__mdt o : [select id, MasterLabel, rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]) {
             setFieldName.add(o.rbin__Field_Name__c.toLowerCase());
             mapFieldName.put(o.MasterLabel, o.rbin__Field_Name__c);
@@ -338,8 +338,7 @@ global with sharing class RecyclebinController {
     
     //Method to make search in Permanently Deleted Data
     public void searchInPermanentlyDeletedData(){
-        List<wrapResults> lstBothWrap= new List<wrapResults>();
-        List<sObject> lstOfRecords= new List<sObject>();
+
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
         
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)) {
@@ -354,11 +353,11 @@ global with sharing class RecyclebinController {
         
         String searchKey= '%'+strKeyword+'%';
         
+        // dynamic query for getting the records from Deleted_Data object for showing
         String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c,rbin__Deleted_Date__c ' +
             'FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c NOT IN :setRecordIds';
         
         if (strSelectedObject != null) {
-            System.debug('strSelectedObject---- '+strSelectedObject);
             queryString += ' AND rbin__Object_Name__c = :strSelectedObject';
         }
         
@@ -380,13 +379,14 @@ global with sharing class RecyclebinController {
             queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
         }
         List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
+
         List<wrapResults> lsttempWrap = new List<wrapResults>();
-        map<string,string> mapObjectLabelName =new map<string,string>();
+        
+        map<string,string> mapObjectLabelName =new map<string,string>();//map to store the object label name
         Integer count = 0;
         recordcount=permanentDeletedDataList.size();
-        system.debug('recordcount- '+recordcount);
         
-        List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomizable = TRUE AND IsDeprecatedAndHidden = FALSE];
+        List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomSetting = false]; // get all object names Labels
         
         for (EntityDefinition obj : objectInfoList) {
             String objectAPIName = obj.QualifiedApiName;
@@ -481,7 +481,7 @@ global with sharing class RecyclebinController {
                         objS.Put('Id',objW.Id);
                         lstSobjecttoUndelete.add(objS);
                     } else if (objW.isCheck && objw.isPermanentlyDeleted == 'Yes') {
-                        recordIds.add(objw.Id);
+                        recordIds.add(objw.Id);// store the record Ids in set which are permanently deleted
                     }
                 }
             }
@@ -527,7 +527,6 @@ global with sharing class RecyclebinController {
                 TimeZone tz = UserInfo.getTimeZone();
                 DateTime dt = Datetime.now();
                 DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
-                system.debug('lstobjectToRestore- '+lstobjectToRestore);
                 
                 Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
                 
@@ -540,13 +539,13 @@ global with sharing class RecyclebinController {
                     if (srList[i].isSuccess()) {
                         successcount++;
                     } else {
-                        if (string.valueOf(srList[i].getErrors()).contains('ENTITY_IS_DELETED')){ 
+                        // show the error when the parent record is not availabe in org 
+                        if (string.valueOf(srList[i].getErrors()).contains('ENTITY_IS_DELETED') || string.valueOf(srList[i].getErrors()).contains('invalid cross reference id')){ 
                             deleteRecordcount++;
-                            //lstRecordsToDelete.add(srList[i].getId());
-                        } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {
+                        } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {// It will show error for duplicate records if the same record is available in org
                             duplicateRecordCount++;
                         } else {
-                            system.debug('Error-'+srList[i].getErrors());
+                            system.debug('Error-'+srList[i].getErrors()[i].getMessage());
                             failcount++;
                         }
                         
@@ -571,19 +570,16 @@ global with sharing class RecyclebinController {
                 }
                 if (deleteRecordcount > 0) {
                     system.debug('deleteRecordcount-'+deleteRecordcount);
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+deleteRecordcount + ' record(s), as the parent record is not available for this records.',''));
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Failed to restore '+deleteRecordcount + ' record(s), as the parent record is not available for this records Or Invalid cross reference id.',''));
 
                 } if (duplicateRecordCount > 0) {
                     system.debug('duplicateRecordCount-'+duplicateRecordCount);
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
 
                 }
                 update recordtoDelete;
                 delete recordtoDelete;
                 SearchRecords();
-                // if (!lstRecordsToDelete.contains(null)) {
-                // Database.delete(lstRecordsToDelete, false);
-                // }
                 
             } else {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record to undelete.',''));
@@ -612,7 +608,6 @@ global with sharing class RecyclebinController {
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
                 //added by RP on 22-11-2018
                 if (lstwrapResults.size() > 1) {
-                    system.debug('lstwrapResults size-- '+lstwrapResults.size());
                     List<string> lstUndeleteAllRecords = new List<string>();
                     string strval = '';
                     for (List<wrapResults> lstWrapper: lstwrapResults) {
@@ -685,6 +680,7 @@ global with sharing class RecyclebinController {
                         if (srList[i].isSuccess()) {
                             successcount++;
                         } else {
+                            system.debug('Error-- '+srList[i].getErrors());
                             if (string.valueOf(srList[i].getErrors()).contains('ENTITY_IS_DELETED')){ 
                                 deleteRecordcount++;
                                 //lstRecordsToDelete.add(srList[i].getId());

@@ -24,9 +24,8 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
     public Database.QueryLocator start(Database.BatchableContext bc) {
 
         // Get Object Key field for Different Objects
-        for (rbin__ObjectKeyField__mdt objectKeyFieldMdt : [SELECT id, MasterLabel, rbin__Field_Name__c FROM rbin__ObjectKeyField__mdt]) {
-            this.objectKeyFieldMap.put(objectKeyFieldMdt.MasterLabel, objectKeyFieldMdt.rbin__Field_Name__c);
-        }
+        this.objectKeyFieldMap = UtilityCls.fetchObjectKeyFields();
+        
         lstTrackBatchProcess = new List<rbin__Track_Batch_Process__c>([
             SELECT
             rbin__Last_Run_Batch_Time__c
@@ -74,6 +73,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
 
         if (sObjectRecords.size() > 0) {
             
+            //Map to store existing deleted record and its Id
             Map<String, rbin__Deleted_Data__c> existingDeletedDataMap = new Map<String, rbin__Deleted_Data__c>();
 
             // Fetch Existing Deleted Data

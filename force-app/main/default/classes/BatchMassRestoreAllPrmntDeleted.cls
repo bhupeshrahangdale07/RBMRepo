@@ -1,3 +1,14 @@
+/*
+// --------------------------------------------------------------------------------------------------------------
+
+// This Batch class used to restore the Permanent Delete records for Restore All functionality for more than 1000 records
+
+// Version#     Date                            Author                                  Description
+// --------------------------------------------------------------------------------------------------------------
+// 1.0          11/9/2023                     Kandisa Technologies                    Initial Version 1.0
+// --------------------------------------------------------------------------------------------------------------
+
+*/
 public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObject> {
 
     List<String> lstIds;
@@ -7,7 +18,7 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
     }
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
-        system.debug('lstIds--->>>'+lstIds);
+        
         return Database.getQueryLocator('SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c IN :lstIds');
     }
 
