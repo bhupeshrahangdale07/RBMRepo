@@ -40,7 +40,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
                     
                     if (schemaType != null) {
-                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()) {
+                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()&& schemaType.getDescribe().getName() != 'rbin__Deleted_Data__c') {
                             String label = String.valueOf(real.get('label'));
                             mapOfAllObj.put(name, label);  
                         } 
