@@ -31,7 +31,7 @@
                     <div id="details">
                         <div id="page_buttons" style="margin-top:10px;text-align:center;">
                             <apex:commandButton value="Restore" action="{!UndeleteRecord}" styleClass="slds-button slds-button--brand" status="Processing" reRender="frm" oncomplete="overridePageMessages();"/>
-                            <apex:commandButton value="Cancel" action="{!Cancel}" styleClass="slds-button slds-button--brand" status="Processing" />
+                            <!--<apex:commandButton value="Cancel" action="{!Cancel}" styleClass="slds-button slds-button--brand" status="Processing" />-->
                         
                        
                         </div>
@@ -59,7 +59,7 @@
                         </div>
                         <div id="page_buttons_bottom" style="margin-top:10px;text-align:center;">
                             <apex:commandButton value="Restore" action="{!UndeleteRecord}" styleClass="slds-button slds-button--brand" status="Processing" reRender="frm" oncomplete="overridePageMessages();"/>
-                            <apex:commandButton value="Cancel" action="{!Cancel}" styleClass="slds-button slds-button--brand" status="Processing" />
+                            <!--<apex:commandButton value="Cancel" action="{!Cancel}" styleClass="slds-button slds-button--brand" status="Processing" />-->
                         </div>
                     </div>
                 </apex:form>
