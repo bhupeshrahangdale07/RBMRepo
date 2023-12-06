@@ -55,11 +55,11 @@ recordPreview(){
 }
 
 // a function to be called on cancel button click 
-cancelHandler(){
-    this.isLoading = true;
-     window.location.assign('/lightning/n/rbin__Recycle_Bin_Manager');
-     this.isLoading = false;
-}
+// cancelHandler(){
+//     this.isLoading = true;
+//      window.location.assign('/lightning/n/rbin__Recycle_Bin_Manager');
+//      this.isLoading = false;
+// }
 
 // this function get called on restore click, it will restore a record
 restoreHandler(){
