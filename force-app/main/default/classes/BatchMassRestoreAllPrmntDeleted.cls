@@ -71,7 +71,7 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
 
         Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, false);
-
+        List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
         for (Integer i = 0; i < srList.size(); i++) {
             if (srList[i].isSuccess()) {
                 rbin__Deleted_Data__c deleteRecord = allRecordList[i];
@@ -80,10 +80,20 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
                 deleteRecord.rbin__Restored_Date_Time__c = currentDt;
                 recordtoDelete.add(deleteRecord);
             } else {
-                System.debug('Error while saving the record- ' + srList[i].getErrors());
+                rbin__Error_Log__c errorObj = new rbin__Error_Log__c();
+                errorObj.rbin__Error_Message__c = String.valueOf(srList[i].getErrors());
+                errorObj.rbin__Failed_Record__c = String.valueOf(sobjecttoUndeleteList[i]);
+                lstErrorRecords.add(errorObj);
+                System.debug('Failed Records- '+sobjecttoUndeleteList[i].get('Name'));
+                System.debug('Failed Records from another list- '+allRecordList[i]);
+                rbin__Deleted_Data__c deleteRecord = allRecordList[i];
+                deleteRecord.rbin__Has_Restored__c = false;
+                recordtoDelete.add(deleteRecord);
             }
         }
-
+        
+        
+        insert lstErrorRecords;
         Database.update(recordtoDelete, false);
         Database.delete(recordtoDelete, false);
     }
