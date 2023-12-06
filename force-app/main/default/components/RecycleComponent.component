@@ -337,7 +337,7 @@
                                     <tr>
                                         <td>
                                             <span class="slds-checkbox">
-                                                <apex:inputCheckbox id="chkresult" styleClass="chkRSelected" value="{!result.isCheck}" />
+                                                <apex:inputCheckbox id="chkresult" styleClass="chkRSelected" value="{!result.isCheck}"/>
                                                 <label class="slds-checkbox__label" for="{!$Component.chkresult}">
                                                     <span class="slds-checkbox_faux"></span>
                                                     <span class="slds-form-element__label"></span>
@@ -346,7 +346,7 @@
                                         </td>
                                         <td>
                                             
-                                            <apex:outputLink value="{!IF(result.isPermanentlyDeleted == 'No', '/apex/rbin__RecordPage', '/apex/PermanentDeletedRecordPreview')}?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}">
+                                            <apex:outputLink value="{!IF(result.isPermanentlyDeleted == 'No', '/apex/rbin__RecordPage', '/apex/PermanentDeletedRecordPreview')}?objectname={!result.SObjectAPIName}&id={!result.Id}&keyword={!strKeyword}&fromDate={!strFromDate}&toDate={!strToDate}&selectedUser={!strSelectedUser}" target="_blank">
                                                {!result.Name} 
                                             </apex:outputLink>
                                             
@@ -367,7 +367,6 @@
                     </table>
                 </div>
                 <script>
-                    
                     function isLightningExperienceOrSalesforce1() {
                         return ((typeof sforce != 'undefined') && sforce && (!!sforce.one));
                     }

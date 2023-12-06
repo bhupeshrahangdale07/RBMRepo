@@ -18,6 +18,13 @@
                             <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Batch Running Status">Batch Running Status</h1>
                             <p class="slds-text-body_small slds-line-height_reset"></p>
                         </div>
+                        <div class="slds-box slds-m-bottom_small">
+                            <p>
+                                <i>
+                                <b>Note:</b>
+                            </i> Please check the error log after every batch completion if any records fail to restore.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
