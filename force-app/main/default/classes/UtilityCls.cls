@@ -11,7 +11,7 @@
 public with sharing class UtilityCls {
 	
     //deserialize json data and used it to restore in SFDC
-    public static List<Sobject> sObjectsToRestore(Set<String> recIds) {
+    public static List<Sobject> sObjectsToRestore(List<String> recIds) {
         List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
         Map<String, String> mapVersionData = new Map<String, String>();
         
