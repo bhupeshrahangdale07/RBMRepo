@@ -3,18 +3,7 @@
 */
 public with sharing class RecordPageController {
 
-    public PageReference Cancel() {
-          PageReference rPage = Page.Recycle_Bin_Manager;
-          
-          rPage.getParameters().put('Keyword', Keyword);
-          rPage.getParameters().put('Object', ObjectLabelName);
-          rPage.getParameters().put('FromDate', FromDate);
-          rPage.getParameters().put('ToDate', ToDate);
-          rPage.getParameters().put('SelectedUser', SelectedUser);
-          
-          rPage.setRedirect(true);
-          return rPage;            
-    }
+    
 
     
     public string objectname;
