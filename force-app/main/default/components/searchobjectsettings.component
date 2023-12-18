@@ -621,45 +621,6 @@
                 );    
             }
 
-            function getpermtrackingobjects() {
-             /*  //$('#spinner').removeClass('slds-hide');
-                Visualforce.remoting.Manager.invokeAction(
-                    //Invoking controller action getcon
-                    '{!$RemoteAction.SearchObjectSetting.triggerableobjects}',
-                    function(result, event){
-                        //We can access the records through the parameter result
-                        //event.status determines if there is error or not 
-                        if(event.status){
-                            if(result){
-                                gb_tracking_options = [];
-                                for(var i = 0 ; i < result.length ; i++ ) {
-                                    var o = {};
-                                    o.Name = result[i].name;
-                                    o.Key = result[i].value;
-                                    gb_tracking_options.push(o);
-                                }
-                                
-                                gb_tracking_options.sort(function (a, b) {
-                                    var nameA = a.Name.toUpperCase(); // ignore upper and lowercase
-                                    var nameB = b.Name.toUpperCase(); // ignore upper and lowercase
-                                    if (nameA < nameB) {
-                                        return -1;
-                                    }
-                                    if (nameA > nameB) {
-                                        return 1;
-                                    }
-                                    
-                                    // names must be equal
-                                    return 0;
-                                });
-                            }
-                        }
-                        $('#spinner').addClass('slds-hide');
-                    },
-                    {escape: true}
-                );    */
-                console.log('inside getpermtrackingobjects function');
-            }
             
             function getSearchObjectSettings() {
                 var __sfdcSessionId = '{!GETSESSIONID()}';
