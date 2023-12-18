@@ -79,6 +79,7 @@ public with sharing class permanentDeletedRecordPreviewController {
             String deletedData = (cv.VersionData).toString();
             String objName = previewRecord.rbin__Object_Name__c;
             String recName = previewRecord.rbin__Record_Name__c;
+            String recIdsToPurge = previewRecord.Id;
             SObject obj = Schema.getGlobalDescribe().get(objName).newSObject();// create a object instance for restoring
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
             Map<String, Schema.SObjectField> allMap = new Map<String, Schema.SObjectField>();
@@ -114,6 +115,8 @@ public with sharing class permanentDeletedRecordPreviewController {
                     previewRecord.rbin__Restored_Date_Time__c =currentDt;
                         update previewRecord;
                         delete previewRecord;
+                        List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id = :recIdsToPurge ALL ROWS];
+        Database.EmptyRecyclebin(lstDeletedRecords);
                          
                 } 
                 return recId;
