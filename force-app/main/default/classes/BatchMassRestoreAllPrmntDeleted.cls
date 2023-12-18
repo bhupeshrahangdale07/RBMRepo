@@ -29,9 +29,11 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         List<rbin__Deleted_Data__c> recordtoDelete = new List<rbin__Deleted_Data__c>();
         Set<String> setDeletedRecIds = new Set<String>();
         Map<String, String> mapVersionData = new Map<String, String>();
+        Set<String> setRecordIdsToPurge = new Set<String>();
 
         for (rbin__Deleted_Data__c rec : lstRecords) {
             setDeletedRecIds.add(rec.rbin__Record_ID__c);
+            setRecordIdsToPurge.add(rec.Id);
         }
 
         for (ContentVersion recVersionData : [SELECT Id, ContentDocumentId, VersionData, Title FROM ContentVersion WHERE Title IN :setDeletedRecIds]) {
@@ -84,8 +86,6 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
                 errorObj.rbin__Error_Message__c = String.valueOf(srList[i].getErrors());
                 errorObj.rbin__Failed_Record__c = String.valueOf(sobjecttoUndeleteList[i]);
                 lstErrorRecords.add(errorObj);
-                System.debug('Failed Records- '+sobjecttoUndeleteList[i].get('Name'));
-                System.debug('Failed Records from another list- '+allRecordList[i]);
                 rbin__Deleted_Data__c deleteRecord = allRecordList[i];
                 deleteRecord.rbin__Has_Restored__c = false;
                 recordtoDelete.add(deleteRecord);
@@ -96,9 +96,12 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         insert lstErrorRecords;
         Database.update(recordtoDelete, false);
         Database.delete(recordtoDelete, false);
+        List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id IN :setRecordIdsToPurge ALL ROWS];
+        Database.EmptyRecyclebin(lstDeletedRecords);
     }
 
     public void finish(Database.BatchableContext bc) {
         // Add finish logic if needed
+        
     }
 }
