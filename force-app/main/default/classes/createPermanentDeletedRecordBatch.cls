@@ -72,7 +72,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         Set<String> setExistedRecordIds = new Set<String>();
 
         if (sObjectRecords.size() > 0) {
-            
+
             //Map to store existing deleted record and its Id
             Map<String, rbin__Deleted_Data__c> existingDeletedDataMap = new Map<String, rbin__Deleted_Data__c>();
 
