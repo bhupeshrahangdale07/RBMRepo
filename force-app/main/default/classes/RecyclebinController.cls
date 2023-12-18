@@ -31,6 +31,7 @@ global with sharing class RecyclebinController {
     public Map<string,string> mapFieldName; 
     public rbin__Recycle_Bin_Setting__c rbinsetting;
     public List<rbin__RecycleSearchObjects__c> lstCustomSettings;
+    public boolean disablePurgeButton {get; set;}
 
     // Constructor method below
     public RecyclebinController() {
@@ -329,7 +330,6 @@ global with sharing class RecyclebinController {
                 count++;
                 
             }
-            
             if(lsttempWrap.size() > 0) {
                 lstwrapResults.add(lsttempWrap);
             }
@@ -340,6 +340,10 @@ global with sharing class RecyclebinController {
     public void searchInPermanentlyDeletedData(){
 
         List<rbin__RecycleSearchObjects__c> lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
+        List<rbin__Permanent_Deleted_Tracking_Object__c> lstTrackingObjects = rbin__Permanent_Deleted_Tracking_Object__c.getall().values();
+        List<SObject> recycleBinRecords = new List<SObject>();
+        set<String> setDeletedDataRecIds = new set<String>();
+        set<String> setRecIdsToHide = new set<String>();// set to store the record Ids of recycle bin records
         
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
@@ -350,12 +354,31 @@ global with sharing class RecyclebinController {
                 return;
             }
         }
+
+        List<rbin__Deleted_Data__c> lstRbinPermanentDeletedData = [SELECT Id, rbin__Record_ID__c From rbin__Deleted_Data__c];
+        for (rbin__Deleted_Data__c rbinData : lstRbinPermanentDeletedData) {
+            setDeletedDataRecIds.add(rbinData.rbin__Record_ID__c);
+        }
         
+        // get all the records from the recycle bin so that user can not see the same records in permanent delete
+            for (rbin__Permanent_Deleted_Tracking_Object__c TrackingObject : lstTrackingObjects) {
+                string objectName = string.valueOf(TrackingObject.Name);
+                String myQuery = 'SELECT Id FROM ' + objectName + ' WHERE Id IN :setDeletedDataRecIds AND IsDeleted = true ALL ROWS';
+                system.debug('String Query- '+Database.query(myQuery));
+                recycleBinRecords.addAll(Database.query(myQuery));
+                // List<AccountBrand> lstAccBrand = [Select Id From AccountBrand];
+                // system.debug('List Of Account Brand- '+lstAccBrand);
+            }
+
+            for (SObject rec : recycleBinRecords) {
+                setRecIdsToHide.add(rec.Id);
+            }
+           
         String searchKey= '%'+strKeyword+'%';
         
         // dynamic query for getting the records from Deleted_Data object for showing
         String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c,rbin__Deleted_Date__c ' +
-            'FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c NOT IN :setRecordIds';
+            'FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c NOT IN :setRecIdsToHide';
         
         if (strSelectedObject != null) {
             queryString += ' AND rbin__Object_Name__c = :strSelectedObject';
@@ -427,20 +450,24 @@ global with sharing class RecyclebinController {
         try {
             
             if(this.strSearchIn == 'RecycleBin') {
+                disablePurgeButton = false;
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInRecycleBin();
                 
             } else  if(strSearchIn == 'PermanentDeletedData') {
+                disablePurgeButton = true;
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInPermanentlyDeletedData();
                 
             }else if(strSearchIn == 'Both') {
+                disablePurgeButton = false;
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInRecycleBin();
                 searchInPermanentlyDeletedData();  
             }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
+            system.debug('Line No- '+ex.getLineNumber());
         }
     }
     
@@ -471,7 +498,7 @@ global with sharing class RecyclebinController {
     //method to restore the selected records
     public void UndeleteSelectedRecords() {
         try {
-            set<String> recordIds =new set<String>();
+            List<String> recordIds =new List<String>();
             List<Sobject> lstSobjecttoUndelete = new List<Sobject>();
             
             for(List<wrapResults> lstWrapper: lstwrapResults) {
@@ -481,6 +508,7 @@ global with sharing class RecyclebinController {
                         objS.Put('Id',objW.Id);
                         lstSobjecttoUndelete.add(objS);
                     } else if (objW.isCheck && objw.isPermanentlyDeleted == 'Yes') {
+                        system.debug('objw.isPermanentlyDeleted -'+objw.isPermanentlyDeleted);
                         recordIds.add(objw.Id);// store the record Ids in set which are permanently deleted
                     }
                 }
@@ -507,29 +535,30 @@ global with sharing class RecyclebinController {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + ' selected record(s) are in process of getting purged.',''));
                 } 
                 SearchRecords();
-            } else if (!recordIds.isEmpty()) {
-                
+            } 
+            if (!recordIds.isEmpty()) {
+                if (recordIds.size() < 10) {
                 List<Sobject> sobjecttoUndeleteList = new List<Sobject>();
                 List<String> recordDataList=new List<String>();
                 Map<Sobject,String> mapRecordData= new Map<Sobject,String>();
                 set<String> allFieldName = new set<String>();
                 List<rbin__Deleted_Data__c> recordtoDelete=new List<rbin__Deleted_Data__c>();
                 List<rbin__Deleted_Data__c> allRecordList=new List<rbin__Deleted_Data__c>();
+                set<String> setIdsofDeletedRecords = new set<String>();
                 
                 for (rbin__Deleted_Data__c rec : [select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in: recordIds]){
                     allRecordList.add(rec);
+                    setIdsofDeletedRecords.add(rec.Id);
                 }
                 
                 //here we are calling  UtilityCls class method sObjectsToRestore which will return the sobject list which we have to restore
                 List<Sobject> lstobjectToRestore = UtilityCls.sObjectsToRestore(recordIds);
-                
+               
                 //toAdd restored DateTime
                 TimeZone tz = UserInfo.getTimeZone();
                 DateTime dt = Datetime.now();
                 DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
-                
                 Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
-                
                 List<Id> lstRecordsToDelete = new List<Id>(); 
                 Integer successcount = 0;
                 Integer failcount = 0;
@@ -563,26 +592,29 @@ global with sharing class RecyclebinController {
                 }
                 //undelete lstSobjecttoUndelete;
                 if (successcount > 0) {
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) have been restored successfully.',''));
+                    System.debug('successcount '+successcount);
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) from Permanent Daleted Data have been restored successfully.',''));
                 }
                 if (failcount > 0) {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + ' record(s) failed to restore.',''));
                 }
                 if (deleteRecordcount > 0) {
-                    system.debug('deleteRecordcount-'+deleteRecordcount);
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Failed to restore '+deleteRecordcount + ' record(s), as the parent record is not available for this records Or Invalid cross reference id.',''));
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Failed to restore ' +deleteRecordcount + ' record(s), as the parent record is not available for this records Or Invalid cross reference id.',''));
 
                 } if (duplicateRecordCount > 0) {
-                    system.debug('duplicateRecordCount-'+duplicateRecordCount);
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
 
                 }
                 update recordtoDelete;
                 delete recordtoDelete;
                 SearchRecords();
-                
+                List<rbin__Deleted_Data__c> lstDeletedRecords =[Select Id, Name From rbin__Deleted_Data__c Where Id IN :setIdsofDeletedRecords AND IsDeleted = true ALL ROWS];
+                Database.EmptyRecyclebin(lstDeletedRecords);
             } else {
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record to undelete.',''));
+                BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIds);
+                Database.executeBatch(batchToRestoreAll, 20);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
+            }
             }
         } catch (Exception ex) {
             if (ex.getmessage().contains('Entity is not in the recycle bin')) {
@@ -601,7 +633,7 @@ global with sharing class RecyclebinController {
     public void UndeleteAllRecords() {
         try {
             if(lstwrapResults.size() > 0) {
-                set<String> recordIds =new set<String>();
+                List<String> recordIds =new List<String>();
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 List<string> recordIdsList = new List<string>(); 
                 
@@ -628,10 +660,8 @@ global with sharing class RecyclebinController {
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
                     } else if (recordIdsList.size() > 0) {
-                        System.debug('recordIdsList--'+recordIdsList);
                         BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
                         Database.executeBatch(batchToRestoreAll, 20);
-                        system.debug('Batch In Process');
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
                     }
@@ -654,77 +684,14 @@ global with sharing class RecyclebinController {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' All records have been restored successfully.',''));
                     SearchRecords();
                 } else if (!recordIds.isEmpty()) {
-                    
-                    Map<Sobject,String> mapRecordData = new Map<Sobject, String>();
-                    set<String> allFieldName = new set<String>();
-                    List<rbin__Deleted_Data__c> recordtoDelete = new List<rbin__Deleted_Data__c>();
-                    List<rbin__Deleted_Data__c> allRecordList = new List<rbin__Deleted_Data__c>();
-                    for (rbin__Deleted_Data__c rec : [select id,rbin__Record_ID__c,rbin__Object_Name__c,rbin__Record_Name__c from rbin__Deleted_Data__c where rbin__Record_ID__c in :recordIds]){
-                        allRecordList.add(rec);
-                    }
-                    
-                    //toAdd restored DateTime
-                    TimeZone tz = UserInfo.getTimeZone();
-                    DateTime dt = Datetime.now();
-                    DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
-                    
-                    //call sObjectsToRestore from utility class to get sobject for restoring
-                    List<Sobject> lstobjectToRestore = UtilityCls.sObjectsToRestore(recordIds);
-                    
-                    Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
-                    Integer successcount = 0;
-                    Integer failcount = 0;
-                    Integer deleteRecordcount = 0;
-                    Integer duplicateRecordCount = 0;
-                    for (Integer i = 0; i < srList.size(); i++) {
-                        if (srList[i].isSuccess()) {
-                            successcount++;
-                        } else {
-                            system.debug('Error-- '+srList[i].getErrors());
-                            if (string.valueOf(srList[i].getErrors()).contains('ENTITY_IS_DELETED')){ 
-                                deleteRecordcount++;
-                                //lstRecordsToDelete.add(srList[i].getId());
-                            } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {
-                                duplicateRecordCount++;
-                            } else {
-                                failcount++;
-                            }
-                            
-                        }
-                        // Check if the corresponding record should be deleted
-                        if (srList[i].isSuccess()) {
-                            rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                            deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
-                            deleteRecord.rbin__Has_Restored__c = true;
-                            deleteRecord.rbin__Restored_Date_Time__c = currentDt;
-                            recordtoDelete.add(deleteRecord);
-                        }
-                    }
-                    //undelete lstSobjecttoUndelete;
-                    if (successcount > 0) {
-                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' record(s) have been restored successfully.',''));
-                    }
-                    if (failcount > 0) {
-                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + '  record(s) failed to restore.',''));
-                    } 
-                    if (deleteRecordcount > 0) {
-                        system.debug('deleteRecordcount-'+deleteRecordcount);
-                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+deleteRecordcount + ' record(s), as the parent record is not available for this records.',''));
-    
-                    } if (duplicateRecordCount > 0) {
-                        system.debug('duplicateRecordCount-'+duplicateRecordCount);
-                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
-    
-                    }
-                    
-                    update recordtoDelete;
-                    delete recordtoDelete;
+
+                    BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
+                        Database.executeBatch(batchToRestoreAll, 20);
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                     SearchRecords();
                     
                 }
-            } else {
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Please select at least one record to undelete.',''));
-            }
+            }  
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
             return;
@@ -754,14 +721,6 @@ global with sharing class RecyclebinController {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Warning,' Salesforce runs a process on a scheduled basis that physically deletes records that have been deleted from the recycle bin, if that process has not run yet, you will still see the records here.',''));
                 
                 // SearchRecords();
-            } else {
-                for(List<wrapResults> lstWrapper : lstwrapResults) {
-                    for (wrapResults objW : lstWrapper) {
-                        if (objw.isPermanentlyDeleted == 'No') {
-                            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Please select at least one record.',''));
-                        }
-                    }
-                }                
             }
             
             SearchRecords();
