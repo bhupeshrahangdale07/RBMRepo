@@ -2,10 +2,7 @@
     Description: Delted record page
 */
 public with sharing class RecordPageController {
-
-    
-
-    
+ 
     public string objectname;
     public string recordid;
     
@@ -46,7 +43,6 @@ public with sharing class RecordPageController {
         if(Apexpages.CurrentPage().getParameters().get('objectname') != null) {
             
             objectname =string.escapeSingleQuotes( string.valueof(Apexpages.CurrentPage().getParameters().get('objectname')));
-            system.debug('Object Value- '+objectname);
 
         } else {
             ApexPages.Message msg = new ApexPages.Message(ApexPages.Severity.Error, 'Object Name is not found.');
