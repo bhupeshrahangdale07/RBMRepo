@@ -42,7 +42,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
                     if (schemaType != null) {
                         if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()&& schemaType.getDescribe().getName() != 'rbin__Deleted_Data__c') {
                             String label = String.valueOf(real.get('label'));
-                            mapOfAllObj.put(name, label);  
+                            mapOfAllObj.put(name, label);
                         } 
                     }
                 }
@@ -68,11 +68,14 @@ public with sharing class trackPermanentDeletedDataCtrl {
                 nextSerialNumber = 1;
             }
             
+            Map<String, String> mapObjectNames = getAllObjectName();
+
             for (rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList) {
                 rbin__Permanent_Deleted_Tracking_Object__c prmntTrckObj = new rbin__Permanent_Deleted_Tracking_Object__c();
                 prmntTrckObj.Name = objName.Name;
                 // Set the calculated serial number
                 prmntTrckObj.rbin__Record_No__c = nextSerialNumber++;
+                prmntTrckObj.rbin__Label__c = mapObjectNames.get(objName.Name);
                 prmntObjectTrackingList.add(prmntTrckObj);
                 
             }
@@ -90,7 +93,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
     @AuraEnabled (cacheable = true)
     public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords() {
         try {
-            list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([Select id,name from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
+            list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([Select id,name,rbin__Label__c from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
             return lst;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
