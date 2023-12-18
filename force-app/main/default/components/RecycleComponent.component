@@ -292,12 +292,12 @@
                 </div>
                 <div id="SearchResults" style="margin-top:20px;">
                     <div id="page_buttons" style="margin-top:10px;text-align:center;">
-                        <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand"
+                        <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand" title="For more than 10 selected records the batch will run to restore the records for 'Permanent Deleted Data'"
                         />
                         <apex:commandButton value="Restore All" onclick="fnUndeleteAllRecords();return false;" styleClass="slds-button slds-button--brand"
                         />
                         <apex:commandButton value="Purge Selected" onclick="fnDeleteFromRecyclebin();return false;" styleClass="slds-button slds-button--brand"
-                            rendered="{!IsAdminUser}" />
+                            rendered="{!IsAdminUser}" disabled="{!disablePurgeButton}"/>
                     </div>
                     <table width="100%" id="tblDeletedRecords" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered checkableTable"
                         style="border-spacing:0px !important;">
