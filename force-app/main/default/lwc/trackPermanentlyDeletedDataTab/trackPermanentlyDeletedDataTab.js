@@ -28,6 +28,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     @track deleteRecordIds;
     @track newObjectList = [];
     @track getAllRecords;
+    @track objectNamesList;
     isSaveBtnVisible;
     recordExist = false;
     isLoading = false;
@@ -37,27 +38,29 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         Save_rbin,
     };
 
+    
     // fetch all the exsisting records 
     @wire(fetchAllRecords)
-    wireAllRecords(result) {
+     wireAllRecords(result) {
         this.isLoading = true;
         this.getAllRecords = result;
         if (result.data) {
             this.objectRecordList = this.getAllRecords.data;
             this.error = undefined;
             this.isLoading = false;
+            console.log('In wire one');
         } else if (result.error) {
             console.log('Error-' + error);
             this.records = undefined;
             this.isLoading = false;
         }
+        
     }
-
-    // fetch all the options for selection
+    //fetch all the options for selection
     @wire(getAllObjectName)
     wireObjectNames(result) {
+        this.objectNamesList = result;
         if (result.data) {
-            this.getAllObjectList = [];
             this.allObjectListForIndex = [];
             for (let key in result.data) {
                 if (!this.objectRecordList.some(obj => obj.Name === key)) {
@@ -65,17 +68,18 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 }
                 this.allObjectListForIndex.push({ label : key, value: key });
             }
+            console.log('In wire two');
             this.isLoading = false;
         } else if (result.error) {
-            console.log('Error-' + error);
+            console.log('Error-' + JSON.stringify(result.error));
             this.isLoading = false;
         }
     }
-
     // a function to be called on option change 
-    async handleChange(event) {
+   handleChange(event) {
         this.isSaveBtnVisible = true;
         var selectedValue = event.detail.value;
+        console.log('Selected value- '+selectedValue);
         var key = event.currentTarget.dataset.id;
 
         const objValue = this.newObjectList.findIndex((obj => obj.Id == key));
@@ -83,25 +87,35 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         this.newObjectList[objValue].Name = selectedValue;
 
         console.log('New selected object List-', JSON.stringify(this.newObjectList));
-        const idxValue = this.getAllObjectList.findIndex((objct => objct.value === selectedValue));
-        this.getAllObjectList.splice(idxValue, 1);
+        const idxValue = this.getAllObjectList.findIndex((objct => objct.value == selectedValue));
+        //this.getAllObjectList.splice(idxValue, 1);
+        
+        console.log('All object List-', JSON.stringify(this.getAllObjectList));
     }
 
     //the function to be called on add button click used to add new row into a datatble
-    addRow() {
+    async addRow() {
+        if(this.objectRecordList.length < 10) {
         this.isSaveBtnVisible = true;
         let randomId = Math.random() * 16;
         let myNewElement = { Id: randomId, Name: null };
         this.objectRecordList = [...this.objectRecordList, myNewElement];
         this.newObjectList.push({ Id: randomId, Name: null });
-        console.log('Object list -' + JSON.stringify(this.objectRecordList));
-        console.log('New Arr after adding row-' + JSON.stringify(this.newObjectList));
-
+    } else {
+        await LightningAlert.open({
+            message: 'You can select only upto 10 records',
+            theme: 'error', // a red theme intended for error states
+            label: 'Error!', // this is the header text
+        });
+    }
     }
 
     //the function to be called on save button click used to save custom setting records
     async onsaveclickHandler() {
 
+        this.newObjectList = this.newObjectList.filter(item => item.Name !== null);
+
+        console.log('Object option List-- '+JSON.stringify(this.getAllObjectList));
         this.isLoading = true;
         saveTrackingObject({ objNameList : this.newObjectList })
             .then(async (result) => {
@@ -113,10 +127,16 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     theme: 'success', // a green theme intended for success states
                     label: 'Success!', // this is the header text
                 });
+                for (let key of this.newObjectList) {
+                    console.log('In loop ',key.Name);
+                    this.getAllObjectList = this.getAllObjectList.filter(itm => itm.value !== key.Name);
+                }
                 this.newObjectList = [];
-                this.wireObjectNames;
+                
+                //this.wireObjectNames;
                 this.isSaveBtnVisible = false;
-                return refreshApex(this.getAllRecords);
+                refreshApex(this.getAllRecords);
+                refreshApex(this.objectNamesList);
 
             })
             .catch(async (error) => {
@@ -136,7 +156,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 this.isLoading = false;
             })
 
-
+       // }
     }
 
     // the will be called on the delete button click
@@ -163,12 +183,12 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 }
                 var indexValueforDeleteObj = this.allObjectListForIndex.findIndex(idx => idx.value == nameValue);
                 if (nameValue != null) {
-                    this.getAllObjectList.splice(indexValueforDeleteObj, 0, { label: nameValue, value: nameValue });
+                    //this.getAllObjectList.splice(indexValueforDeleteObj, 0, { label: nameValue, value: nameValue });
                 }
                 this.newObjectList.splice(this.newObjectList.findIndex(row => row.Id == this.deleteRecordIds), 1);
 
                 this.isLoading = false;
-                return refreshApex(this.getAllRecords);
+                refreshApex(this.getAllRecords);
             } else {
                 deleteObject({ removeObjectIds: this.deleteRecordIds })
                     .then(async (res) => {
@@ -181,11 +201,12 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                         var deletedValue = this.objectRecordList[this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds)].Name;
                         var indexValueforDeleteObj = this.allObjectListForIndex.findIndex(idx => idx.value == deletedValue);
                         this.getAllObjectList.splice(indexValueforDeleteObj, 0, { label: deletedValue, value: deletedValue });
-                        return refreshApex(this.getAllRecords);
+                        refreshApex(this.getAllRecords);   
+                         this.newObjectList = [];
 
                     })
                     .catch((error) => {
-                        console.log('error on delete-', error);
+                        console.log('error on delete-', JSON.stringify(error));
                     })
             }
         } else {

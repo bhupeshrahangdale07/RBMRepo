@@ -2,8 +2,10 @@
 	<lightning-card>
 		<div class="slds-m-around_medium">
 			<div if:true={isLoading} class="slds-is-relative">
-				<lightning-spinner alternative-text="Loading..." variant="brand">
+				<div class="backdrop">
+				<lightning-spinner  class="spinshow" alternative-text="Loading..." variant="brand">
 				</lightning-spinner>
+			</div>
 			</div>
 			<table class="slds-table slds-table_cell-buffer slds-table_bordered"
 				aria-labelledby="element-with-table-label other-element-with-table-label" style="width: fit-content;">
@@ -12,7 +14,12 @@
 						<p>
 							<i>
                             <b>Note:</b>
-                        </i> Please select the objects you would like to track the records after permanemt delete.
+                        </i><br/>
+						1. Please select the objects you would like to track for permanent delete.<br/>
+						2. There will be one batch which will take back up of all deleted data every day for selected objects only. <br/>
+						3. You can select upto 10 objects at a time for permanent delete tracking.<br/>
+						4. For more than 10 selected records the batch will run to restore the records, you can see the batch status in "Mass Restore Batch Status" Tab.<br/>
+						5. In "Mass Restore Batch Status" tab if any record get failed to restore then you can check this in "Error Log" Tab.<br/>
 						</p>
 					</div>
 					<tr class="slds-line-height_reset">
@@ -34,12 +41,12 @@
 							</th>
 							<td data-label="Account Name">
 								<template lwc:if={obj.Name}>
-									<lightning-formatted-text value={obj.Name} style="padding: 8%;">
+									<lightning-formatted-text value={obj.rbin__Label__c} style="padding: 8%;">
 									</lightning-formatted-text>
 								</template>
 								<template lwc:else>
 									<lightning-combobox data-id={obj.Id} name="Object Name" value={obj.Name}
-										options={getAllObjectList} onchange={handleChange}></lightning-combobox>
+										options={getAllObjectList} onchange={handleChange} required="true"></lightning-combobox>
 								</template>
 								<!-- </template>-->
 							</td>

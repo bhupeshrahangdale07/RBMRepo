@@ -32,6 +32,9 @@ global with sharing class RecyclebinController {
     public rbin__Recycle_Bin_Setting__c rbinsetting;
     public List<rbin__RecycleSearchObjects__c> lstCustomSettings;
     public boolean disablePurgeButton {get; set;}
+    public boolean disableButton {get; set;}
+    public boolean forPermanentDeleted {get; set;}
+    public integer bothRecordCount {get; set;}
 
     // Constructor method below
     public RecyclebinController() {
@@ -46,10 +49,13 @@ global with sharing class RecyclebinController {
         lstCustomSettings = new List<rbin__RecycleSearchObjects__c>();
         strSelectedUser = '';
         recordcount = 0;
+        bothRecordCount = 0;
         CheckAdminUser();
         strSearchIn = 'RecycleBin';
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
+        disableButton = true; 
+        
 
         // this will fetch those sobjects where we are not considering the "Name" as standard fields.
         for (rbin__ObjectKeyField__mdt o : [select id, MasterLabel, rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]) {
@@ -272,10 +278,12 @@ global with sharing class RecyclebinController {
         }
         
         if(lstAllDeletedObjects.size() > 0) {
+            //disableButton = false;
+            disablePurgeButton = false;
             Integer count = 0;
             List<wrapResults> lsttempWrap = new List<wrapResults>();
             recordcount = lstAllDeletedObjects.size();
-            
+            bothRecordCount += lstAllDeletedObjects.size();
             Set<Id> ContentDocumentIds = new Set<Id>();
             for (SObject objs : lstAllDeletedObjects) {
                 string strobjecttype =  string.valueof(objS.getSObjectType());
@@ -333,6 +341,9 @@ global with sharing class RecyclebinController {
             if(lsttempWrap.size() > 0) {
                 lstwrapResults.add(lsttempWrap);
             }
+        } else {
+           // disableButton = true;
+            disablePurgeButton = true;
         }
     }
     
@@ -407,7 +418,7 @@ global with sharing class RecyclebinController {
         
         map<string,string> mapObjectLabelName =new map<string,string>();//map to store the object label name
         Integer count = 0;
-        recordcount=permanentDeletedDataList.size();
+        
         
         List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomSetting = false]; // get all object names Labels
         
@@ -416,7 +427,10 @@ global with sharing class RecyclebinController {
             String objectLabel = obj.Label;
             mapObjectLabelName.put(objectAPIName,objectLabel);
         }
-        
+        if(permanentDeletedDataList.size() > 0) {
+            recordcount = permanentDeletedDataList.size();
+            bothRecordCount += permanentDeletedDataList.size();
+           // disableButton = false;
         for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {    
             wrapResults objW = new wrapResults();
             // Assign the field values directly to wrapper class properties
@@ -443,6 +457,9 @@ global with sharing class RecyclebinController {
         if(lsttempWrap.size()>0) {
             lstwrapResults.add(lsttempWrap);
         }
+    } else {
+        //disableButton = true;
+    }
     }
     
     //method to search the deleted records based on the search critiera specified by the user
@@ -451,19 +468,39 @@ global with sharing class RecyclebinController {
             
             if(this.strSearchIn == 'RecycleBin') {
                 disablePurgeButton = false;
+                forPermanentDeleted = false;
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInRecycleBin();
+                if (lstwrapResults.size() > 0) {
+                    disableButton = false; 
+                } else {
+                    disableButton = true;
+                }
                 
             } else  if(strSearchIn == 'PermanentDeletedData') {
                 disablePurgeButton = true;
+                forPermanentDeleted = true;
                 lstwrapResults = new List<List<wrapResults>>();
                 searchInPermanentlyDeletedData();
+                if (lstwrapResults.size() > 0) {
+                    disableButton = false; 
+                } else {
+                    disableButton = true;
+                }
                 
             }else if(strSearchIn == 'Both') {
                 disablePurgeButton = false;
+                forPermanentDeleted = false;
                 lstwrapResults = new List<List<wrapResults>>();
+                bothRecordCount = 0;
                 searchInRecycleBin();
-                searchInPermanentlyDeletedData();  
+                searchInPermanentlyDeletedData();
+                recordcount = bothRecordCount;
+                if (lstwrapResults.size() > 0) {
+                    disableButton = false; 
+                } else {
+                    disableButton = true;
+                }
             }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
@@ -633,6 +670,7 @@ global with sharing class RecyclebinController {
     public void UndeleteAllRecords() {
         try {
             if(lstwrapResults.size() > 0) {
+                system.debug('lstwrapResults- '+lstwrapResults.size());
                 List<String> recordIds =new List<String>();
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 List<string> recordIdsList = new List<string>(); 
@@ -691,7 +729,9 @@ global with sharing class RecyclebinController {
                     SearchRecords();
                     
                 }
-            }  
+            } else {
+                system.debug('lstwrapResults- '+lstwrapResults.size());
+            } 
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
             return;

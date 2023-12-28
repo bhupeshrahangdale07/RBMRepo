@@ -155,6 +155,11 @@
         	max-width: fit-content !important;
         }
         
+        .small-icon {
+            width: 16px; 
+            height: 16px; 
+        }
+        
     </style>
 
     <body>
@@ -292,13 +297,26 @@
                 </div>
                 <div id="SearchResults" style="margin-top:20px;">
                     <div id="page_buttons" style="margin-top:10px;text-align:center;">
-                        <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand" title="For more than 10 selected records the batch will run to restore the records for 'Permanent Deleted Data'"
+                      <!--<apex:outputpanel rendered="{!forPermanentDeleted}">
+                                <div class="small-icon">
+                                <img class="imgHelpText helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}"/>
+                                <div class="slds-popover slds-popover--tooltip slds-hide slds-nubbin_top-left" role="tooltip" id="help">
+                                    <div class="slds-popover__body"><pre>Note</pre></div>
+                                </div>
+                            </div>
+                </apex:outputpanel>-->
+                        <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand" disabled="{!disableButton}"
                         />
-                        <apex:commandButton value="Restore All" onclick="fnUndeleteAllRecords();return false;" styleClass="slds-button slds-button--brand"
+                        <apex:commandButton value="Restore All" onclick="fnUndeleteAllRecords();return false;" styleClass="slds-button slds-button--brand" disabled="{!disableButton}"
                         />
                         <apex:commandButton value="Purge Selected" onclick="fnDeleteFromRecyclebin();return false;" styleClass="slds-button slds-button--brand"
                             rendered="{!IsAdminUser}" disabled="{!disablePurgeButton}"/>
                     </div>
+                    <apex:outputpanel rendered="{!forPermanentDeleted}">
+                    <div style="margin-top:10px;">
+                        <b>Note:</b>- If you choose more than 10 records, the job will execute to restore the records for the Permanently Deleted Data.
+                            </div>
+                </apex:outputpanel>
                     <table width="100%" id="tblDeletedRecords" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered checkableTable"
                         style="border-spacing:0px !important;">
                         <thead>
@@ -429,7 +447,8 @@
                             onSelect: function (datepicker, t) {
                                 var dt = new Date();
                                 var cdt = new Date(datepicker.selectedFullDate._d).addDays(15);
-                                if (dt > cdt) {
+                                var permanentDeleted = {!forPermanentDeleted};
+                                if (dt > cdt && permanentDeleted == false) {
                                     datepicker.$el.val('');
                                     var cdt15 = new Date().addDays(-14);
                                     var dverr = $(datepicker.$selectedInput).closest('div.slds-form-element').find('div.clsError');

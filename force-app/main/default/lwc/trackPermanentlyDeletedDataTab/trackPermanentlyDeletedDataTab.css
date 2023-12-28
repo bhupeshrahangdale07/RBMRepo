@@ -1,3 +1,21 @@
 .slds-input__icon.iconpointerevetns{
     pointer-events:all
 }
+.backdrop {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(235, 233, 233, 0.5); /* background color while spinner onscreen */
+    z-index: 15000; /* set z-index always high */
+  }
+  
+  .spinshow::after {
+    position: absolute;
+    content: "Please wait while loading....";
+    width: 100%;
+    text-align: center;
+    top: calc(50% + 3em);
+    font-weight: bold;
+  }
