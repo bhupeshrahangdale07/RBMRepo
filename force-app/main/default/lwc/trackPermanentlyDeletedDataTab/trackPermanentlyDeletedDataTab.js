@@ -48,7 +48,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             this.objectRecordList = this.getAllRecords.data;
             this.error = undefined;
             this.isLoading = false;
-            console.log('In wire one');
         } else if (result.error) {
             console.log('Error-' + error);
             this.records = undefined;
@@ -61,14 +60,12 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     wireObjectNames(result) {
         this.objectNamesList = result;
         if (result.data) {
-            this.allObjectListForIndex = [];
             for (let key in result.data) {
                 if (!this.objectRecordList.some(obj => obj.Name === key)) {
                     this.getAllObjectList.push({ label : result.data[key], value : key });
                 }
                 this.allObjectListForIndex.push({ label : key, value: key });
             }
-            console.log('In wire two');
             this.isLoading = false;
         } else if (result.error) {
             console.log('Error-' + JSON.stringify(result.error));
@@ -79,18 +76,13 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
    handleChange(event) {
         this.isSaveBtnVisible = true;
         var selectedValue = event.detail.value;
-        console.log('Selected value- '+selectedValue);
         var key = event.currentTarget.dataset.id;
 
         const objValue = this.newObjectList.findIndex((obj => obj.Id == key));
 
         this.newObjectList[objValue].Name = selectedValue;
-
-        console.log('New selected object List-', JSON.stringify(this.newObjectList));
-        const idxValue = this.getAllObjectList.findIndex((objct => objct.value == selectedValue));
+        //const idxValue = this.getAllObjectList.findIndex((objct => objct.value == selectedValue));
         //this.getAllObjectList.splice(idxValue, 1);
-        
-        console.log('All object List-', JSON.stringify(this.getAllObjectList));
     }
 
     //the function to be called on add button click used to add new row into a datatble
@@ -112,10 +104,26 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
     //the function to be called on save button click used to save custom setting records
     async onsaveclickHandler() {
+        let isValid = true;
 
+        var selectElements = this.template.querySelectorAll('lightning-select');
+
+        selectElements.forEach((selectElement) => {
+            // Check if the value is null or empty
+            if (!selectElement.value) {
+                isValid = false;
+    
+                // Set a custom validity message
+                selectElement.setCustomValidity('Please select a value.');
+    
+            }else {
+                selectElement.setCustomValidity('');
+            }
+            // Report validity to show the error message
+            selectElement.reportValidity();
+        });
+        if (isValid) {
         this.newObjectList = this.newObjectList.filter(item => item.Name !== null);
-
-        console.log('Object option List-- '+JSON.stringify(this.getAllObjectList));
         this.isLoading = true;
         saveTrackingObject({ objNameList : this.newObjectList })
             .then(async (result) => {
@@ -128,7 +136,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     label: 'Success!', // this is the header text
                 });
                 for (let key of this.newObjectList) {
-                    console.log('In loop ',key.Name);
                     this.getAllObjectList = this.getAllObjectList.filter(itm => itm.value !== key.Name);
                 }
                 this.newObjectList = [];
@@ -146,7 +153,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     const startIndex = errorMessage.indexOf("first error");
                     const extractedErrorMessage = errorMessage.substring(startIndex);
                     const message = extractedErrorMessage.replace("first error: FIELD_INTEGRITY_EXCEPTION, ", "");// it will show the message only
-                    console.log('Error result-' + message);
                     await LightningAlert.open({
                         message: message,
                         theme: 'error', // a red theme intended for error states
@@ -155,8 +161,10 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 }
                 this.isLoading = false;
             })
+        }else{
+            console.log('In else block');
+        }
 
-       // }
     }
 
     // the will be called on the delete button click
@@ -165,10 +173,10 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
         // it will pop up an conformation box for user whether he want to delete a record or not
         const result = await LightningConfirm.open({
-            message: 'Are you sure to delete this record?',
+            message: 'Are you sure, you want to delete this record?',
             theme: 'warning',
             variant: 'header',
-            label: 'Delete a record',
+            label: 'Delete confirmation!',
 
         });
         // if he want to delete a record
@@ -176,15 +184,15 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             this.isLoading = true;
             if (!isNaN(this.deleteRecordIds)) {
                 this.objectRecordList.splice(this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds), 1);
-                var foundObject = this.newObjectList.find(obj => obj.Id == this.deleteRecordIds);
-                if (foundObject && foundObject.Name !== null) {
-                    var nameValue = foundObject.Name;
-                    console.log('Name value:', nameValue);
-                }
-                var indexValueforDeleteObj = this.allObjectListForIndex.findIndex(idx => idx.value == nameValue);
-                if (nameValue != null) {
+                //var foundObject = this.newObjectList.find(obj => obj.Id == this.deleteRecordIds);
+                // if (foundObject && foundObject.Name !== null) {
+                //     var nameValue = foundObject.Name;
+                //     console.log('Name value:', nameValue);
+                // }
+                //var indexValueforDeleteObj = this.allObjectListForIndex.findIndex(idx => idx.value == nameValue);
+               // if (nameValue != null) {
                     //this.getAllObjectList.splice(indexValueforDeleteObj, 0, { label: nameValue, value: nameValue });
-                }
+                //}
                 this.newObjectList.splice(this.newObjectList.findIndex(row => row.Id == this.deleteRecordIds), 1);
 
                 this.isLoading = false;
@@ -196,7 +204,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                         await LightningAlert.open({
                             message: res,
                             theme: 'success',
-                            label: 'Record Deleted', // this is the header text
+                            label: 'Success!', // this is the header text
                         });
                         var deletedValue = this.objectRecordList[this.objectRecordList.findIndex(row => row.Id == this.deleteRecordIds)].Name;
                         var indexValueforDeleteObj = this.allObjectListForIndex.findIndex(idx => idx.value == deletedValue);
@@ -208,11 +216,12 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     .catch((error) => {
                         console.log('error on delete-', JSON.stringify(error));
                     })
+                   // this.isSaveBtnVisible = false;
             }
         } else {
 
         }
-        this.isSaveBtnVisible = false;
+        
     }
     updateRecordView() {
         setTimeout(() => {
