@@ -155,9 +155,23 @@
         	max-width: fit-content !important;
         }
         
-        .small-icon {
-            width: 16px; 
-            height: 16px; 
+        .helpIcon{
+            position:relative;
+            right:0%
+        }
+        
+        .helpIcon .imgHelpIcon{
+            width:13px;
+            margin-top: 10px;
+            position: absolute;
+            left: 560px;
+        }
+
+        .helpIconTextBox {
+            display: inline-block !important;
+            position: absolute !important;
+        	left: 542px;
+        	top: 38px;
         }
         
     </style>
@@ -297,14 +311,14 @@
                 </div>
                 <div id="SearchResults" style="margin-top:20px;">
                     <div id="page_buttons" style="margin-top:10px;text-align:center;">
-                      <!--<apex:outputpanel rendered="{!forPermanentDeleted}">
-                                <div class="small-icon">
-                                <img class="imgHelpText helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}"/>
+                      <apex:outputpanel rendered="{!forPermanentDeleted}">
+                                <div class="helperText--container helpIcon">
+                                <img class="imgHelpIcon helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}"/>
                                 <div class="slds-popover slds-popover--tooltip slds-hide slds-nubbin_top-left" role="tooltip" id="help">
-                                    <div class="slds-popover__body"><pre>Note</pre></div>
+                                    <div class="slds-popover__body" style="text-align : left;"><pre>{!$Label.Help_Text_for_Permanent_Deleted_Data_Restore}</pre></div>
                                 </div>
                             </div>
-                </apex:outputpanel>-->
+                </apex:outputpanel>
                         <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand" disabled="{!disableButton}"
                         />
                         <apex:commandButton value="Restore All" onclick="fnUndeleteAllRecords();return false;" styleClass="slds-button slds-button--brand" disabled="{!disableButton}"
@@ -313,9 +327,9 @@
                             rendered="{!IsAdminUser}" disabled="{!disablePurgeButton}"/>
                     </div>
                     <apex:outputpanel rendered="{!forPermanentDeleted}">
-                    <div style="margin-top:10px;">
-                        <b>Note:</b>- If you choose more than 10 records, the job will execute to restore the records for the Permanently Deleted Data.
-                            </div>
+                    <!--div style="margin-top:10px;">
+                        <b>Note:</b> If you choose more than 10 records, the job will execute to restore the records for the Permanently Deleted Data.
+                            </div-->
                 </apex:outputpanel>
                     <table width="100%" id="tblDeletedRecords" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered checkableTable"
                         style="border-spacing:0px !important;">
@@ -590,6 +604,14 @@
                 $(document).on('mouseleave','.imgHelpText',function(){
                     $(this).siblings('div.slds-popover').addClass('slds-hide');
                     $(this).siblings('div.slds-popover').removeClass('helpTooltipText');
+                });
+                $(document).on('mouseenter','.imgHelpIcon',function(){
+                    $(this).siblings('div.slds-popover').removeClass('slds-hide');
+                    $(this).siblings('div.slds-popover').addClass('helpIconTextBox');
+                });
+                $(document).on('mouseleave','.imgHelpIcon',function(){
+                    $(this).siblings('div.slds-popover').addClass('slds-hide');
+                    $(this).siblings('div.slds-popover').removeClass('helpIconTextBox');
                 });
 
                 window.onload = function() {
