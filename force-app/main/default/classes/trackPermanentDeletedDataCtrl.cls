@@ -14,7 +14,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
     @AuraEnabled(cacheable = true)
     public static Map<string, string> getAllObjectName() {
         Map<string, string> mapOfAllObj = new Map<string, string>();
-        List<String> ignorsObjects = new List<String>{'Partner', 'CaseComment', 'FeedComment', 'FeedItem', 'IdeaComment', 'FeedComment', 'FeedItem', 'EngagementChannelType', 'DataUsePurpose'};
+        List<String> ignorsObjects = UtilityCls.objectsToIgnore();
             String endpoint = URL.getSalesforceBaseUrl().toExternalForm() + '/services/data/v48.0/sobjects/';
         
         HttpRequest req = new HttpRequest();
@@ -40,7 +40,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
                     
                     if (schemaType != null) {
-                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()&& schemaType.getDescribe().getName() != 'rbin__Deleted_Data__c') {
+                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()&& schemaType.getDescribe().getName() != 'rbin__Deleted_Data__c'&& schemaType.getDescribe().isUndeletable()) {
                             String label = String.valueOf(real.get('label'));
                             mapOfAllObj.put(name, label);
                         } 
@@ -81,7 +81,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
             }
             insert prmntObjectTrackingList;
 
-            return 'Setting Updated Successfully!';
+            return 'Setting has been updated successfully!';
             
         } catch (Exception e) {
             system.debug('Error in Line Number-'+e.getLineNumber());
@@ -111,7 +111,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
             
             updateSerialNumbers();
             
-            return 'Setting updated Successfully!';
+            return 'Setting has been updated successfully!';
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
