@@ -120,4 +120,12 @@ public with sharing class UtilityCls {
         	Insert lstContentDocLnk;   
         }
     }
+
+    public static List<string> objectsToIgnore () {
+        List<String> lstObjectsToIgnore = new List<String>();
+        for (rbin__Objects_To_Ignore__mdt obj : [Select Id, MasterLabel FROM rbin__Objects_To_Ignore__mdt]) {
+            lstObjectsToIgnore.add(obj.MasterLabel);
+        }
+        return lstObjectsToIgnore;
+    }
 }
