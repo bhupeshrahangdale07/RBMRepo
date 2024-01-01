@@ -8,7 +8,7 @@
 			</div>
 			</div>
 			<table class="slds-table slds-table_cell-buffer slds-table_bordered"
-				aria-labelledby="element-with-table-label other-element-with-table-label" style="width: fit-content;">
+				aria-labelledby="element-with-table-label other-element-with-table-label" style="width: 100%;">
 				<thead>
 					<div class="slds-box slds-m-bottom_small">
 						<p>
@@ -26,7 +26,7 @@
 						<th class="" scope="col" style="width: 10%;">
 							<div class="slds-truncate" title="Action">ACTION</div>
 						</th>
-						<th class="" scope="col" style="left: 7%;">
+						<th class="" scope="col" style="left: 2%;">
 							<div class="slds-truncate" title="Object Name">OBJECT NAME</div>
 						</th>
 					</tr>
@@ -41,12 +41,12 @@
 							</th>
 							<td data-label="Account Name">
 								<template lwc:if={obj.Name}>
-									<lightning-formatted-text value={obj.rbin__Label__c} style="padding: 8%;">
+									<lightning-formatted-text value={obj.rbin__Label__c} style="padding: 3%;">
 									</lightning-formatted-text>
 								</template>
 								<template lwc:else>
-									<lightning-combobox data-id={obj.Id} name="Object Name" value={obj.Name}
-										options={getAllObjectList} onchange={handleChange} required="true"></lightning-combobox>
+									<lightning-select data-id={obj.Id} name="Object Name" value={obj.Name}
+										options={getAllObjectList} onchange={handleChange}></lightning-select>
 								</template>
 								<!-- </template>-->
 							</td>
