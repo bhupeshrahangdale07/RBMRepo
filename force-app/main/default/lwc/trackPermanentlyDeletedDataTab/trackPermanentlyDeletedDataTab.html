@@ -45,8 +45,8 @@
 									</lightning-formatted-text>
 								</template>
 								<template lwc:else>
-									<lightning-select data-id={obj.Id} name="Object Name" value={obj.Name}
-										options={getAllObjectList} onchange={handleChange}></lightning-select>
+									<lightning-select data-id={obj.Id} name="Object Name" value={obj.selectedValue}
+										options={obj.option1Array} onchange={handleChange}></lightning-select>
 								</template>
 								<!-- </template>-->
 							</td>

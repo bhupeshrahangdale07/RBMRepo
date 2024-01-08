@@ -29,9 +29,11 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     @track newObjectList = [];
     @track getAllRecords;
     @track objectNamesList;
+    selectedopvalue = "";
     isSaveBtnVisible;
     recordExist = false;
     isLoading = false;
+    @track optionArry2 = [];
 
     label = {
         AddNewButton,
@@ -45,7 +47,22 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         this.isLoading = true;
         this.getAllRecords = result;
         if (result.data) {
-            this.objectRecordList = this.getAllRecords.data;
+            const mainArr = [];
+            const arr = [...this.getAllRecords.data]
+            arr.forEach((element)=>{
+               const myNewElement = {
+                    "Id": element.Id,
+                     "Name": element.Name,
+                     "rbin__Label__c":element.rbin__Label__c,
+                      "selectedValue": element.Name, 
+                      "option1Array": [...this.getAllObjectList]
+                }
+                mainArr.push(myNewElement);
+            });
+            
+            this.objectRecordList = [...mainArr];
+
+            console.log('this.objectRecordList- '+JSON.stringify(this.objectRecordList));
             this.error = undefined;
             this.isLoading = false;
         } else if (result.error) {
@@ -63,6 +80,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             for (let key in result.data) {
                 if (!this.objectRecordList.some(obj => obj.Name === key)) {
                     this.getAllObjectList.push({ label : result.data[key], value : key });
+                    this.optionArry2.push({label : result.data[key], value : key });
                 }
                 this.allObjectListForIndex.push({ label : key, value: key });
             }
@@ -74,15 +92,38 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     }
     // a function to be called on option change 
    handleChange(event) {
-        this.isSaveBtnVisible = true;
-        var selectedValue = event.detail.value;
+    this.isSaveBtnVisible = true;
         var key = event.currentTarget.dataset.id;
-
+        var selectedValue = event.detail.value;
+        this.selectedopvalue = selectedValue;
+        const currtArry = this.objectRecordList.find((ele)=> ele.Id == key);
+        const oldValue = currtArry.selectedValue;
+       // console.log('oldValue- '+oldValue);
+        console.log('currtArry options- '+JSON.stringify(currtArry.option1Array))
+        const currentRecOption = currtArry.option1Array.find((ele)=> ele.value == oldValue);
+        currtArry.selectedValue = event.detail.value;
+        this.objectRecordList.forEach((element)=>{
+            // if (oldValue != "" ) {
+            //     console.log('oldValue- '+oldValue)
+            //     element.option1Array.push({ label: currentRecOption.label, value: currentRecOption.value });
+            // }
+            const newArr = [];
+            if(element.Id != key){
+                console.log('Element Id '+element.Id);
+                element.option1Array.forEach((ele)=>{
+                    if(ele.value !== event.detail.value){
+                        newArr.push({"label" : ele.label, "value" : ele.value });
+                    }
+                });
+                if (oldValue != "" ) {
+                newArr.push({label: currentRecOption.label, value: currentRecOption.value});
+                }
+                element.option1Array = newArr;
+            }
+        })
+        
         const objValue = this.newObjectList.findIndex((obj => obj.Id == key));
-
         this.newObjectList[objValue].Name = selectedValue;
-        //const idxValue = this.getAllObjectList.findIndex((objct => objct.value == selectedValue));
-        //this.getAllObjectList.splice(idxValue, 1);
     }
 
     //the function to be called on add button click used to add new row into a datatble
@@ -90,9 +131,33 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         if(this.objectRecordList.length < 10) {
         this.isSaveBtnVisible = true;
         let randomId = Math.random() * 16;
-        let myNewElement = { Id: randomId, Name: null };
+        const valueArr = [];
+        let myNewElement = { "Id": randomId, 
+                "Name": null,
+                "rbin__Label__c": null, 
+                "selectedValue": "", 
+                "option1Array": [] };
+        const newOptionsArr = [];
+        if (this.objectRecordList) {
+
+            this.objectRecordList.forEach((element) => {
+
+                valueArr.push(element.selectedValue);
+
+            });
+
+        }
+      
+        this.getAllObjectList.forEach((element)=>{
+            if(element.value !== this.selectedopvalue && (valueArr.indexOf(element.value) === -1)){
+                newOptionsArr.push({label : element.label, value : element.value});
+            }
+            
+        })
+        myNewElement.option1Array = newOptionsArr;
         this.objectRecordList = [...this.objectRecordList, myNewElement];
-        this.newObjectList.push({ Id: randomId, Name: null });
+        console.log('Add row- '+JSON.stringify(this.objectRecordList));
+        this.newObjectList.push({ "Id": randomId, "Name": null });
     } else {
         await LightningAlert.open({
             message: 'You can select only upto 10 records',
@@ -109,8 +174,9 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         var selectElements = this.template.querySelectorAll('lightning-select');
 
         selectElements.forEach((selectElement) => {
+            console.log('selectElementValue- '+JSON.stringify(selectElement.value))
             // Check if the value is null or empty
-            if (!selectElement.value) {
+            if (selectElement.value == '') {
                 isValid = false;
     
                 // Set a custom validity message
@@ -194,7 +260,9 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     //this.getAllObjectList.splice(indexValueforDeleteObj, 0, { label: nameValue, value: nameValue });
                 //}
                 this.newObjectList.splice(this.newObjectList.findIndex(row => row.Id == this.deleteRecordIds), 1);
-
+                if(this.newObjectList.length == 0){
+                    this.isSaveBtnVisible = false;
+                }
                 this.isLoading = false;
                 refreshApex(this.getAllRecords);
             } else {
@@ -211,7 +279,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                         this.getAllObjectList.splice(indexValueforDeleteObj, 0, { label: deletedValue, value: deletedValue });
                         refreshApex(this.getAllRecords);   
                          this.newObjectList = [];
-
+                         this.isSaveBtnVisible = false;
                     })
                     .catch((error) => {
                         console.log('error on delete-', JSON.stringify(error));
@@ -220,6 +288,9 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             }
         } else {
 
+        }
+        if(this.objectRecordList.length == 0){
+            this.isSaveBtnVisible = false;
         }
         
     }
