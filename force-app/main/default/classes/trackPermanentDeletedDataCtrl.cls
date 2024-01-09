@@ -15,7 +15,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
     public static Map<string, string> getAllObjectName() {
         Map<string, string> mapOfAllObj = new Map<string, string>();
         List<String> ignorsObjects = UtilityCls.objectsToIgnore();
-            String endpoint = URL.getSalesforceBaseUrl().toExternalForm() + '/services/data/v48.0/sobjects/';
+        String endpoint = URL.getSalesforceBaseUrl().toExternalForm() + '/services/data/v48.0/sobjects/';
         
         HttpRequest req = new HttpRequest();
         endpoint += '';
@@ -34,7 +34,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
             
             if ((Boolean)real.get('triggerable')) {
                 if(!ignorsObjects.contains(String.valueOf(real.get('name')))) {
-
+                    
                     String objLabel = String.valueOf(real.get('label'));
                     String name = String.valueOf(real.get('name'));
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
@@ -69,7 +69,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
             }
             
             Map<String, String> mapObjectNames = getAllObjectName();
-
+            
             for (rbin__Permanent_Deleted_Tracking_Object__c objName : objNameList) {
                 rbin__Permanent_Deleted_Tracking_Object__c prmntTrckObj = new rbin__Permanent_Deleted_Tracking_Object__c();
                 prmntTrckObj.Name = objName.Name;
@@ -80,7 +80,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
                 
             }
             insert prmntObjectTrackingList;
-
+            
             return 'Setting has been updated successfully!';
             
         } catch (Exception e) {
@@ -99,7 +99,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
             throw new AuraHandledException(e.getMessage());
         }
     }
-
+    
     // this method will delete the record from rbin__Permanent_Deleted_Tracking_Object__c custom setting
     @AuraEnabled
     public static string deleteObject(String removeObjectIds) {
@@ -116,13 +116,13 @@ public with sharing class trackPermanentDeletedDataCtrl {
             throw new AuraHandledException(e.getMessage());
         }
     }
-
+    
     // this method will update the serial numbers of the records
     public static void updateSerialNumbers() {
         List<rbin__Permanent_Deleted_Tracking_Object__c> recordsToUpdate = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
         // Query all records ordered by rbin__Record_No__c
         List<rbin__Permanent_Deleted_Tracking_Object__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM 	rbin__Permanent_Deleted_Tracking_Object__c ORDER BY Name ASC];
-
+        
         // Update the serial numbers
         Integer currentSerialNumber = 1;
         for (rbin__Permanent_Deleted_Tracking_Object__c record : allRecords) {

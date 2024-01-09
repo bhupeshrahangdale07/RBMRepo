@@ -55,7 +55,7 @@
 				</tbody>
 			</table>
 			<div slot="footer" class="slds-var-m-vertical_medium">
-				<lightning-button label={label.AddNewButton} variant="brand" onclick={addRow}
+				<lightning-button label={label.AddNewButton} variant="brand" onclick={addRow} disabled={isAddNewdisabled}
 					class="slds-m-right_small"></lightning-button>
 				<template if:true={isSaveBtnVisible}>
 					<lightning-button variant="brand" label={label.Save_rbin} name="Save" onclick={onsaveclickHandler}>

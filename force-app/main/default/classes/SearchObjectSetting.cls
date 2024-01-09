@@ -224,7 +224,7 @@ global with sharing class SearchObjectSetting {
     
     @RemoteAction //the function to be called in remote action and used to get all existing custom setting records
     global static boolean save(list<rbin__RecycleSearchObjects__c> lst) {   
-        //system.debug('@@@@@@save ' + lst) ;
+        system.debug('@@@@@@save ' + lst) ;
         upsert lst;
         return true;
     }

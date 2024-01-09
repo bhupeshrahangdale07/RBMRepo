@@ -232,6 +232,7 @@ global with sharing class RecyclebinController {
 
             }
         } catch (Exception ex) {
+            System.debug('Error for Object- '+ex.getMessage());
             return null;
         }
         return lstSobject;
