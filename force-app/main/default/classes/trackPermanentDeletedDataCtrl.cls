@@ -85,6 +85,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
             
         } catch (Exception e) {
             system.debug('Error in Line Number-'+e.getLineNumber());
+            system.debug('Error Message- '+e.getMessage());
             throw new AuraHandledException(e.getMessage());
         }
     }
