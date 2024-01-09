@@ -24,13 +24,13 @@ public class testTrackPermanentDeletedDataCtrl {
     }
     @isTest
     public static void saveTrackingObjectTest(){
-        
         List<rbin__Permanent_Deleted_Tracking_Object__c> lstTrackingObj =[Select Id, Name FROM rbin__Permanent_Deleted_Tracking_Object__c];
         Test.startTest();
+        Test.setMock(HttpCalloutMock.class, new createApexTriggerMock());
         String response = trackPermanentDeletedDataCtrl.saveTrackingObject(lstTrackingObj);
         Test.stopTest();
         
-        System.assertEquals('Setting Updated Successfully!', response, 'Success');
+        System.assertEquals('Setting has been updated successfully!', response, 'Success');
     }
     @isTest
     public static void fetchAllRecordsTest(){
@@ -47,7 +47,7 @@ public class testTrackPermanentDeletedDataCtrl {
         Test.startTest();
         String response = trackPermanentDeletedDataCtrl.deleteObject(lstTrackingObj.Id);
         Test.stopTest();
-        System.assertEquals('Setting updated Successfully!', response, 'Success');
+        System.assertEquals('Setting has been updated successfully!', response, 'Success');
     }
     @isTest
     public static void updateSerialNumbersTest(){
