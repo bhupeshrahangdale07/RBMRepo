@@ -123,8 +123,8 @@ public with sharing class UtilityCls {
 
     public static List<string> objectsToIgnore () {
         List<String> lstObjectsToIgnore = new List<String>();
-        for (rbin__Objects_To_Ignore__mdt obj : [Select Id, MasterLabel FROM rbin__Objects_To_Ignore__mdt]) {
-            lstObjectsToIgnore.add(obj.MasterLabel);
+        for (rbin__Ignored_Objects__c obj : [Select Id, Name FROM rbin__Ignored_Objects__c]) {
+            lstObjectsToIgnore.add(obj.Name);
         }
         return lstObjectsToIgnore;
     }

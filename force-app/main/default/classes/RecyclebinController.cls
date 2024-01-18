@@ -54,7 +54,7 @@ global with sharing class RecyclebinController {
         strSearchIn = 'RecycleBin';
         set<string>  setFieldName = new set<string>();
         setFieldName.add('name');
-        disableButton = true; 
+        disableButton = true;
         
 
         // this will fetch those sobjects where we are not considering the "Name" as standard fields.
@@ -65,6 +65,7 @@ global with sharing class RecyclebinController {
 
         rbinsetting = rbin__Recycle_Bin_Setting__c.getOrgDefaults();
         lstCustomSettings = rbin__RecycleSearchObjects__c.getall().values();
+        List<String> ignorsObjects = UtilityCls.objectsToIgnore();
 
         Set<string> setSobject = new Set<string>();
         setSobject.add('Address');
@@ -91,23 +92,25 @@ global with sharing class RecyclebinController {
                     blnfield = true;
                 }
             }
-
-            if (blnfield && objectFields.containsKey('isdeleted') && objectFields.containsKey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting() && objSType.getDescribe().getName() != 'rbin__Deleted_Data__c') {
+        if(!ignorsObjects.contains(String.valueOf(objSType.getDescribe().getName()))){
+            if (blnfield && objectFields.containsKey('isdeleted') && objectFields.containsKey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting() && objSType.getDescribe().getName() != 'rbin__Deleted_Data__c'&& !objSType.getDescribe().getName().containsignorecase('feed')) {
                 if (lstObjects.size() < 1000) {
                     lstObjects.add(new SelectOption(objSType.getDescribe().getName(), objSType.getDescribe().getLabel()));
                     mapObjectNames.put(objSType.getDescribe().getName(), objSType.getDescribe().getLabel());
                 }
             }
         }
+        }
         doSort(lstObjects);
-
+        system.debug('Search PageTotal Options- '+lstObjects.size());
         system.debug('**constructor method**' + Apexpages.CurrentPage().getParameters().get('Object'));
 
         if (Apexpages.CurrentPage().getParameters().get('Object') != null)
             strSelectedObject = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('Object')));
 
-        if (Apexpages.CurrentPage().getParameters().get('Keyword') != null)
+        if (Apexpages.CurrentPage().getParameters().get('Keyword') != null){
             strKeyword = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('Keyword')));
+        }
 
         if (Apexpages.CurrentPage().getParameters().get('FromDate') != null)
             strFromDate = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('FromDate')));
@@ -193,7 +196,8 @@ global with sharing class RecyclebinController {
                         if (strWhereParam.length() > 3) {
                             strWhereParam += ' OR ';
                         }
-                        string strValue = '%' + string.escapeSingleQuotes(strKeyword) + '%';
+                        string trimmedSearchValue = strKeyword.trim();
+                        string strValue = '%' + string.escapeSingleQuotes(trimmedSearchValue) + '%';
                         strWhereParam += string.escapeSingleQuotes(dfield.getName()) + ' like: strValue ';
                     }
                 }
@@ -232,7 +236,6 @@ global with sharing class RecyclebinController {
 
             }
         } catch (Exception ex) {
-            System.debug('Error for Object- '+ex.getMessage());
             return null;
         }
         return lstSobject;
@@ -376,17 +379,15 @@ global with sharing class RecyclebinController {
             for (rbin__Permanent_Deleted_Tracking_Object__c TrackingObject : lstTrackingObjects) {
                 string objectName = string.valueOf(TrackingObject.Name);
                 String myQuery = 'SELECT Id FROM ' + objectName + ' WHERE Id IN :setDeletedDataRecIds AND IsDeleted = true ALL ROWS';
-                system.debug('String Query- '+Database.query(myQuery));
                 recycleBinRecords.addAll(Database.query(myQuery));
-                // List<AccountBrand> lstAccBrand = [Select Id From AccountBrand];
-                // system.debug('List Of Account Brand- '+lstAccBrand);
             }
 
             for (SObject rec : recycleBinRecords) {
                 setRecIdsToHide.add(rec.Id);
             }
-           
-        String searchKey= '%'+strKeyword+'%';
+        string trimmedSearchKey =  strKeyword.trim();
+        String searchKey= '%'+trimmedSearchKey+'%';
+        
         
         // dynamic query for getting the records from Deleted_Data object for showing
         String queryString = 'SELECT Id, Name, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Deleted_By__r.Name, rbin__Record_Name__c,rbin__Deleted_Date__c ' +
@@ -431,18 +432,20 @@ global with sharing class RecyclebinController {
         if(permanentDeletedDataList.size() > 0) {
             recordcount = permanentDeletedDataList.size();
             bothRecordCount += permanentDeletedDataList.size();
-           // disableButton = false;
-        for (rbin__Deleted_Data__c pdd : permanentDeletedDataList) {    
+        for (rbin__Deleted_Data__c rec : permanentDeletedDataList) {    
             wrapResults objW = new wrapResults();
             // Assign the field values directly to wrapper class properties
-            objW.Id = pdd.rbin__Record_ID__c != null ? string.valueof(pdd.rbin__Record_ID__c) : '';
-            objW.Name = pdd.rbin__Record_Name__c != null ? string.valueof(pdd.rbin__Record_Name__c) : '';
-            objW.SObjectAPIName = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
-            //objW.Type = pdd.rbin__Object_Name__c != null ? pdd.rbin__Object_Name__c : '';
-            objw.Type=mapObjectLabelName.get(pdd.rbin__Object_Name__c);
-            
-            objW.DeletedBy = pdd.rbin__Deleted_By__c != null && pdd.rbin__Deleted_By__r.Name != null ? string.valueof(pdd.rbin__Deleted_By__r.Name) : '';
-            objW.DeletedOn = pdd.rbin__Deleted_Date__c != null ? DateTime.valueof(pdd.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
+            objW.Id = rec.rbin__Record_ID__c != null ? string.valueof(rec.rbin__Record_ID__c) : '';
+            objW.Name = rec.rbin__Record_Name__c != null ? string.valueof(rec.rbin__Record_Name__c) : '';
+            objW.SObjectAPIName = rec.rbin__Object_Name__c != null ? rec.rbin__Object_Name__c : '';
+            //objW.Type = rec.rbin__Object_Name__c != null ? rec.rbin__Object_Name__c : '';
+            if(mapObjectLabelName.containsKey(rec.rbin__Object_Name__c)){ 
+                objw.Type=mapObjectLabelName.get(rec.rbin__Object_Name__c);
+            }else{
+                objw.Type = rec.rbin__Object_Name__c != null ? rec.rbin__Object_Name__c : '';
+            }
+            objW.DeletedBy = rec.rbin__Deleted_By__c != null && rec.rbin__Deleted_By__r.Name != null ? string.valueof(rec.rbin__Deleted_By__r.Name) : '';
+            objW.DeletedOn = rec.rbin__Deleted_Date__c != null ? DateTime.valueof(rec.rbin__Deleted_Date__c).format('MM/dd/yyyy hh:mm a') : '';
             objw.isPermanentlyDeleted = 'Yes';
             
             // Add the populated wrapper object to the list
@@ -546,7 +549,6 @@ global with sharing class RecyclebinController {
                         objS.Put('Id',objW.Id);
                         lstSobjecttoUndelete.add(objS);
                     } else if (objW.isCheck && objw.isPermanentlyDeleted == 'Yes') {
-                        system.debug('objw.isPermanentlyDeleted -'+objw.isPermanentlyDeleted);
                         recordIds.add(objw.Id);// store the record Ids in set which are permanently deleted
                     }
                 }
@@ -647,7 +649,9 @@ global with sharing class RecyclebinController {
                 delete recordtoDelete;
                 SearchRecords();
                 List<rbin__Deleted_Data__c> lstDeletedRecords =[Select Id, Name From rbin__Deleted_Data__c Where Id IN :setIdsofDeletedRecords AND IsDeleted = true ALL ROWS];
+                if(lstDeletedRecords.size() > 0){
                 Database.EmptyRecyclebin(lstDeletedRecords);
+                }
             } else {
                 BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIds);
                 Database.executeBatch(batchToRestoreAll, 20);
@@ -671,7 +675,6 @@ global with sharing class RecyclebinController {
     public void UndeleteAllRecords() {
         try {
             if(lstwrapResults.size() > 0) {
-                system.debug('lstwrapResults- '+lstwrapResults.size());
                 List<String> recordIds =new List<String>();
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 List<string> recordIdsList = new List<string>(); 

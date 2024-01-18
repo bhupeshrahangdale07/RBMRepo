@@ -77,6 +77,7 @@ global with sharing class SearchObjectSetting {
     global List<SelectOption> fnBindsObject(){
         List<SelectOption> lst = new List<SelectOption>();
         set<string>  setFieldName = new set<string>();
+        List<String> ignorsObjects = UtilityCls.objectsToIgnore();
         setFieldName.add('name');
         for(rbin__ObjectKeyField__mdt o : [select id,MasterLabel,rbin__Field_Name__c from rbin__ObjectKeyField__mdt where id != null]){
             setFieldName.add(o.rbin__Field_Name__c.tolowercase());
@@ -108,13 +109,14 @@ global with sharing class SearchObjectSetting {
                         blnfield = true;
                     }
                 }
-                
+                if(!ignorsObjects.contains(String.valueOf(objSType.getDescribe().getName()))){
                 if( (blnfield)  && objectFields.containskey('isdeleted') && objectFields.containskey('lastmodifieddate') && objSType.getDescribe().isAccessible() && objSType.getDescribe().isDeletable() && objSType.getDescribe().isQueryable() && !objSType.getDescribe().isCustomSetting() && !objSType.getDescribe().getName().containsignorecase('feed') && objSType.getDescribe().isQueryable() && objSType.getDescribe().getName() != 'rbin__Deleted_Data__c'){
                     if(lst.size()<1000) 
                     {
                         lst.add(new SelectOption(objSType.getDescribe().getName(),objSType.getDescribe().getLabel()));                    
                     }
                 }
+            }  
             }catch(Exception e) { system.debug('@@@exception@@@ '); }
         }
         return lst;        

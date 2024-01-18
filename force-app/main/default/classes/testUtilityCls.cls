@@ -82,7 +82,7 @@ public class testUtilityCls {
     @isTest
     public static void sObjectsToRestoreTest(){
         
-        Set<String> recIds = new Set<String>();
+        List<String> recIds = new List<String>();
         for (rbin__Deleted_Data__c rec : [Select Id, rbin__Record_ID__c, rbin__Object_Name__c FROM rbin__Deleted_Data__c]) {
             recIds.add(rec.rbin__Record_ID__c);
         }

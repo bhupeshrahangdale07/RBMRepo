@@ -33,6 +33,7 @@ isSaveBtnVisible;
 isAddNewdisabled = false;
 isLoading = false;
 @track AlloptionArry2 = [];
+@track isValid;
 
 label = {
     AddNewButton,
@@ -80,6 +81,10 @@ wireObjectNames(result) {
             }
             this.allObjectListForIndex.push({ label : key, value: key });
         }
+        this.getAllObjectList.sort((a, b) => {
+            // Use localeCompare for case-insensitive sorting
+            return a.label.localeCompare(b.label);
+        });
         this.isLoading = false;
     } else if (result.error) {
         console.log('Error-' + JSON.stringify(result.error));
@@ -107,12 +112,17 @@ this.isSaveBtnVisible = true;
             if (oldValue != "" ) {
             newArr.push({label: currentRecOption.label, value: currentRecOption.value});
             }
+            newArr.sort((a, b) => {
+                // Use localeCompare for case-insensitive sorting
+                return a.label.localeCompare(b.label);
+            });
             element.option1Array = newArr;
         }
     })
     
     const objValue = this.newObjectList.findIndex((obj => obj.Id == key));
     this.newObjectList[objValue].Name = selectedValue;
+    this.customValidityCheck();
 this.isAddNewdisabled = false;
 }
 
@@ -151,33 +161,16 @@ async addRow() {
 } else {
     await LightningAlert.open({
         message: 'You can select only upto 10 records',
-        theme: 'error', // a red theme intended for error states
-        label: 'Error!', // this is the header text
+        theme: 'warning', // a red theme intended for error states
+        label: 'Warning!', // this is the header text
     });
 }
 }
 
 //the function to be called on save button click used to save custom setting records
 async onsaveclickHandler() {
-    let isValid = true;
-
-    var selectElements = this.template.querySelectorAll('lightning-select');
-
-    selectElements.forEach((selectElement) => {
-        // Check if the value is null or empty
-        if (selectElement.value == '') {
-            isValid = false;
-
-            // Set a custom validity message
-            selectElement.setCustomValidity('Please select a value.');
-
-        }else {
-            selectElement.setCustomValidity('');
-        }
-        // Report validity to show the error message
-        selectElement.reportValidity();
-    });
-    if (isValid) {
+    this.customValidityCheck();
+    if (this.isValid) {
     this.newObjectList = this.newObjectList.filter(item => item.Name !== null);
     this.isLoading = true;
     saveTrackingObject({ objNameList : this.newObjectList })
@@ -247,6 +240,10 @@ async handleActionDelete(event) {
                             if(currntValueIndx == -1){
                                 const optArr = this.getAllObjectList.find((ele)=> ele.value == currentValue);
                                 element.option1Array.push({label : optArr.label, value : optArr.value});
+                                element.option1Array.sort((a, b) => {
+                                    // Use localeCompare for case-insensitive sorting
+                                    return a.label.localeCompare(b.label);
+                                });
                             }
 
                         }
@@ -258,8 +255,10 @@ async handleActionDelete(event) {
             this.newObjectList.splice(this.newObjectList.findIndex(row => row.Id == this.deleteRecordIds), 1);
             
             this.isAddNewdisabled = false;
+            this.customValidityCheck();
             if(this.newObjectList.length == 0){
                 this.isSaveBtnVisible = false;
+                this.isAddNewdisabled = false;
             }
             this.isLoading = false;
             refreshApex(this.getAllRecords);
@@ -290,6 +289,7 @@ async handleActionDelete(event) {
     }
     if(this.objectRecordList.length == 0){
         this.isSaveBtnVisible = false;
+        this.isAddNewdisabled = false;
     }
     
 }
@@ -298,4 +298,26 @@ updateRecordView() {
         eval("$A.get('e.force:refreshView').fire();");
     }, 3000);
 }
+ customValidityCheck() {
+     this.isValid = true;
+
+    var selectElements = this.template.querySelectorAll('lightning-select');
+
+    selectElements.forEach((selectElement) => {
+        // Check if the value is null or empty
+        if (selectElement.value == '') {
+            this.isValid = false;
+
+            // Set a custom validity message
+            selectElement.setCustomValidity('Please select a value.');
+            this.isAddNewdisabled = true;
+        }else {
+            selectElement.setCustomValidity('');
+        }
+        // Report validity to show the error message
+        selectElement.reportValidity();
+    });
+    return this.isValid;
+ }
+
 }

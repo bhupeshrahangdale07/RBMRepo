@@ -157,21 +157,20 @@
         
         .helpIcon{
             position:relative;
-            right:0%
+            right:-37%;
+            top:4px;
+            float:left;
         }
         
         .helpIcon .imgHelpIcon{
-            width:13px;
-            margin-top: 10px;
+            width:1%;
+            /*margin-top: 10px;
             position: absolute;
-            left: 560px;
+            left: 560px;*/
         }
 
-        .helpIconTextBox {
-            display: inline-block !important;
-            position: absolute !important;
-        	left: 542px;
-        	top: 38px;
+        .helpIconTextBox {      
+    
         }
         
     </style>
@@ -312,12 +311,12 @@
                 <div id="SearchResults" style="margin-top:20px;">
                     <div id="page_buttons" style="margin-top:10px;text-align:center;">
                       <apex:outputpanel rendered="{!forPermanentDeleted}">
-                                <div class="helperText--container helpIcon">
-                                <img class="imgHelpIcon helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}"/>
-                                <div class="slds-popover slds-popover--tooltip slds-hide slds-nubbin_top-left" role="tooltip" id="help">
+                                <!--div class="helperText--container helpIcon"-->
+                                <img class="imgHelpIcon helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}" width="14px"/>
+                                <div class="slds-popover slds-popover--tooltip slds-hide slds-nubbin_top-left" role="tooltip" id="help" style="position: absolute; margin-top: 35px; margin-left: -33px;">
                                     <div class="slds-popover__body" style="text-align : left;"><pre>{!$Label.Help_Text_for_Permanent_Deleted_Data_Restore}</pre></div>
                                 </div>
-                            </div>
+                            <!--/div-->
                 </apex:outputpanel>
                         <apex:commandButton value="Restore Selected" onclick="fnUndeleteSelectedRecords();return false;" styleClass="slds-button slds-button--brand" disabled="{!disableButton}"
                         />

@@ -43,7 +43,6 @@ public with sharing class permanentDeletedRecordPreviewController {
                 objwr.FieldLabel = fieldMap.get(key).getDescribe().getLabel();
                 System.debug('Label- ' + objwr.FieldLabel);
                 if (jsonMap.get(key) != null) {
-                    System.debug('Value- ' + String.valueOf(jsonMap.get(key)));
                     objwr.Value = String.valueOf(jsonMap.get(key));
                 } else {
                     objwr.Value = '-';

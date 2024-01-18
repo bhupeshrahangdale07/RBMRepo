@@ -26,11 +26,11 @@ public with sharing class trackPermanentDeletedDataCtrl {
         Http httpreq = new Http();
         HttpResponse  res  = httpreq.send(req);
         
-        Map<String, Object> m = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
-        List<Object> ob = (List<Object>)m.get('sobjects');
+        Map<String, Object> mapObj = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
+        List<Object> lstObjects = (List<Object>)mapObj.get('sobjects');
         
-        for (Object o : ob){
-            Map<String, Object> real = (Map<String, Object>)o;
+        for (Object obj : lstObjects){
+            Map<String, Object> real = (Map<String, Object>)obj;
             
             if ((Boolean)real.get('triggerable')) {
                 if(!ignorsObjects.contains(String.valueOf(real.get('name')))) {
@@ -48,6 +48,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
                 }
             }
         }
+        system.debug('Permanent option Count- '+mapOfAllObj.keySet().size());
         return mapOfAllObj;
     }
     

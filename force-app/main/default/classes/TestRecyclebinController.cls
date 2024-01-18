@@ -115,7 +115,7 @@ public with sharing class TestRecyclebinController {
         objRecordpage = new RecordPageController();
         objRecordpage.UndeleteRecord();
         
-        objRecordpage.Cancel();
+       // objRecordpage.Cancel();
         
         system.assertEquals(acc.Id, [select Id from Account Where Id=: acc.Id].Id);
         

@@ -95,10 +95,17 @@
                                     <tfoot>
                                         <tr class="slds-line-height_reset">
                                             <td class="slds-text-title_caps slds-cell-wrap" scope="col" colspan="2">
-                                                
-                                                <button class="slds-button slds-button_brand" id="btnAddnew">{!$Label.AddNewButton}</button>
+                                                <ul class="slds-button-group-row">
+                                                    <li class="slds-button-group-item">
+                                                      <button class="slds-button slds-button_brand" id="btnAddnew">{!$Label.AddNewButton}</button>
+                                                    </li>
+                                                    <li class="slds-button-group-item">
+                                                      <button class="slds-button slds-button_brand slds-hide btnDisabledSave" id="btnSave">{!$Label.Save_rbin}</button>
+                                                    </li>
+                                                </ul>
+                                                <!--button class="slds-button slds-button_brand" id="btnAddnew">{!$Label.AddNewButton}</button>
                                                 <div class=" slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_success slds-hide" role="alert" id="lblmsg"></div>
-                                                <button class="slds-button slds-button_brand slds-hide" id="btnSave">{!$Label.Save_rbin}</button>
+                                                <button class="slds-button slds-button_brand slds-hide" id="btnSave">{!$Label.Save_rbin}</button-->
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -500,9 +507,17 @@
                                         <tfoot>
                                             <tr class="slds-line-height_reset">
                                                 <td class="slds-text-title_caps slds-cell-wrap" scope="col" colspan="2">
-                                                    
-                                                    <button class="slds-button slds-button_brand" id="btnAddnewforracking">{!$Label.AddNewButton}</button>
-                                                    <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">{!$Label.Save_rbin}</button>
+                                                    <ul class="slds-button-group-row">
+                                                        <li class="slds-button-group-item">
+                                                          <button class="slds-button slds-button_brand" id="btnAddnewforracking">{!$Label.AddNewButton}</button>
+                                                        </li>
+                                                        <li class="slds-button-group-item">
+                                                          <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">{!$Label.Save_rbin}</button>
+                                                        </li>
+                                                    </ul>
+                                                    <!--button class="slds-button slds-button_brand" id="btnAddnewforracking">{!$Label.AddNewButton}</button>
+                                                    <button class="slds-button slds-button_brand slds-hide btnDisabledtracking" id="btnSavefortacking">{!$Label.Save_rbin}</button-->
+                                                
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -824,7 +839,7 @@
 <div class="slds-truncate clsdelete" title="Action">{0}</div> \
 </td> \
 <td data-label="Object Name" class="slds-cell-wrap"> \
-<div class="slds-truncate" title="Object Name">{1}</div> \
+<div class="slds-truncate" title="">{1}</div> \
 </td> \
 </tr>';
                 var deleteicon = '<span id="btnDeletetrackingrec" class="slds-icon_container slds-icon-action-delete slds-icon_container--circle" title="Delete"> \
@@ -879,7 +894,7 @@
 <div class="slds-truncate clsdelete" title="Action">{0}</div> \
 </td> \
 <td data-label="Object Name" class="slds-cell-wrap"> \
-<div class="slds-truncate" title="Object Name">{1}</div> \
+<div class="slds-truncate" title="">{1}</div> \
 </td> \
 </tr>';
                 var deleteicon = '<span id="btnDelete" class="slds-icon_container slds-icon-action-delete slds-icon_container--circle" title="Delete"> \
