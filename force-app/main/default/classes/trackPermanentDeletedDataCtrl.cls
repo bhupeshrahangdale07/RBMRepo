@@ -1,16 +1,18 @@
-/*
-// --------------------------------------------------------------------------------------------------------------
 
-// This class is the controller apex class to support the trackPermanentlyDeletedDataTab LWC Component
-// Version#     Date                            Author                                  Description
-// --------------------------------------------------------------------------------------------------------------
-// 1.0         08-09-2023                     Kandisa Technologies                    Initial Version 1.0
-// --------------------------------------------------------------------------------------------------------------
-
-*/
+/** 
+ *  @description This class is the controller apex class to support the trackPermanentlyDeletedDataTab LWC Component.
+ * Version#     Date                            Author                                  Description
+ * --------------------------------------------------------------------------------------------------------------
+ * 1.0         08-09-2023                     Kandisa Technologies                    Initial Version 1.0
+ * --------------------------------------------------------------------------------------------------------------
+ */
 public with sharing class trackPermanentDeletedDataCtrl {
     
-    // method to be called for getting all the object names as an option for selection
+    
+    /**
+     * @description method to be called for getting all the object names as an option for selection
+     * @return   Map<string, string> - map of object label and name
+     */
     @AuraEnabled(cacheable = true)
     public static Map<string, string> getAllObjectName() {
         Map<string, string> mapOfAllObj = new Map<string, string>();
@@ -35,7 +37,6 @@ public with sharing class trackPermanentDeletedDataCtrl {
             if ((Boolean)real.get('triggerable')) {
                 if(!ignorsObjects.contains(String.valueOf(real.get('name')))) {
                     
-                    String objLabel = String.valueOf(real.get('label'));
                     String name = String.valueOf(real.get('name'));
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
                     
@@ -48,18 +49,21 @@ public with sharing class trackPermanentDeletedDataCtrl {
                 }
             }
         }
-        system.debug('Permanent option Count- '+mapOfAllObj.keySet().size());
         return mapOfAllObj;
     }
     
-    // this method will save the record to rbin__Permanent_Deleted_Tracking_Object__c custom setting
+    /**
+     * @description this method will save the record to rbin__Permanent_Deleted_Tracking_Object__c custom setting
+     * @param objNameList - list of object names 
+     * @return string - 'Setting has been updated succussesfully '
+     */
     @AuraEnabled
     public static string saveTrackingObject(List<rbin__Permanent_Deleted_Tracking_Object__c> objNameList) {
         try {
             List<rbin__Permanent_Deleted_Tracking_Object__c> prmntObjectTrackingList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
             Decimal nextSerialNumber;
             // Query for the maximum existing serial number
-            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM rbin__Permanent_Deleted_Tracking_Object__c];
+            List<AggregateResult> ar = [SELECT MAX(rbin__Record_No__c) maxRecordNo FROM rbin__Permanent_Deleted_Tracking_Object__c WITH SECURITY_ENFORCED];
             
             Decimal maxSerialNumber = (Decimal)ar[0].get('maxRecordNo');
             if (maxSerialNumber != null) { 
@@ -80,18 +84,21 @@ public with sharing class trackPermanentDeletedDataCtrl {
                 prmntObjectTrackingList.add(prmntTrckObj);
                 
             }
+            if(Schema.sObjectType.rbin__Permanent_Deleted_Tracking_Object__c.isCreateable()){
             insert prmntObjectTrackingList;
+        }
             
             return 'Setting has been updated successfully!';
             
         } catch (Exception e) {
-            system.debug('Error in Line Number-'+e.getLineNumber());
-            system.debug('Error Message- '+e.getMessage());
             throw new AuraHandledException(e.getMessage());
         }
     }
     
-    // this method will fetch all the records present in rbin__Permanent_Deleted_Tracking_Object__c custom setting
+    /**
+     * @description this method will fetch all the records present in rbin__Permanent_Deleted_Tracking_Object__c custom setting
+     * @return List<rbin__Permanent_Deleted_Tracking_Object__c>
+     */
     @AuraEnabled (cacheable = true)
     public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords() {
         try {
@@ -102,14 +109,20 @@ public with sharing class trackPermanentDeletedDataCtrl {
         }
     }
     
-    // this method will delete the record from rbin__Permanent_Deleted_Tracking_Object__c custom setting
+    /**
+     * @description this method will delete the record from rbin__Permanent_Deleted_Tracking_Object__c custom setting
+     * @param removeObjectIds - record Ids to remove 
+     * @return string - Delete succuss
+     */
     @AuraEnabled
     public static string deleteObject(String removeObjectIds) {
         try {
             List<rbin__Permanent_Deleted_Tracking_Object__c> deleteObjectRecordList = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
             
-            deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id = :removeObjectIds];
+            deleteObjectRecordList = [SELECT Id FROM rbin__Permanent_Deleted_Tracking_Object__c WHERE Id = :removeObjectIds WITH SECURITY_ENFORCED];
+            if(Schema.sObjectType.rbin__Permanent_Deleted_Tracking_Object__c.isdeletable()){
             delete deleteObjectRecordList;
+        }
             
             updateSerialNumbers();
             
@@ -119,11 +132,13 @@ public with sharing class trackPermanentDeletedDataCtrl {
         }
     }
     
-    // this method will update the serial numbers of the records
+    /**
+     * @description this method will update the serial numbers of the records
+     */
     public static void updateSerialNumbers() {
         List<rbin__Permanent_Deleted_Tracking_Object__c> recordsToUpdate = new List<rbin__Permanent_Deleted_Tracking_Object__c>();
         // Query all records ordered by rbin__Record_No__c
-        List<rbin__Permanent_Deleted_Tracking_Object__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM 	rbin__Permanent_Deleted_Tracking_Object__c ORDER BY Name ASC];
+        List<rbin__Permanent_Deleted_Tracking_Object__c> allRecords = [SELECT Id,Name, rbin__Record_No__c FROM 	rbin__Permanent_Deleted_Tracking_Object__c WITH SECURITY_ENFORCED ORDER BY Name ASC];
         
         // Update the serial numbers
         Integer currentSerialNumber = 1;
@@ -132,6 +147,8 @@ public with sharing class trackPermanentDeletedDataCtrl {
             recordsToUpdate.add(record);
         }
         // Perform the update
+        if (Schema.sObjectType.rbin__Permanent_Deleted_Tracking_Object__c.isupdateable()){
         update recordsToUpdate;
+    }
     }
 }
