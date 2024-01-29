@@ -1,14 +1,13 @@
-/*
-// --------------------------------------------------------------------------------------------------------------
 
-// This class used to create Permanent Delete record based on scheduled batch everyday.
-// It is create only those which are deleted within in 24 hours.
-// Version#     Date                            Author                                  Description
-// --------------------------------------------------------------------------------------------------------------
-// 1.0         27-07-2023                     Kandisa Technologies                    Initial Version 1.0
-// --------------------------------------------------------------------------------------------------------------
 
-*/
+/** 
+ *  @description This class used to create Permanent Delete record based on scheduled batch everyday.
+ * It creates only those which are deleted within in 24 hours.
+ * Version#     Date                            Author                                  Description
+ * --------------------------------------------------------------------------------------------------------------
+ * 1.0         27-07-2023                       Kandisa Technologies                    Initial Version 1.0
+ * --------------------------------------------------------------------------------------------------------------
+ */
 
 public class createPermanentDeletedRecordBatch Implements Database.Batchable<sobject>, Database.Stateful {
 
@@ -16,11 +15,18 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
     public Map<String, String> objectKeyFieldMap = new Map<String, String>();
     private Integer recordNo = 1;
     private String objectName;
-    
-    public createPermanentDeletedRecordBatch(Integer RecNo) {
-        this.recordNo = RecNo;
+    /**
+     * @description constructor of the batch class
+     * @param recNo - record Number
+     */
+    public createPermanentDeletedRecordBatch(Integer recNo) {
+        this.recordNo = recNo;
     }
-
+    /**
+     * @description start method which will get all the records from recycle bin of selected object.
+     * @param bc - BatchableContext
+     * @return Database.QueryLocator - list of records
+     */
     public Database.QueryLocator start(Database.BatchableContext bc) {
 
         // Get Object Key field for Different Objects
@@ -57,10 +63,14 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         return Database.getQueryLocator(myQuery);
     }
 
+    /**
+     * @description execute method which will create the records in Deleted Data object.
+     * @param bc - Database.BatchableContext 
+     * @param sObjectRecords - list Of records
+     */
     public void execute(Database.BatchableContext bc, List<SObject> sObjectRecords) {
         String recordName;
         List<rbin__Deleted_Data__c> upsertToDeletedData = new List<rbin__Deleted_Data__c>();
-        List<Schema.SObjectType> childObjects = new List<Schema.SObjectType>();
 
         // Get a list of Ids from List
         Set<Id> sObjectRecordIds = new Set<Id>(new Map<Id, SObject>(sObjectRecords).keySet());
@@ -142,7 +152,10 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
 
         UtilityCls.createFileAttachment(mapRecordData, setExistedRecordIds);
     }
-
+     /**
+     * @description finish method which will call the batch every time as per the record number
+     * @param bc - Database.BatchableContex
+     */
     public void finish(Database.BatchableContext bc) {
         // Get the count of tracked delete objects
         Integer countTPDObjects = Database.countQuery('SELECT Count() FROM rbin__Permanent_Deleted_Tracking_Object__c');

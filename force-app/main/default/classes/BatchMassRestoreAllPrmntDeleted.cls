@@ -1,29 +1,38 @@
-/*
-// --------------------------------------------------------------------------------------------------------------
 
-// This Batch class used to restore the Permanent Delete records for Restore All functionality for more than 1000 records
-
-// Version#     Date                            Author                                  Description
-// --------------------------------------------------------------------------------------------------------------
-// 1.0          11/9/2023                     Kandisa Technologies                    Initial Version 1.0
-// --------------------------------------------------------------------------------------------------------------
-
-*/
+/** 
+ *  @description This Batch class used to restore the Permanent Delete records for Restore All functionality for more than 1000 records
+ * Version#     Date                            Author                                  Description
+ * --------------------------------------------------------------------------------------------------------------
+ * 1.0         11/9/2023                      Kandisa Technologies                    Initial Version 1.0
+ * --------------------------------------------------------------------------------------------------------------
+ */
 public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObject> {
 
     List<String> lstIds;
-
+/**
+ * @description This constructor is for passinf Id list 
+ * @param idsList - List of record ids to restore
+ */
     public BatchMassRestoreAllPrmntDeleted(List<String> idsList) {
         this.lstIds = idsList;
     }
 
+    /**
+     * @description The start method for getting records to restore
+     * @param bc - BatchableContext
+     * @return Database.QueryLocator
+     */
     public Database.QueryLocator start(Database.BatchableContext bc) {
         
         return Database.getQueryLocator('SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c FROM rbin__Deleted_Data__c WHERE rbin__Record_ID__c IN :lstIds');
     }
 
+    /**
+     * @description execute method which will execute the logic for restoring the records
+     * @param bc - batchable context
+     * @param lstRecords - List of record Ids to restore
+     */
     public void execute(Database.BatchableContext bc, List<rbin__Deleted_Data__c> lstRecords) {
-        Set<String> allFieldName = new Set<String>();
         List<SObject> sobjecttoUndeleteList = new List<SObject>();
         List<rbin__Deleted_Data__c> allRecordList = new List<rbin__Deleted_Data__c>();
         List<rbin__Deleted_Data__c> recordtoDelete = new List<rbin__Deleted_Data__c>();
@@ -99,7 +108,10 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id IN :setRecordIdsToPurge ALL ROWS];
         Database.EmptyRecyclebin(lstDeletedRecords);
     }
-
+    /**
+     * @description - finish method
+     * @param bc - batchableContext
+     */
     public void finish(Database.BatchableContext bc) {
         // Add finish logic if needed
         

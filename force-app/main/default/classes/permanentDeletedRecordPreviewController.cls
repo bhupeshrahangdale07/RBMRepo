@@ -1,32 +1,34 @@
-/*
-// --------------------------------------------------------------------------------------------------------------
 
-// This class is the controller apex class to support the trackPermanentlyDeletedDataTab LWC Component
-// Version#     Date                            Author                                  Description
-// --------------------------------------------------------------------------------------------------------------
-// 1.0             25/8/2023                     Kandisa Technologies                    Initial Version 1.0
-// --------------------------------------------------------------------------------------------------------------
-
-*/
+/** 
+ *  @description This class is the controller apex class to support the trackPermanentlyDeletedDataTab LWC Component
+ * Version#     Date                            Author                                  Description
+ * --------------------------------------------------------------------------------------------------------------
+ * 1.0         25/8/2023                       Kandisa Technologies                    Initial Version 1.0
+ * --------------------------------------------------------------------------------------------------------------
+ */
 
 public with sharing class permanentDeletedRecordPreviewController {
 
-    // This method get called for preview of the record
+    /** 
+     *  @description This method get called for preview of the record
+     * @param recordId - List of record IDs.
+     * @return WrpDeletedData 
+     */
     @AuraEnabled(cacheable = true)
-    public static wrpDeletedData showPreviewPage(Id recordId) {
-        wrpDeletedData objwrpDeletedData = new wrpDeletedData();
-        List<wrpRecordDetail> lstDeletedRecord = new List<wrpRecordDetail>();
+    public static WrpDeletedData showPreviewPage(Id recordId) {
+        WrpDeletedData objwrpDeletedData = new WrpDeletedData();
+        List<WrpRecordDetail> lstDeletedRecord = new List<WrpRecordDetail>();
         rbin__Deleted_Data__c deletedRecord = [
             SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c
             FROM rbin__Deleted_Data__c
             WHERE rbin__Record_ID__c = :recordId
-            LIMIT 1
+             WITH SECURITY_ENFORCED LIMIT 1
         ];
         // will get the JSON data of the record from ContentVersion
         ContentVersion cv = [
             SELECT Id, ContentDocumentId, VersionData, Title
             FROM ContentVersion
-            WHERE Title = :recordId
+            WHERE Title = :recordId WITH SECURITY_ENFORCED
         ];
 
         String deletedData = (cv.VersionData).toString();
@@ -39,13 +41,12 @@ public with sharing class permanentDeletedRecordPreviewController {
 
         for (String key : jsonMap.keySet()) {
             if (key != 'attributes' && key != 'BillingAddress' && key != 'ShippingAddress' && key != 'MailingAddress') {
-                wrpRecordDetail objwr = new wrpRecordDetail();
-                objwr.FieldLabel = fieldMap.get(key).getDescribe().getLabel();
-                System.debug('Label- ' + objwr.FieldLabel);
+                WrpRecordDetail objwr = new WrpRecordDetail();
+                objwr.fieldLabel = fieldMap.get(key).getDescribe().getLabel();
                 if (jsonMap.get(key) != null) {
-                    objwr.Value = String.valueOf(jsonMap.get(key));
+                    objwr.value = String.valueOf(jsonMap.get(key));
                 } else {
-                    objwr.Value = '-';
+                    objwr.value = '-';
                 }
                 lstDeletedRecord.add(objwr);
             }
@@ -58,26 +59,28 @@ public with sharing class permanentDeletedRecordPreviewController {
         return objwrpDeletedData;
     }
 
-    // This method will restore the record on restore button click
+     /** 
+     *  @description This method will restore the record on restore button click
+     *  @param recordId - ID of the record to be restored.
+     *  @return Id - Restored record Id
+     */
     @AuraEnabled
     public static Id restoreRecord(Id recordId) {
         try {
-            Set<String> allFieldName = new Set<String>();
             rbin__Deleted_Data__c previewRecord = [
                 SELECT Id, rbin__Record_ID__c, rbin__Object_Name__c, rbin__Record_Name__c
                 FROM rbin__Deleted_Data__c
                 WHERE rbin__Record_ID__c = :recordId
-                LIMIT 1
+                 WITH SECURITY_ENFORCED LIMIT 1
             ];
             ContentVersion cv = [
                 SELECT Id, ContentDocumentId, VersionData, Title
                 FROM ContentVersion
-                WHERE Title = :recordId
+                WHERE Title = :recordId WITH SECURITY_ENFORCED
             ];
 
             String deletedData = (cv.VersionData).toString();
             String objName = previewRecord.rbin__Object_Name__c;
-            String recName = previewRecord.rbin__Record_Name__c;
             String recIdsToPurge = previewRecord.Id;
             SObject obj = Schema.getGlobalDescribe().get(objName).newSObject();// create a object instance for restoring
             Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(deletedData);
@@ -112,9 +115,12 @@ public with sharing class permanentDeletedRecordPreviewController {
                     previewRecord.rbin__Restored_Record_Id__c = sr.getId();
                     previewRecord.rbin__Has_Restored__c = true;
                     previewRecord.rbin__Restored_Date_Time__c =currentDt;
+                    if(Schema.sObjectType.rbin__Deleted_Data__c.isupdateable() && Schema.sObjectType.rbin__Deleted_Data__c.isdeletable()){
                         update previewRecord;
                         delete previewRecord;
-                        List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id = :recIdsToPurge ALL ROWS];
+                    }
+                        
+                        List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id = :recIdsToPurge WITH SECURITY_ENFORCED ALL ROWS];
         Database.EmptyRecyclebin(lstDeletedRecords);
                          
                 } 
@@ -126,27 +132,49 @@ public with sharing class permanentDeletedRecordPreviewController {
             throw new AuraHandledException(e.getMessage());
         }
     }
-// Wrapper class 
-    public class wrpDeletedData {
+ /** 
+     *  @description This wrapper class is used for WrpRecordDetail, object Name. Record Name and RecordId
+     */
+    public class WrpDeletedData {
         @AuraEnabled
-        public List<wrpRecordDetail> lstWrpData = null;
+        public List<WrpRecordDetail> lstWrpData = null;
+          /**
+     * @description The name of the object.
+     */
         @AuraEnabled
         public String objectName { get; set; }
+            /**
+     * @description The name of the record.
+     */
         @AuraEnabled
         public String recordName { get; set; }
+            /**
+     * @description Record Id.
+     */
         @AuraEnabled
         public Id recordId { get; set; }
     }
-
-    public class wrpRecordDetail {
+    /** 
+     *  @description This wrapper class is used for fieldLabel, value
+     */
+    public class WrpRecordDetail {
+            /**
+     * @description fieldLabel.
+     */
         @AuraEnabled
-        public String FieldLabel { get; set; }
+        public String fieldLabel { get; set; }
+             /**
+     * @description field value.
+     */
         @AuraEnabled
-        public String Value { get; set; }
+        public String value { get; set; }
 
-        public wrpRecordDetail() {
-            FieldLabel = '';
-            Value = '';
+          /**ys
+     * @description WrpRecordDetail constructor.
+     */
+        public WrpRecordDetail() {
+            fieldLabel = '';
+            value = '';
         }
     }
 }

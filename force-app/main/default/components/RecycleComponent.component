@@ -198,11 +198,11 @@
 
             <apex:form id="frm">
                 <apex:pagemessages id="messages"></apex:pagemessages>
-                <apex:actionFunction id="actUndeleteAll" name="actUndeleteAll" action="{!UndeleteAllRecords}" status="Processing" reRender="frm"
+                <apex:actionFunction id="actUndeleteAll" name="actUndeleteAll" action="{!undeleteAllRecords}" status="Processing" reRender="frm"
                     oncomplete="overridePageMessages();" />
-                <apex:actionFunction id="actUndeleteSelected" name="actUndeleteSelected" action="{!UndeleteSelectedRecords}" status="Processing"
+                <apex:actionFunction id="actUndeleteSelected" name="actUndeleteSelected" action="{!undeleteSelectedRecords}" status="Processing"
                     reRender="frm" oncomplete="overridePageMessages();" />
-                <apex:actionFunction id="actPurgeSelected" name="actPurgeSelected" action="{!DeleteFromRecyclebin}" status="Processing" reRender="frm"
+                <apex:actionFunction id="actPurgeSelected" name="actPurgeSelected" action="{!deleteFromRecyclebin}" status="Processing" reRender="frm"
                     oncomplete="overridePageMessages();" />
                 <div id="SearchFilters" style="margin-top:20px;">
                     <!-- Search In selection -->
@@ -297,9 +297,9 @@
                                 <div class="slds-form-element slds-size--1-of-{!if(IsAdminUser,'6','5')}">
                                     <label class="slds-form-element__label"></label>
                                     <div class="slds-form-element__control" style="margin-top:4px;">
-                                        <apex:commandButton id="btnSearch" value="Search" action="{!SearchRecords}" styleClass="slds-button slds-button--brand" status="Processing"
+                                        <apex:commandButton id="btnSearch" value="Search" action="{!searchRecords}" styleClass="slds-button slds-button--brand" status="Processing"
                                             reRender="frm" oncomplete="overridePageMessages();" />
-                                        <apex:commandButton value="Clear" action="{!Clear}" reRender="frm" styleClass="slds-button slds-button_neutral" status="Processing"
+                                        <apex:commandButton value="Clear" action="{!clear}" reRender="frm" styleClass="slds-button slds-button_neutral" status="Processing"
                                             oncomplete="overridePageMessages();clearDeleteByUser();" />
                                     </div>
                                 </div>
