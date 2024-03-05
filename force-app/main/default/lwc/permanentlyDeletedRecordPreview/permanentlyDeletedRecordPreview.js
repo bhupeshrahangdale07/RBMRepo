@@ -1,44 +1,53 @@
-/*
-// --------------------------------------------------------------------------------------------------------------
+/**
+ * @description This component is used preview of the record.
+ * Version#     Date                   Author                 Description
+ * 1.0         24/8/2023          Kandisa Technologies     Initial Version 1.0
+ */
 
-// This component is used preview of the record
-// Version#     Date                            Author                                  Description
-// --------------------------------------------------------------------------------------------------------------
-// 1.0         24/8/2023                     Kandisa Technologies                    Initial Version 1.0
-// --------------------------------------------------------------------------------------------------------------
-
-*/
-
-import { LightningElement, api, track } from 'lwc';
-import HideLightningHeader from '@salesforce/resourceUrl/noHeader';
-import { loadStyle, loadScript } from 'lightning/platformResourceLoader';
-import { NavigationMixin } from 'lightning/navigation';
-import LightningAlert from 'lightning/alert';
-import showPreviewPage from '@salesforce/apex/permanentDeletedRecordPreviewController.showPreviewPage';
-import restoreRecord from '@salesforce/apex/permanentDeletedRecordPreviewController.restoreRecord';
+import {LightningElement, api, track} from "lwc";
+import HideLightningHeader from "@salesforce/resourceUrl/noHeader";
+import {loadStyle} from "lightning/platformResourceLoader";
+import {NavigationMixin} from "lightning/navigation";
+import LightningAlert from "lightning/alert";
+import showPreviewPage from
+    "@salesforce/apex/permanentDeletedRecordPreviewController.showPreviewPage";
+import restoreRecord from
+    "@salesforce/apex/permanentDeletedRecordPreviewController.restoreRecord";
 
 export default class PermanentlyDeletedRecordPreview extends NavigationMixin(LightningElement) {
 
-   // recordIdFroPreview;
+    // RecordIdFroPreview;
     error;
+
     @track recordForPreview;
+
     @api recId;
+
     objName;
+
     recName;
+
     isLoading = false;
+
     baseURL;
 
-    connectedCallback(){
-        Promise.all([loadStyle(this, HideLightningHeader)])
-        .then(() => {
+    connectedCallback () {
+
+        Promise.all([loadStyle(this, HideLightningHeader)]).then(() => {
             // CSS loaded
-        }).catch(error => {
+        }).catch((error) => {
+
             this.error = error;
             this.showLoading = false;
-            this.showToast("Something Went Wrong in Loading 'noHeader' .",error,'error','dismissable');
+            this.showToast(
+                "Something Went Wrong in Loading 'noHeader' .",
+                error,
+                "error",
+                "dismissable");
+                
         });
         this.recordPreview();
-      
+
 }
 // this function get called for record preview
 recordPreview(){

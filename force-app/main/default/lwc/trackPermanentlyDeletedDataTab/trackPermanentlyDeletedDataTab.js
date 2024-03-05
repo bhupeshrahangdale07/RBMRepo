@@ -1,4 +1,3 @@
-
 /**
  * @description This component is used for Track Permanently Deleted Data Tab.
  * Version#     Date                   Author                 Description
@@ -11,9 +10,9 @@ import fetchAllRecords from
     "@salesforce/apex/trackPermanentDeletedDataCtrl.fetchAllRecords";
 import getAllObjectName from
     "@salesforce/apex/trackPermanentDeletedDataCtrl.getAllObjectName";
+import {LightningElement, track, wire} from "lwc";
 import LightningAlert from "lightning/alert";
 import LightningConfirm from "lightning/confirm";
-import {LightningElement, track, wire} from "lwc";
 import {RefreshEvent} from "lightning/refresh";
 import {refreshApex} from "@salesforce/apex";
 import saveRbin from "@salesforce/label/c.Save_rbin";
@@ -120,6 +119,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
             }
             this.getAllObjectList.sort((val1, val2) => {
+
                 // Use localeCompare for case-insensitive sorting
                 return val1.label.localeCompare(val2.label);
 
@@ -137,51 +137,48 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     // A function to be called on option change
     handleChange (event) {
 
-        const keyId = event.currentTarget.dataset.id,
+        let key = event.currentTarget.dataset.id,
             selectedValue = event.detail.value;
         this.isSaveBtnVisible = true;
         this.selectedopvalue = selectedValue;
-        const currtArry = this.objectRecordList.find((ele) => ele.Id == keyId),
+        const currtArry = this.objectRecordList.find((ele) => ele.Id == key),
             oldValue = currtArry.selectedValue,
-        currentRecOption = currtArry.option1Array.find((ele) => ele.value == oldValue);
-            currtArry.selectedValue = event.detail.value;
+            currentRecOption = currtArry.option1Array.find((ele) => ele.value == oldValue);
+        currtArry.selectedValue = event.detail.value;
         this.objectRecordList.forEach((element) => {
 
             const newArr = [];
-            if (element.Id != keyId) {
+            if (element.Id != key) {
 
                 element.option1Array.forEach((ele) => {
 
                     if (ele.value !== event.detail.value) {
 
-                        newArr.push({
-                            "label": ele.label,
-                            "value": ele.value
-                        });
+                        newArr.push({"label": ele.label,
+                            "value": ele.value});
+
                     }
 
                 });
                 if (oldValue != "") {
 
-                    newArr.push({
-                        "label": currentRecOption.label,
-                        "value": currentRecOption.value
-                    });
-                }
+                    newArr.push({"label": currentRecOption.label,
+                        "value": currentRecOption.value});
 
+                }
                 newArr.sort((val1, val2) => {
 
                     // Use localeCompare for case-insensitive sorting
                     return val1.label.localeCompare(val2.label);
 
                 });
+                element.option1Array = newArr;
 
-                element.option1Array = newArr;  
             }
 
         });
 
-        const objValue = this.newObjectList.findIndex((obj => {obj.Id == keyId; }));
+        const objValue = this.newObjectList.findIndex((obj) => obj.Id == key);
         this.newObjectList[objValue].Name = selectedValue;
         this.customValidityCheck();
         this.isAddNewdisabled = false;
@@ -223,23 +220,24 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
                     newOptionsArr.push({"label": element.label,
                         "value": element.value});
+
                 }
 
             });
             myNewElement.option1Array = newOptionsArr;
             this.objectRecordList = [...this.objectRecordList, myNewElement];
             this.newObjectList.push({"Id": randomId,
-                        "Name": null});
+                "Name": null});
 
             this.isAddNewdisabled = true;
-        } 
-        else {
+
+        } else {
 
             await LightningAlert.open({
 
-                "message": 'You can select only up to 10 records',
-                "theme": 'warning', // A red theme intended for error states
-                "label": 'Warning!' // This is the header text
+                "label": "Warning!",
+                "message": "You can select only up to 10 records",
+                "theme": "warning"
 
             });
 
@@ -253,45 +251,44 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
         this.customValidityCheck();
         if (this.isValid) {
 
-            this.newObjectList = this.newObjectList.filter(item => item.Name !== null);
+            this.newObjectList = this.newObjectList.filter((item) => item.Name !== null);
             this.isLoading = true;
-            saveTrackingObject({ objNameList: this.newObjectList })
-                .then(async (result) => {
+            saveTrackingObject({"objNameList": this.newObjectList}).then(async (result) => {
 
-                    refreshApex(this.wireAllRecords);
-                    this.dispatchEvent(new RefreshEvent());
-                    this.isLoading = false;
+                refreshApex(this.wireAllRecords);
+                this.dispatchEvent(new RefreshEvent());
+                this.isLoading = false;
+                await LightningAlert.open({
+
+                    "label": "Success!",
+                    "message": result,
+                    "theme": "success"
+
+                });
+                for (let key of this.newObjectList) {
+
+                    this.getAllObjectList = this.getAllObjectList.filter((itm) => itm.value !== key.Name);
+
+                }
+                this.newObjectList = [];
+
+                this.isSaveBtnVisible = false;
+                refreshApex(this.getAllRecords);
+
+            }).catch(async (error) => {
+
+                this.isLoading = false;
+                if (error) {
+
+                    const errorMessage = JSON.stringify(error.body.message),
+                        startIndex = errorMessage.indexOf("first error"),
+                        extractedErrorMessage = errorMessage.substring(startIndex),
+                        // It will show the message only
+                        message = extractedErrorMessage.replace("first error: FIELD_INTEGRITY_EXCEPTION, ", "");
                     await LightningAlert.open({
-
-                        message: result,
-                        theme: 'success', // a green theme intended for success states
-                        label: 'Success!', // this is the header text
-
-                    });
-                    for (let key of this.newObjectList) {
-
-                        this.getAllObjectList = this.getAllObjectList.filter(itm => itm.value !== key.Name);
-
-                    }
-                    this.newObjectList = [];
-
-                    this.isSaveBtnVisible = false;
-                    refreshApex(this.getAllRecords);
-
-                })
-                .catch(async (error) => {
-
-                    this.isLoading = false;
-                    if (error) {
-
-                        const errorMessage = JSON.stringify(error.body.message);
-                        const startIndex = errorMessage.indexOf("first error");
-                        const extractedErrorMessage = errorMessage.substring(startIndex);
-                        const message = extractedErrorMessage.replace("first error: FIELD_INTEGRITY_EXCEPTION, ", "");// it will show the message only
-                        await LightningAlert.open({
-                            message: message,
-                            theme: 'error', // a red theme intended for error states
-                            label: 'Error!', // this is the header text
+                        "label": "Error!",
+                        "message": message,
+                        "theme": "error",
                         });
 
                     }
