@@ -48,8 +48,8 @@ export default class PermanentlyDeletedRecordPreview extends NavigationMixin(Lig
         });
         this.recordPreview();
 
-}
-// this function get called for record preview
+    }
+// This function get called for record preview
 recordPreview(){
     this.isLoading = true;
     showPreviewPage({recordId:this.recId})
@@ -63,7 +63,7 @@ recordPreview(){
     })
 }
 
-// a function to be called on cancel button click 
+// A function to be called on cancel button click 
 // cancelHandler(){
 //     this.isLoading = true;
 //      window.location.assign('/lightning/n/rbin__Recycle_Bin_Manager');
