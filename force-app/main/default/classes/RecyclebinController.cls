@@ -412,7 +412,7 @@ global with sharing class RecyclebinController {
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
             Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-            
+            System.debug('dtFromDate- '+dtFromDate);
             if(dtFromDate > dtToDate) {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
                 return;
@@ -452,12 +452,13 @@ global with sharing class RecyclebinController {
         
         if (!string.isblank(strFromDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-            queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) > :dtFromDate';
+            queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) >= :dtFromDate';
         }
         
         if (!string.isblank(strToDate)) {
             Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-            queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) < :dtToDate';
+            queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) <= :dtToDate';
+           
         }
         
         if (!string.IsBlank(strSelectedUser)) {
@@ -632,7 +633,7 @@ global with sharing class RecyclebinController {
                 searchRecords();
             } 
             if (!recordIds.isEmpty()) {
-                if (recordIds.size() < 10) {
+                if (recordIds.size() <= 10) {
                 List<rbin__Deleted_Data__c> recordtoDelete = new List<rbin__Deleted_Data__c>();
                 List<rbin__Deleted_Data__c> allRecordList = new List<rbin__Deleted_Data__c>();
                 set<String> setIdsofDeletedRecords = new set<String>();
@@ -681,7 +682,7 @@ global with sharing class RecyclebinController {
                 }
                 //undelete lstSobjecttoUndelete;
                 if (successcount > 0) {
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) from Permanent Daleted Data have been restored successfully.',''));
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) from Permanent Deleted Data have been restored successfully.',''));
                 }
                 if (failcount > 0) {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' '+failcount + ' record(s) failed to restore.',''));

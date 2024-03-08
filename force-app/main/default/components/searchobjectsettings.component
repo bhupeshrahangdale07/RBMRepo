@@ -1476,7 +1476,7 @@
                         for(var i = 0 ; i < emailids.length ; i++){
                             if(pattern.test(emailids[i])){
                                 if(chkduplicate.includes(emailids[i])){
-                                    alert(emailids[i] + ' is alreay added.');
+                                    alert(emailids[i] + ' is already added.');
                                     validate = false;
                                 } else {
                                     validate = true;

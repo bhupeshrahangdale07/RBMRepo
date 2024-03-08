@@ -28,13 +28,13 @@
            <!-- <lightning-button label="Cancel" variant="brand"  onclick={cancelHandler} class="slds-m-left_x-small"></lightning-button>-->
         </div>
         
-        <div class="slds-grid slds-wrap">   
+        <div class="slds-grid slds-wrap">
         <template for:each={recordForPreview} for:item="record">
             <div key={record.Id} class="slds-col slds-size_6-of-12 slds-col--padded">
             <div  class="slds-form-element slds-has-divider--bottom">
-                <label class="slds-form-element__label">{record.FieldLabel}</label>
+                <label class="slds-form-element__label">{record.fieldLabel}</label>
                 <div class="slds-form-element__control">
-                    {record.Value}
+                    {record.value}
                 </div>
             </div>
         </div>
