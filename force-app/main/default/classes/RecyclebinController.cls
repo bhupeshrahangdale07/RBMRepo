@@ -752,12 +752,13 @@ global with sharing class RecyclebinController {
                         
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
-                    } else if (recordIdsList.size() > 0) {
+                    }
+                        if (recordIdsList.size() > 0) {
                         BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
                         Database.executeBatch(batchToRestoreAll, 20);
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
-                    }
+                        }
                 }
                 
                 for (List<WrapResults> lstWrapper : lstwrapResults) {

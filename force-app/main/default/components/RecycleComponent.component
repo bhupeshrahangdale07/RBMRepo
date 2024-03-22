@@ -480,7 +480,7 @@
                             },
                             "bDestroy": true,
                             "sPaginationType": "full_numbers",
-                            "lengthMenu": [10, 25, 50, 100, 200, 500, 1000],
+                            "lengthMenu": [10, 25, 50, 100, 200, 500],
                             "aoColumnDefs": [
                                 { "bSortable": false, "aTargets": [0] }
                             ],
@@ -543,7 +543,16 @@
                     function fnUndeleteSelectedRecords() {
                         dtResultTable.page.len(-1).draw();
                         var rselectedcount = $(".chkRSelected:checked").length;
-                        if (rselectedcount > 0) {
+                        if(rselectedcount > 500){
+                            var d = getMessagebox();
+                            d = d.replace('{title}', 'Warning');
+                            d = d.replace('{message}', 'You can not select more than 500 records at a time.');
+                            var btnclose = '<button class="slds-button slds-button--neutral slds-button--brand btnCloseMessagebox">Close</button>';
+                            d = d.replace('{cancelbutton}', btnclose);
+                            d = d.replace('{actionbutton}', '');
+                            $('.slds').find('#divMessagebox').remove();
+                            $('.slds').append(d);
+                        } else if (rselectedcount > 0) {
                             var d = getMessagebox();
                             d = d.replace('{title}', 'Restore Selected Confirmation');
                             d = d.replace('{message}', 'This will restore ' + rselectedcount + ' selected records below, Are you sure you want to Restore selected?');
