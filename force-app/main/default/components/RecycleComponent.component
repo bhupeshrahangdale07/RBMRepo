@@ -312,7 +312,7 @@
                     <div id="page_buttons" style="margin-top:10px;text-align:center;">
                       <apex:outputpanel rendered="{!forPermanentDeleted}">
                                 <!--div class="helperText--container helpIcon"-->
-                                <img class="imgHelpIcon helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}" width="14px"/>
+                                <img class="imgHelpIcon helpOrb" src="{!URLFOR($Asset.SLDS,'assets/icons/utility/info_60.png')}" width="14px" style=" width: 14px"/>
                                 <div class="slds-popover slds-popover--tooltip slds-hide slds-nubbin_top-left" role="tooltip" id="help" style="position: absolute; margin-top: 35px; margin-left: -33px;">
                                     <div class="slds-popover__body" style="text-align : left;"><pre>{!$Label.Help_Text_for_Permanent_Deleted_Data_Restore}</pre></div>
                                 </div>

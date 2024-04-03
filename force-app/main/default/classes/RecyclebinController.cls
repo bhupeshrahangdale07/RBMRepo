@@ -665,6 +665,7 @@ global with sharing class RecyclebinController {
                         } else if (string.valueOf(srList[i].getErrors()).contains('DuplicateError')) {// It will show error for duplicate records if the same record is available in org
                             duplicateRecordCount++;
                         } else {
+                            system.debug('Error on Restore- '+srList[i].getErrors());
                             failcount++;
                         }
                         
@@ -732,7 +733,7 @@ global with sharing class RecyclebinController {
                 
                 //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
                 //added by RP on 22-11-2018
-                if (lstwrapResults.size() > 1) {
+                //if (lstwrapResults.size() > 1) {
                     List<string> lstUndeleteAllRecords = new List<string>();
                     string strval = '';
                     for (List<WrapResults> lstWrapper: lstwrapResults) {
@@ -759,9 +760,9 @@ global with sharing class RecyclebinController {
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
                         }
-                }
+                //}
                 
-                for (List<WrapResults> lstWrapper : lstwrapResults) {
+                /*for (List<WrapResults> lstWrapper : lstwrapResults) {
                     for(WrapResults objW : lstWrapper) {
                         if (objW.isPermanentlyDeleted == 'No') {    
                             Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
@@ -776,17 +777,17 @@ global with sharing class RecyclebinController {
                     Database.UndeleteResult[] undeleteresult = Database.Undelete(lstUndeleteAll, false);
                     //undelete lstUndeleteAll;
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' All records have been restored successfully.',''));
-                    searchRecords();
-                } else if (!recordIds.isEmpty()) {
+                    searchRecords();*/
+                //} else 
+                // if (!recordIds.isEmpty()) {
 
-                    BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
-                        Database.executeBatch(batchToRestoreAll, 20);
-                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
-                        searchRecords();
+                //     BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
+                //         Database.executeBatch(batchToRestoreAll, 20);
+                //         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
+                //         searchRecords();
                     
-                }
-            } else {
-            } 
+                // }
+            }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
             return;

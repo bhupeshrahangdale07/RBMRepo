@@ -96,6 +96,10 @@ public with sharing class permanentDeletedRecordPreviewController {
                     if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
                         Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                         obj.put(fieldName, fieldValue);
+                    } else if(fieldDescribe.getType() == Schema.DisplayType.DateTime){
+                        system.debug('Type'+fieldDescribe.getType()+' Field- '+String.valueOf(jsonMap.get(fieldName)));
+                        DateTime fieldValue = DateTime.parse(String.valueOf(jsonMap.get(fieldName)));
+                        obj.put(fieldName, fieldValue);
                     } else {
                         obj.put(fieldName, jsonMap.get(fieldName));
                     }
