@@ -146,11 +146,11 @@ global with sharing class RecyclebinController {
         doSort(lstObjects);
 
         if (Apexpages.CurrentPage().getParameters().get('Object') != null){
-            string selectedObject = string.valueOf(Apexpages.CurrentPage().getParameters().get('Object'));
+            string selectedObject = String.escapeSingleQuotes(Apexpages.CurrentPage().getParameters().get('Object'));
             strSelectedObject = selectedObject;
         }
         if (Apexpages.CurrentPage().getParameters().get('Keyword') != null){
-            strKeyword = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('Keyword')));
+            strKeyword = string.escapeSingleQuotes(Apexpages.CurrentPage().getParameters().get('Keyword'));
         }
 
         if (Apexpages.CurrentPage().getParameters().get('FromDate') != null){
@@ -412,7 +412,7 @@ global with sharing class RecyclebinController {
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
             Date dtToDate = Date.NewInstance(Integer.valueof(strToDate.split('/')[2]),Integer.valueof(strToDate.split('/')[0]),Integer.valueof(strToDate.split('/')[1]));
-            System.debug('dtFromDate- '+dtFromDate);
+            
             if(dtFromDate > dtToDate) {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,' Deleted From Date cannot be greater than Deleted To Date.'));
                 return;

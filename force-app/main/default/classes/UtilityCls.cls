@@ -44,19 +44,15 @@ public with sharing class UtilityCls {
             for (String fieldName : jsonMap.keySet()) {
                 if (fieldName != 'Id'  && allMap.containsKey(fieldName)) {
                     Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
-                    system.debug('Field- '+fieldName+' R status- '+fieldDescribe.getRelationshipOrder());
-                    system.debug('Ref- '+fieldDescribe.getReferenceTo());
-                    
+                   
                     if ((fieldDescribe.isAccessible() && fieldDescribe.isCreateable() ) || (fieldDescribe.getRelationshipOrder() == 1 || fieldDescribe.getRelationshipOrder() == 0)) {
-                            system.debug('fieldName- '+fieldName);
+                            
                         if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
                             Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                             obj.put(fieldName, fieldValue);
                         } else if(fieldDescribe.getType() == Schema.DisplayType.DateTime){
-                            system.debug('Type'+fieldDescribe.getType()+' Field- '+fieldName);
                             String dateField = String.valueOf(jsonMap.get(fieldName));
                             DateTime fieldValue = DateTime.valueOf(dateField.replace('T',' '));
-                            system.debug('Value - '+fieldValue);
                             obj.put(fieldName, fieldValue);
                         } else {
                             obj.put(fieldName, jsonMap.get(fieldName));

@@ -58,14 +58,24 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
             allMap = UtilityCls.fetchObjectFieldMap(lst.rbin__Object_Name__c);
             
             for (String fieldName : jsonMap.keySet()) {
+
                 if (fieldName != 'Id'  && allMap.containsKey(fieldName)) {
+
                     Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
-                    if ((fieldDescribe.isCreateable() && fieldDescribe.isUpdateable()) 
+                    if ((fieldDescribe.isAccessible() && fieldDescribe.isCreateable()) 
                         || (fieldDescribe.getRelationshipOrder() == 1 || fieldDescribe.getRelationshipOrder() == 0)) {
                         if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
+
                             Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                             obj.put(fieldName, fieldValue);
-                        } else {
+
+                        } else if(fieldDescribe.getType() == Schema.DisplayType.DateTime){
+                            
+                            String dateField = String.valueOf(jsonMap.get(fieldName));
+                            DateTime fieldValue = DateTime.valueOf(dateField.replace('T',' '));
+                            obj.put(fieldName, fieldValue);
+
+                        } else{
                             obj.put(fieldName, jsonMap.get(fieldName));
                         }
                     }

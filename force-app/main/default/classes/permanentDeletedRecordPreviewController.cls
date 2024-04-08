@@ -89,22 +89,32 @@ public with sharing class permanentDeletedRecordPreviewController {
             allMap = UtilityCls.fetchObjectFieldMap(previewRecord.rbin__Object_Name__c);// this will return map of all field api name and sObjectField
             
             for (String fieldName : jsonMap.keySet()) {
+
                 if (fieldName != 'Id'  && allMap.containsKey(fieldName)) {
+
                     Schema.DescribeFieldResult fieldDescribe = allMap.get(fieldName).getDescribe();
-                    if ((fieldDescribe.isCreateable() && fieldDescribe.isUpdateable()) 
+                    if ((fieldDescribe.isAccessible() && fieldDescribe.isCreateable()) 
                         || (fieldDescribe.getRelationshipOrder() == 1 || fieldDescribe.getRelationshipOrder() == 0)) {
+
                     if (fieldDescribe.getType() == Schema.DisplayType.DATE) {
+
                         Date fieldValue = Date.valueOf(String.valueOf(jsonMap.get(fieldName)));
                         obj.put(fieldName, fieldValue);
+
                     } else if(fieldDescribe.getType() == Schema.DisplayType.DateTime){
-                        system.debug('Type'+fieldDescribe.getType()+' Field- '+String.valueOf(jsonMap.get(fieldName)));
+
                         DateTime fieldValue = DateTime.parse(String.valueOf(jsonMap.get(fieldName)));
                         obj.put(fieldName, fieldValue);
+
                     } else {
+
                         obj.put(fieldName, jsonMap.get(fieldName));
+
+                        }
+
                     }
-                }
-                }
+
+                    }
             }
 
             TimeZone tz = UserInfo.getTimeZone();
