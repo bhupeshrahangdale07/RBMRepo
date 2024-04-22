@@ -23,12 +23,11 @@ public class BatchMassUndeleteRecords Implements Database.batchable<string>{
                 lstUndeleteAll.add(objS);
             }            
         }
-        Database.UndeleteResult[] undeleteresults = Database.Undelete(lstUndeleteAll,false);
+        Database.UndeleteResult[] undeleteresults = Database.Undelete(lstUndeleteAll, true);
         
         List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
         for (Integer i = 0; i < undeleteresults.size(); i++) {
             if (undeleteresults[i].isSuccess()) {
-
                
             } else {
                 rbin__Error_Log__c errorObj = new rbin__Error_Log__c();

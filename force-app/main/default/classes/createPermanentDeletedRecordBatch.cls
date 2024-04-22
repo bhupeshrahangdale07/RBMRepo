@@ -56,8 +56,18 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         // Fetch object fields
         List<String> fieldNames = new List<String>(UtilityCls.fetchObjectFieldMap(objName).keySet());
 
+        Organization org =[Select id,OrganizationType From Organization Limit 1];
+
         if (lstTrackBatchProcess.size() > 0 && lstTrackBatchProcess[0].Last_Run_Batch_Time__c != null) {
             DateTime lastRunBatch = lstTrackBatchProcess[0].rbin__Last_Run_Batch_Time__c;
+
+            // if(org.OrganizationType == 'Developer Edition'){
+            // Content Publication limtis are not avalaible to check for org. For Developer Edition the Content Publication limtis is 2500 hence added Limit of 2500 for Developer Edition in query. 
+            // myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch LIMIT 2500 ALL ROWS';
+
+            // } else {
+
+            // }
             myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch ALL ROWS';
         }
         return Database.getQueryLocator(myQuery);
@@ -146,7 +156,6 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
                 }
             }
         }
-
         // Insert/Update Deleted Data
         Database.Upsert(upsertToDeletedData, false);
 

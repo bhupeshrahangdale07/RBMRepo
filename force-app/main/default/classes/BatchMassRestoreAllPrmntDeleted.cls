@@ -91,7 +91,7 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         DateTime dt = Datetime.now();
         DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
 
-        Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, false);
+        Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, true);
         List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
         for (Integer i = 0; i < srList.size(); i++) {
             if (srList[i].isSuccess()) {

@@ -108,6 +108,10 @@ public with sharing class UtilityCls {
         if (Schema.sObjectType.ContentDocument.isdeletable()) {
             Delete existedContentDoc;
         }
+        if(existedContentDoc.size() > 0){
+            Database.EmptyRecyclebin(existedContentDoc);
+        }
+       
 
         Map<String, Id> mapContentVersion = new Map<String, Id>();
         List<ContentVersion> lstContentVersion = new List<ContentVersion>();
