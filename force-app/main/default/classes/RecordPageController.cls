@@ -1,5 +1,5 @@
 /*
-    Description: Delted record page
+    Description: Detailed record page
 */
 public with sharing class RecordPageController {
  
@@ -133,6 +133,15 @@ public with sharing class RecordPageController {
             objS.Put('Id',recordid);
             //undelete objS;
             Database.UndeleteResult undeleteresult = Database.Undelete(objS, false);
+
+            List<rbin__Deleted_Data__c> lstDeletedDataRecords = [Select rbin__Record_ID__c from rbin__Deleted_Data__c Where rbin__Record_ID__c =: recordid WITH SECURITY_ENFORCED];
+
+            if(undeleteresult.isSuccess() && lstDeletedDataRecords.size() > 0 && Schema.sObjectType.rbin__Deleted_Data__c.isdeletable()){
+
+                Delete lstDeletedDataRecords;
+                Database.EmptyRecyclebin(lstDeletedDataRecords);
+
+            }
             if(!undeleteresult.isSuccess()){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, 'This Record is in process of getting purged.',''));
                 return null;

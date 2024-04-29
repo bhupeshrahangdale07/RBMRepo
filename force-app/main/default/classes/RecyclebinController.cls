@@ -146,21 +146,21 @@ global with sharing class RecyclebinController {
         doSort(lstObjects);
 
         if (Apexpages.CurrentPage().getParameters().get('Object') != null){
-            string selectedObject = String.escapeSingleQuotes(Apexpages.CurrentPage().getParameters().get('Object'));
+            string selectedObject = Apexpages.CurrentPage().getParameters().get('Object').escapeHtml4();
             strSelectedObject = selectedObject;
         }
         if (Apexpages.CurrentPage().getParameters().get('Keyword') != null){
-            strKeyword = string.escapeSingleQuotes(Apexpages.CurrentPage().getParameters().get('Keyword'));
+            strKeyword = (Apexpages.CurrentPage().getParameters().get('Keyword')).escapeHtml4();
         }
 
         if (Apexpages.CurrentPage().getParameters().get('FromDate') != null){
-            strFromDate = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('FromDate')));
+            strFromDate = (string.valueOf(Apexpages.CurrentPage().getParameters().get('FromDate'))).escapeHtml4();
         }
         if (Apexpages.CurrentPage().getParameters().get('ToDate') != null){
-            strToDate = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('ToDate')));
+            strToDate = (string.valueOf(Apexpages.CurrentPage().getParameters().get('ToDate'))).escapeHtml4();
         }
         if (Apexpages.CurrentPage().getParameters().get('SelectedUser') != null){
-            strSelectedUser = string.escapeSingleQuotes(string.valueOf(Apexpages.CurrentPage().getParameters().get('SelectedUser')));
+            strSelectedUser = (string.valueOf(Apexpages.CurrentPage().getParameters().get('SelectedUser'))).escapeHtml4();
         }
         if (!String.isBlank(strSelectedObject)) {
             searchRecords();
@@ -404,10 +404,12 @@ global with sharing class RecyclebinController {
      * @description Method to make search in Permanently Deleted Data
      */
     public void searchInPermanentlyDeletedData(){
+
         List<rbin__Permanent_Deleted_Tracking_Object__c> lstTrackingObjects = rbin__Permanent_Deleted_Tracking_Object__c.getall().values();
         List<SObject> recycleBinRecords = new List<SObject>();
         set<String> setDeletedDataRecIds = new set<String>();
         set<String> setRecIdsToHide = new set<String>();// set to store the record Ids of recycle bin records
+        //List<String> lstSelectedTrackingObjects = new List<String>();
         
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
@@ -426,10 +428,14 @@ global with sharing class RecyclebinController {
         
         // get all the records from the recycle bin so that user can not see the same records in permanent delete
             for (rbin__Permanent_Deleted_Tracking_Object__c trackingObject : lstTrackingObjects) {
+                
                 string objectName = string.valueOf(trackingObject.Name);
-                String myQuery = 'SELECT Id FROM ' + objectName + ' WHERE Id IN :setDeletedDataRecIds AND IsDeleted = true ALL ROWS';
+                //lstSelectedTrackingObjects.add(objectName);
+                String myQuery = 'SELECT Id FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE Id IN :setDeletedDataRecIds AND IsDeleted = true ALL ROWS';
                 recycleBinRecords.addAll(Database.query(myQuery));
             }
+
+            
 
             for (SObject rec : recycleBinRecords) {
                 setRecIdsToHide.add(rec.Id);
@@ -464,15 +470,18 @@ global with sharing class RecyclebinController {
         if (!string.IsBlank(strSelectedUser)) {
             queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
         }
-        List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(queryString);
+
+        queryString += ' LIMIT 6000';
+
+        List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(String.escapeSingleQuotes(queryString));
 
         List<WrapResults> lsttempWrap = new List<WrapResults>();
         
         map<string,string> mapObjectLabelName =new map<string,string>();//map to store the object label name
         Integer count = 0;
         
-        
-        List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomSetting = false WITH SECURITY_ENFORCED]; // get all object names Labels
+        // apply filter for only selected objects
+        List<EntityDefinition> objectInfoList = [SELECT DurableId, QualifiedApiName, Label FROM EntityDefinition WHERE IsCustomSetting = false /*AND QualifiedApiName in : lstSelectedTrackingObjects*/ WITH SECURITY_ENFORCED]; // get all object names Labels
         
         for (EntityDefinition obj : objectInfoList) {
             String objectAPIName = obj.QualifiedApiName;
@@ -482,7 +491,9 @@ global with sharing class RecyclebinController {
         if(permanentDeletedDataList.size() > 0) {
             recordcount = permanentDeletedDataList.size();
             bothRecordCount += permanentDeletedDataList.size();
+
         for (rbin__Deleted_Data__c rec : permanentDeletedDataList) {    
+
             WrapResults objW = new WrapResults();
             // Assign the field values directly to wrapper class properties
             objW.Id = rec.rbin__Record_ID__c != null ? string.valueof(rec.rbin__Record_ID__c) : '';
@@ -598,12 +609,17 @@ global with sharing class RecyclebinController {
         try {
             List<String> recordIds =new List<String>();
             List<Sobject> lstSobjecttoUndelete = new List<Sobject>();
-            
+            Set<String> setRecIdsToRestore = new Set<String>();
+            List<rbin__Deleted_Data__c> lstRecordsToDelete = new List<rbin__Deleted_Data__c>();
+            Map<String, rbin__Deleted_Data__c> mapDeletedRecordIds = new Map<String, rbin__Deleted_Data__c>();
+            List<rbin__Deleted_Data__c> lstDeletedDataRecords = new List<rbin__Deleted_Data__c>();
+
             for(List<WrapResults> lstWrapper: lstwrapResults) {
                 for(WrapResults objW: lstWrapper) {
                     if(objW.isCheck && objw.isPermanentlyDeleted == 'No') {
                         Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
                         objS.Put('Id',objW.Id);
+                        setRecIdsToRestore.add(objW.Id);// store the record Ids that has to be restored to delete from permanently deteled data.
                         lstSobjecttoUndelete.add(objS);
                     } else if (objW.isCheck && objw.isPermanentlyDeleted == 'Yes') {
                         recordIds.add(objw.Id);// store the record Ids in set which are permanently deleted
@@ -614,16 +630,44 @@ global with sharing class RecyclebinController {
             if (lstSobjecttoUndelete.size() > 0) {
                 Database.UndeleteResult[] undeleteresult = Database.Undelete(lstSobjecttoUndelete, false);
                 
+                if(setRecIdsToRestore.size() > 0){
+
+                 lstDeletedDataRecords = [Select rbin__Record_ID__c from rbin__Deleted_Data__c Where rbin__Record_ID__c in:setRecIdsToRestore WITH SECURITY_ENFORCED];
+                    
+                }
+                if(lstDeletedDataRecords.size() > 0){
+
+                    for (rbin__Deleted_Data__c rec : lstDeletedDataRecords) {
+
+                    mapDeletedRecordIds.put(rec.rbin__Record_ID__c, rec);
+
+                }
+            }
+            
                 Integer successcount = 0;
                 Integer failcount = 0;
-                for (Database.UndeleteResult result: undeleteresult) {
-                    if (result.isSuccess()) {
+                for (Integer i = 0; i < undeleteresult.size(); i++) {
+
+                    if (undeleteresult[i].isSuccess()) {
                         successcount++;
+                        rbin__Deleted_Data__c deletedDataRec = mapDeletedRecordIds.get(undeleteresult[i].getId());
+                        
+                        if(deletedDataRec != null){
+                            lstRecordsToDelete.add(mapDeletedRecordIds.get(undeleteresult[i].getId()));
+                        }
+                        
                     } else {
                         failcount++;
                     }
                 }
-                //undelete lstSobjecttoUndelete;
+                if(Schema.sObjectType.rbin__Deleted_Data__c.isdeletable() && lstRecordsToDelete.size() > 0){
+                   
+                   Delete lstRecordsToDelete;
+
+                   Database.EmptyRecyclebin(lstRecordsToDelete);
+
+                }
+
                 if (successcount > 0) {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) have been restored successfully.',''));
                 }
