@@ -207,7 +207,7 @@ global with sharing class RecyclebinController {
         }
     }
 
-    private List<Sobject> findAllSobjectList(string strSelectedObject) {
+    private List<Sobject> findAllSobjectList(string strSelectedObject, boolean defaultSearch) {
         List<Sobject> lstSobject = new List<Sobject>();
 
         try {
@@ -274,7 +274,17 @@ global with sharing class RecyclebinController {
             }
 
             if (strWhereParam.length() > 0) {searchquery += ' and ';}
-            searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT ' + integer.valueof(System.label.Row_Count_Limit) + ' ALL ROWS ';
+
+            if(defaultSearch == true) {
+                system.debug('Default- '+strSelectedObject);
+                searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT ' + integer.valueof(System.label.Row_Count_Limit) + ' ALL ROWS ';
+
+            } else {
+                system.debug('Selected Object- ');
+                searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT 6000 ALL ROWS ';
+
+            }
+            //searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT ' + integer.valueof(System.label.Row_Count_Limit) + ' ALL ROWS ';
 
             if (!string.IsBlank(searchquery)) {
 
@@ -291,6 +301,7 @@ global with sharing class RecyclebinController {
      * @description method to make search in recycle Bin
      */
     public void searchInRecycleBin() {
+
         Map<string,string> objectKeyFieldMap = UtilityCls.fetchObjectKeyFields();
         
         lstAllDeletedObjects = new List<Sobject>();
@@ -314,14 +325,14 @@ global with sharing class RecyclebinController {
             for(rbin__RecycleSearchObjects__c o : lstCustomSettings){
                 if(intLimit == 20){ break;}
                 
-                lstSobjecttemp = findAllSobjectList(o.Name);
+                lstSobjecttemp = findAllSobjectList(o.Name, true);
                 if(lstSobjecttemp != null && lstSobjecttemp.size()>0){
                     lstAllDeletedObjects.addAll(lstSobjecttemp);   
                 }           
                 intLimit++;
             }
         }else{
-            lstSobjecttemp = findAllSobjectList(strSelectedObject);
+            lstSobjecttemp = findAllSobjectList(strSelectedObject, false);
             
             if(lstSobjecttemp == null){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info, ' Salesforce currently doesn\'t support restoring  records of the ' + strSelectedObject + ' Object.'));
@@ -421,20 +432,29 @@ global with sharing class RecyclebinController {
             }
         }
 
-        List<rbin__Deleted_Data__c> lstRbinPermanentDeletedData = [SELECT Id, rbin__Record_ID__c From rbin__Deleted_Data__c WITH SECURITY_ENFORCED];
-        for (rbin__Deleted_Data__c rbinData : lstRbinPermanentDeletedData) {
-            setDeletedDataRecIds.add(rbinData.rbin__Record_ID__c);
-        }
+        // List<rbin__Deleted_Data__c> lstRbinPermanentDeletedData = [SELECT Id, rbin__Record_ID__c From rbin__Deleted_Data__c WITH SECURITY_ENFORCED];
+        // for (rbin__Deleted_Data__c rbinData : lstRbinPermanentDeletedData) {
+        //     setDeletedDataRecIds.add(rbinData.rbin__Record_ID__c);
+        // }
         
         // get all the records from the recycle bin so that user can not see the same records in permanent delete
+        if(string.IsBlank(strSelectedObject)) {
             for (rbin__Permanent_Deleted_Tracking_Object__c trackingObject : lstTrackingObjects) {
                 
                 string objectName = string.valueOf(trackingObject.Name);
                 //lstSelectedTrackingObjects.add(objectName);
-                String myQuery = 'SELECT Id FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE Id IN :setDeletedDataRecIds AND IsDeleted = true ALL ROWS';
+                String myQuery = 'SELECT Id FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE IsDeleted = true ALL ROWS';
                 recycleBinRecords.addAll(Database.query(myQuery));
             }
+        } else {
 
+            string objectName = strSelectedObject;
+                //lstSelectedTrackingObjects.add(objectName);
+                String myQuery = 'SELECT Id FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE IsDeleted = true ALL ROWS';
+                recycleBinRecords.addAll(Database.query(myQuery));
+
+        }
+            //Add one query for selected object
             
 
             for (SObject rec : recycleBinRecords) {
@@ -458,6 +478,7 @@ global with sharing class RecyclebinController {
         
         if (!string.isblank(strFromDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
+            system.debug('Date- '+dtFromDate);
             queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) >= :dtFromDate';
         }
         
@@ -470,8 +491,7 @@ global with sharing class RecyclebinController {
         if (!string.IsBlank(strSelectedUser)) {
             queryString += ' AND rbin__Deleted_By__c =: strSelectedUser';
         }
-
-        queryString += ' LIMIT 6000';
+        queryString += ' LIMIT '+integer.valueof(System.label.Row_Count_Limit_For_Permanent_Deleted_Data);
 
         List<rbin__Deleted_Data__c> permanentDeletedDataList = Database.query(String.escapeSingleQuotes(queryString));
 
@@ -546,6 +566,7 @@ global with sharing class RecyclebinController {
                 disablePurgeButton = true;
                 forPermanentDeleted = true;
                 lstwrapResults = new List<List<WrapResults>>();
+                system.debug('In PDD');
                 searchInPermanentlyDeletedData();
                 if (lstwrapResults.size() > 0) {
                     disableButton = false; 

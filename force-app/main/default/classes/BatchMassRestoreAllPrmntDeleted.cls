@@ -85,14 +85,15 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
             sobjecttoUndeleteList.add(obj);
             allMap = null;
         }
-
+        
+        List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
         // Add restored DateTime
         TimeZone tz = UserInfo.getTimeZone();
         DateTime dt = Datetime.now();
         DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
 
         Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, true);
-        List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
+        
         for (Integer i = 0; i < srList.size(); i++) {
             if (srList[i].isSuccess()) {
                 rbin__Deleted_Data__c deleteRecord = allRecordList[i];
