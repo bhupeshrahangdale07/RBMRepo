@@ -6,9 +6,12 @@
  * 1.0         11/9/2023                      Kandisa Technologies                    Initial Version 1.0
  * --------------------------------------------------------------------------------------------------------------
  */
-public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObject> {
+public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObject>, Database.Stateful {
 
     List<String> lstIds;
+    Integer totalRecordProcessed = 0;
+    Integer totalFailedRecords = 0;
+    Integer totalSuccessRecords = 0;
 /**
  * @description This constructor is for passinf Id list 
  * @param idsList - List of record ids to restore
@@ -85,39 +88,48 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
             sobjecttoUndeleteList.add(obj);
             allMap = null;
         }
-        
+
         List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
         // Add restored DateTime
-        TimeZone tz = UserInfo.getTimeZone();
-        DateTime dt = Datetime.now();
-        DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
+        // TimeZone tz = UserInfo.getTimeZone();
+        // DateTime dt = Datetime.now();
+        // DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
 
-        Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, true);
+        Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, false);
         
         for (Integer i = 0; i < srList.size(); i++) {
+
+            totalRecordProcessed += 1;
             if (srList[i].isSuccess()) {
+                totalSuccessRecords +=1;
                 rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
-                deleteRecord.rbin__Has_Restored__c = true;
-                deleteRecord.rbin__Restored_Date_Time__c = currentDt;
+                // deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
+                // deleteRecord.rbin__Has_Restored__c = true;
+                // deleteRecord.rbin__Restored_Date_Time__c = currentDt;
                 recordtoDelete.add(deleteRecord);
+
             } else {
+                totalFailedRecords += 1;
                 rbin__Error_Log__c errorObj = new rbin__Error_Log__c();
                 errorObj.rbin__Error_Message__c = String.valueOf(srList[i].getErrors());
                 errorObj.rbin__Failed_Record__c = String.valueOf(sobjecttoUndeleteList[i]);
                 lstErrorRecords.add(errorObj);
-                rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                deleteRecord.rbin__Has_Restored__c = false;
-                recordtoDelete.add(deleteRecord);
+                // rbin__Deleted_Data__c deleteRecord = allRecordList[i];
+                // deleteRecord.rbin__Has_Restored__c = false;
+
             }
+        
         }
         
         
         insert lstErrorRecords;
-        Database.update(recordtoDelete, false);
+        //Database.update(recordtoDelete, false);
         Database.delete(recordtoDelete, false);
         List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id IN :setRecordIdsToPurge ALL ROWS];
-        Database.EmptyRecyclebin(lstDeletedRecords);
+        if(lstDeletedRecords.size() > 0){
+            Database.EmptyRecyclebin(lstDeletedRecords);
+        }
+        
     }
     /**
      * @description - finish method
@@ -125,6 +137,26 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
      */
     public void finish(Database.BatchableContext bc) {
         // Add finish logic if needed
+        List<String> sendtomails = new List<String>();
+
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        
+            sendtomails.add('rahangdalebhupesh99@gmail.com'); // Add email of system admin
+        
+        email.saveAsActivity = false;
+        //email.setTargetObjectId(UserInfo.getUserId());
+        email.setToAddresses(sendtomails);
+        email.setSubject('Batch Restore Status');
+        
+        String body = 'Hi Admin, <br/><br/>' + UserInfo.getName() + ' has processed total ' + totalRecordProcessed + ' for restore. <br/><br/>Below is the details of restored Records,<br/><br/><table border="1" style="border-collapse: collapse; width: 50%; "><tr><th>Description</th><th>Count</b>&nbsp;&nbsp;';
+        
+        body += '</th></tr><tr style = "text-align: center;"><td>Success Records &nbsp;&nbsp;</td><td>&nbsp;&nbsp;' + totalSuccessRecords + '</td></tr><tr style="text-align: center;"><td>Failed Records</td><td>&nbsp;&nbsp;'+ totalFailedRecords +'</td></tr></table><br/>';
+        
+        body += '**Please check the <a href="'+System.URL.getSalesforceBaseUrl().toExternalForm()+'/'+Schema.SObjectType.rbin__Error_Log__c.getKeyPrefix()+'/o'+'">\'Error Log\'</a> for failed records in RBM app.<br/><br/>Thanks,<br/>Recycle Bin Manager';
+
+        email.setHtmlBody(body);
+
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
         
     }
 }

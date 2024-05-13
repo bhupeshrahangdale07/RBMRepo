@@ -1,9 +1,12 @@
 /*
     Description: Batch is used to undelete records.
 */
-public class BatchMassUndeleteRecords Implements Database.batchable<string>{
+public class BatchMassUndeleteRecords Implements Database.batchable<string>, Database.Stateful{
     
     List<String> lstIds;
+    Integer totalRecordProcessed = 0;
+    Integer totalFailedRecords = 0;
+    Integer totalSuccessRecords = 0;
     
     public BatchMassUndeleteRecords(List<String> lst){
         this.lstIds = lst;
@@ -29,7 +32,7 @@ public class BatchMassUndeleteRecords Implements Database.batchable<string>{
 
             }            
         }
-        Database.UndeleteResult[] undeleteresults = Database.Undelete(lstUndeleteAll, true);
+        Database.UndeleteResult[] undeleteresults = Database.Undelete(lstUndeleteAll, false);
         
         if(setRecIdsToRestore.size() > 0){
         List<rbin__Deleted_Data__c> lstDeletedDataRecords = [Select rbin__Record_ID__c from rbin__Deleted_Data__c Where rbin__Record_ID__c in:setRecIdsToRestore WITH SECURITY_ENFORCED];
@@ -43,8 +46,12 @@ public class BatchMassUndeleteRecords Implements Database.batchable<string>{
         
         List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
         for (Integer i = 0; i < undeleteresults.size(); i++) {
+
+            totalRecordProcessed += 1;
+
             if (undeleteresults[i].isSuccess()) {
 
+                totalSuccessRecords += 1;
                 rbin__Deleted_Data__c deletedDataRec = mapDeletedRecordIds.get(undeleteresults[i].getId()); 
 
                 if(deletedDataRec != null){
@@ -52,6 +59,8 @@ public class BatchMassUndeleteRecords Implements Database.batchable<string>{
                 }
                 
             } else {
+
+                totalFailedRecords +=1;
                 rbin__Error_Log__c errorObj = new rbin__Error_Log__c();
                 errorObj.rbin__Error_Message__c = String.valueOf(undeleteresults[i].getErrors());
                 errorObj.rbin__Failed_Record__c = String.valueOf(lstUndeleteAll[i]);
@@ -68,5 +77,26 @@ public class BatchMassUndeleteRecords Implements Database.batchable<string>{
     }
     
     public void finish(Database.BatchableContext BC){
+
+        List<String> sendtomails = new List<String>();
+
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        
+            sendtomails.add('rahangdalebhupesh99@gmail.com'); // Add email of system admin
+        
+        email.saveAsActivity = false;
+        //email.setTargetObjectId(UserInfo.getUserId());
+        email.setToAddresses(sendtomails);
+        email.setSubject('Batch Restore Status');
+        
+        String body = 'Hi Admin, <br/><br/>' + UserInfo.getName() + ' has processed total ' + totalRecordProcessed + ' for restore. <br/><br/>Below is the details of restored Records,<br/><br/><table border="1" style="border-collapse: collapse; width: 50%; "><tr><th>Description</th><th>Count</b>&nbsp;&nbsp;';
+        
+        body += '</th></tr><tr style = "text-align: center;"><td>Success Records &nbsp;&nbsp;</td><td>&nbsp;&nbsp;' + totalSuccessRecords + '</td></tr><tr style="text-align: center;"><td>Failed Records</td><td>&nbsp;&nbsp;'+ totalFailedRecords +'</td></tr></table><br/>';
+        
+        body += '**Please check the <a href="'+System.URL.getSalesforceBaseUrl().toExternalForm()+'/'+Schema.SObjectType.rbin__Error_Log__c.getKeyPrefix()+'/o'+'">\'Error Log\'</a> for failed records in RBM app.<br/><br/>Thanks,<br/>Recycle Bin Manager';
+        email.setHtmlBody(body);
+
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+
     }
  }
