@@ -41,7 +41,7 @@ public with sharing class trackPermanentDeletedDataCtrl {
                     SObjectType schemaType = Schema.getGlobalDescribe().get(String.valueOf(real.get('name')));
                     
                     if (schemaType != null) {
-                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()&& schemaType.getDescribe().getName() != 'rbin__Deleted_Data__c'&& schemaType.getDescribe().isUndeletable()) {
+                        if (schemaType.getDescribe().isAccessible() && schemaType.getDescribe().isDeletable() && schemaType.getDescribe().isQueryable() && !schemaType.getDescribe().isCustomSetting() && schemaType.getDescribe().isCreateable()&& schemaType.getDescribe().getName() != 'rbin__Deleted_Data__c' && schemaType.getDescribe().getName() != 'rbin__Error_Log__c' && schemaType.getDescribe().isUndeletable()) {
                             String label = String.valueOf(real.get('label'));
                             mapOfAllObj.put(name, label);
                         } 
@@ -150,5 +150,28 @@ public with sharing class trackPermanentDeletedDataCtrl {
         if (Schema.sObjectType.rbin__Permanent_Deleted_Tracking_Object__c.isupdateable()){
         update recordsToUpdate;
     }
+    }
+
+    @AuraEnabled
+    public static string scheduleBatch(){
+        try {
+            Set<String> batchNames = new Set<String>();
+           List<CronJobDetail> scheduledBatch = [SELECT Id, Name, JobType from CronJobDetail where Name =:'GetPermanentDeletedDataBatch']; 
+
+           
+           if(scheduledBatch.size() > 0){
+            
+            return 'Already Scheduled';
+
+           } else {
+            System.schedule('GetPermanentDeletedDataBatch', '0 0 17 * * ? *' , new createPermanentDeletedRecordBatch(1));
+            return 'Scheduled';
+
+           }
+            
+            
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
 }

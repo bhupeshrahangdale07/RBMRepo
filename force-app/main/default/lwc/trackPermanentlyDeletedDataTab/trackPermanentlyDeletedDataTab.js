@@ -18,6 +18,8 @@ import {refreshApex} from "@salesforce/apex";
 import saveRbin from "@salesforce/label/c.Save_rbin";
 import saveTrackingObject from
     "@salesforce/apex/trackPermanentDeletedDataCtrl.saveTrackingObject";
+import scheduleBatch from 
+    "@salesforce/apex/trackPermanentDeletedDataCtrl.scheduleBatch";
 
 export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
@@ -74,7 +76,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 mainArr.push(myNewElement);
 
             });
-
             this.objectRecordList = [...mainArr];
             this.error = undefined;
             this.isLoading = false;
@@ -91,7 +92,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     // Fetch all the options for selection
     @wire(getAllObjectName)
     wireObjectNames (result) {
-
+        
         if (result.data) {
 
             for (let key in result.data) {
@@ -104,7 +105,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
                     obj.Name === key;
 
-                })) {
+               })) {
 
                     this.getAllObjectList.push({
                         "label": result.data[key],
@@ -188,10 +189,10 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     // The function to be called on add button click used to add new row into a datatable
     async addRow () {
 
-        const num10 = 10,
+        const num10 = 9,
             num16 = 16,
             numMinus1 = -1;
-        if (this.objectRecordList.length < num10) {
+        if (this.objectRecordList.length <= num10) {
 
             this.isSaveBtnVisible = true;
             const randomId = Math.random() * num16,
@@ -215,8 +216,8 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
             }
             this.getAllObjectList.forEach((element) => {
-
-                if (element.value !== this.selectedopvalue && (valueArr.indexOf(element.value) === numMinus1)) {
+                
+                if (element.value !== this.selectedopvalue && (valueArr.indexOf(element.value) == numMinus1)) {
 
                     newOptionsArr.push({"label": element.label,
                         "value": element.value});
@@ -238,7 +239,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             await LightningAlert.open({
 
                 "label": "Warning!",
-                "message": "You can select only up to 10 records",
+                "message": "You can select up to 10 records only",
                 "theme": "warning"
 
             });
@@ -267,11 +268,11 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     "theme": "success"
 
                 });
-                for (let key of this.newObjectList) {
+                // for (let key of this.newObjectList) {
 
-                    this.getAllObjectList = this.getAllObjectList.filter((itm) => itm.value !== key.Name);
+                //     this.getAllObjectList = this.getAllObjectList.filter((itm) => itm.value !== key.Name);
 
-                }
+                // }
                 this.newObjectList = [];
 
                 this.isSaveBtnVisible = false;
@@ -299,6 +300,8 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     this.isLoading = false;
 
                 });
+                this.isAddNewdisabled = false;
+
 
         } else {
 
@@ -328,7 +331,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
             this.isLoading = true;
             if (!isNaN(this.deleteRecordIds)) {
-
+                
                 this.selectedopvalue = "";
                 const currentRecArr = this.objectRecordList.find((ele) => ele.Id == this.deleteRecordIds);
                 const currentValue = currentRecArr.selectedValue;
@@ -365,8 +368,10 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
                 this.newObjectList.splice(this.newObjectList.findIndex(row => row.Id == this.deleteRecordIds), num1);
 
-                this.isAddNewdisabled = false;
+                
                 this.customValidityCheck();
+                this.isAddNewdisabled = false;
+
                 if (this.newObjectList.length === num0) {
 
                     this.isSaveBtnVisible = false;
@@ -376,7 +381,8 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 this.isLoading = false;
                 refreshApex(this.getAllRecords);
             } else {
-
+                
+                this.selectedopvalue = "";
                 deleteObject({ removeObjectIds: this.deleteRecordIds }).
                     then(async (res) => {
 
@@ -434,7 +440,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
             } else {
 
                 selectElement.setCustomValidity("");
-
+                
             }
 
             // Report validity to show the error message
@@ -442,6 +448,42 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
 
         });
         return this.isValid;
+
+    }
+
+    scheduleBatchClickHandler () {
+
+        scheduleBatch().
+        then( async (result)=>{
+
+            if(result == 'Already Scheduled'){
+
+                await LightningAlert.open({
+                    "label": "Already Scheduled!",
+                    "message": 'The batch for Permanent Deleted Data is already scheduled.',
+                    "theme": "shade"
+                });
+
+            } else {
+
+                await LightningAlert.open({
+                    "label": "Success!",
+                    "message": "The batch has been scheduled successfully.",
+                    "theme": "success"
+                });
+
+            }
+
+        }).
+        catch(async (error)=>{
+            await LightningAlert.open({
+                "label": "Error!",
+                "message": JSON.stringify(error),
+                "theme": "error"
+            });
+
+        });
+
 
     }
 

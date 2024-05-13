@@ -1,5 +1,6 @@
 <template>
 	<lightning-card>
+		<lightning-button label="Schedule a Batch" variant="brand" class="slds-align_absolute-center" onclick={scheduleBatchClickHandler}></lightning-button>
 		<div class="slds-m-around_medium">
 			<div if:true={isLoading} class="slds-is-relative">
 				<div class="backdrop">
@@ -7,6 +8,7 @@
 				</lightning-spinner>
 			</div>
 			</div>
+			
 			<table class="slds-table slds-table_cell-buffer slds-table_bordered"
 				aria-labelledby="element-with-table-label other-element-with-table-label" style="width: 100%;">
 				<thead>
