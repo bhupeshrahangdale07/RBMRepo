@@ -9,12 +9,16 @@
  * --------------------------------------------------------------------------------------------------------------
  */
 
-public class createPermanentDeletedRecordBatch Implements Database.Batchable<sobject>, Database.Stateful {
+public class createPermanentDeletedRecordBatch Implements Database.Batchable<sobject>, Database.Stateful, Schedulable {
 
     public List<rbin__Track_Batch_Process__c> lstTrackBatchProcess = new List<rbin__Track_Batch_Process__c>();
     public Map<String, String> objectKeyFieldMap = new Map<String, String>();
     private Integer recordNo = 1;
     private String objectName;
+
+    public void execute(SchedulableContext sc) {
+        Database.executeBatch(new createPermanentDeletedRecordBatch(1), 200);
+    }
     /**
      * @description constructor of the batch class
      * @param recNo - record Number
