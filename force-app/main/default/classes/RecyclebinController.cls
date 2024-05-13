@@ -74,7 +74,7 @@ global with sharing class RecyclebinController {
     /**
      * @description Local variables referenced in the page 'bothRecordCount'
      */
-    public integer bothRecordCount {get; set;}
+    //public integer bothRecordCount {get; set;}
 
     /**
      * @description Constructor method below
@@ -91,7 +91,7 @@ global with sharing class RecyclebinController {
         lstCustomSettings = new List<rbin__RecycleSearchObjects__c>();
         strSelectedUser = '';
         recordcount = 0;
-        bothRecordCount = 0;
+        //bothRecordCount = 0;
         checkAdminUser();
         strSearchIn = 'RecycleBin';
         set<string>  setFieldName = new set<string>();
@@ -182,10 +182,9 @@ global with sharing class RecyclebinController {
         SelectOption sopt2 = new SelectOption('PermanentDeletedData', '<span title="It allows search in the Permanent Deleted Data.">Permanent Deleted Data</span>');
         sopt2.setEscapeItem(false);
         opts.add(sopt2);
-        SelectOption sopt3 = new SelectOption('Both', '<span title="The search results are returned along with Permanently Deleted Data and Recycle Bin.">Both</span>');
-        sopt3.setEscapeItem(false);
-        opts.add(sopt3);
-
+        // SelectOption sopt3 = new SelectOption('Both', '<span title="The search results are returned along with Permanently Deleted Data and Recycle Bin.">Both</span>');
+        // sopt3.setEscapeItem(false);
+        // opts.add(sopt3);
         return opts;
     }
 
@@ -347,7 +346,7 @@ global with sharing class RecyclebinController {
             Integer count = 0;
             List<WrapResults> lsttempWrap = new List<WrapResults>();
             recordcount = lstAllDeletedObjects.size();
-            bothRecordCount += lstAllDeletedObjects.size();
+            //bothRecordCount += lstAllDeletedObjects.size();
             Set<Id> contentDocumentIds = new Set<Id>();
             for (SObject objs : lstAllDeletedObjects) {
                 string strobjecttype =  string.valueof(objS.getSObjectType());
@@ -510,7 +509,7 @@ global with sharing class RecyclebinController {
         }
         if(permanentDeletedDataList.size() > 0) {
             recordcount = permanentDeletedDataList.size();
-            bothRecordCount += permanentDeletedDataList.size();
+            //bothRecordCount += permanentDeletedDataList.size();
 
         for (rbin__Deleted_Data__c rec : permanentDeletedDataList) {    
 
@@ -566,7 +565,6 @@ global with sharing class RecyclebinController {
                 disablePurgeButton = true;
                 forPermanentDeleted = true;
                 lstwrapResults = new List<List<WrapResults>>();
-                system.debug('In PDD');
                 searchInPermanentlyDeletedData();
                 if (lstwrapResults.size() > 0) {
                     disableButton = false; 
@@ -574,20 +572,21 @@ global with sharing class RecyclebinController {
                     disableButton = true;
                 }
                 
-            }else if(strSearchIn == 'Both') {
-                disablePurgeButton = false;
-                forPermanentDeleted = false;
-                lstwrapResults = new List<List<WrapResults>>();
-                bothRecordCount = 0;
-                searchInRecycleBin();
-                searchInPermanentlyDeletedData();
-                recordcount = bothRecordCount;
-                if (lstwrapResults.size() > 0) {
-                    disableButton = false; 
-                } else {
-                    disableButton = true;
-                }
             }
+            // else if(strSearchIn == 'Both') {
+            //     disablePurgeButton = false;
+            //     forPermanentDeleted = false;
+            //     lstwrapResults = new List<List<WrapResults>>();
+            //     bothRecordCount = 0;
+            //     searchInRecycleBin();
+            //     searchInPermanentlyDeletedData();
+            //     recordcount = bothRecordCount;
+            //     if (lstwrapResults.size() > 0) {
+            //         disableButton = false; 
+            //     } else {
+            //         disableButton = true;
+            //     }
+            // }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
         }
@@ -712,9 +711,9 @@ global with sharing class RecyclebinController {
                 List<Sobject> lstobjectToRestore = UtilityCls.sObjectsToRestore(recordIds);
                
                 //toAdd restored DateTime
-                TimeZone tz = UserInfo.getTimeZone();
-                DateTime dt = Datetime.now();
-                DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
+                // TimeZone tz = UserInfo.getTimeZone();
+                // DateTime dt = Datetime.now();
+                // DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
                 Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
                 Integer successcount = 0;
                 Integer failcount = 0;
@@ -740,9 +739,9 @@ global with sharing class RecyclebinController {
                     if (srList[i].isSuccess()) {
                         rbin__Deleted_Data__c deleteRecord = allRecordList[i];
                         // add records to the list for delete operation on the record
-                        deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
-                        deleteRecord.rbin__Has_Restored__c = true;
-                        deleteRecord.rbin__Restored_Date_Time__c = currentDt;
+                        // deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
+                        // deleteRecord.rbin__Has_Restored__c = true;
+                        // deleteRecord.rbin__Restored_Date_Time__c = currentDt;
                         recordtoDelete.add(deleteRecord);
                     }
                 }
@@ -760,8 +759,8 @@ global with sharing class RecyclebinController {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ' Failed to restore '+duplicateRecordCount + ' record(s), duplicate record',''));
 
                 }
-                if(Schema.sObjectType.rbin__Deleted_Data__c.isupdateable() && Schema.sObjectType.rbin__Deleted_Data__c.isdeletable()){
-                update recordtoDelete;
+                if(Schema.sObjectType.rbin__Deleted_Data__c.isdeletable()){
+                //update recordtoDelete;
                 delete recordtoDelete;
             }
                 searchRecords();
