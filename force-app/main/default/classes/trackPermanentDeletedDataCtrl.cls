@@ -102,8 +102,8 @@ public with sharing class trackPermanentDeletedDataCtrl {
     @AuraEnabled (cacheable = true)
     public static List<rbin__Permanent_Deleted_Tracking_Object__c> fetchAllRecords() {
         try {
-            list<rbin__Permanent_Deleted_Tracking_Object__c> lst = new list<rbin__Permanent_Deleted_Tracking_Object__c>([Select id,name,rbin__Label__c from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
-            return lst;
+            list<rbin__Permanent_Deleted_Tracking_Object__c> lstPermanentDeletedTrackingObjName = new list<rbin__Permanent_Deleted_Tracking_Object__c>([Select id,name,rbin__Label__c from rbin__Permanent_Deleted_Tracking_Object__c order by Name]);
+            return lstPermanentDeletedTrackingObjName;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -155,16 +155,16 @@ public with sharing class trackPermanentDeletedDataCtrl {
     @AuraEnabled
     public static string scheduleBatch(){
         try {
-            Set<String> batchNames = new Set<String>();
-           List<CronJobDetail> scheduledBatch = [SELECT Id, Name, JobType from CronJobDetail where Name =:'GetPermanentDeletedDataBatch']; 
+
+           List<CronJobDetail> scheduledBatch = [SELECT Id, Name, JobType from CronJobDetail where Name =:'Get Permanent Deleted Data Batch' WITH SECURITY_ENFORCED]; 
 
            
            if(scheduledBatch.size() > 0){
-            
+
             return 'Already Scheduled';
 
            } else {
-            System.schedule('GetPermanentDeletedDataBatch', '0 0 17 * * ? *' , new createPermanentDeletedRecordBatch(1));
+            System.schedule('Get Permanent Deleted Data Batch', '0 0 01 * * ? *' , new createPermanentDeletedRecordBatch(1));
             return 'Scheduled';
 
            }

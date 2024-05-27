@@ -91,7 +91,6 @@ global with sharing class RecyclebinController {
         lstCustomSettings = new List<rbin__RecycleSearchObjects__c>();
         strSelectedUser = '';
         recordcount = 0;
-        //bothRecordCount = 0;
         checkAdminUser();
         strSearchIn = 'RecycleBin';
         set<string>  setFieldName = new set<string>();
@@ -182,9 +181,6 @@ global with sharing class RecyclebinController {
         SelectOption sopt2 = new SelectOption('PermanentDeletedData', '<span title="It allows search in the Permanent Deleted Data.">Permanent Deleted Data</span>');
         sopt2.setEscapeItem(false);
         opts.add(sopt2);
-        // SelectOption sopt3 = new SelectOption('Both', '<span title="The search results are returned along with Permanently Deleted Data and Recycle Bin.">Both</span>');
-        // sopt3.setEscapeItem(false);
-        // opts.add(sopt3);
         return opts;
     }
 
@@ -275,15 +271,13 @@ global with sharing class RecyclebinController {
             if (strWhereParam.length() > 0) {searchquery += ' and ';}
 
             if(defaultSearch == true) {
-                system.debug('Default- '+strSelectedObject);
                 searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT ' + integer.valueof(System.label.Row_Count_Limit) + ' ALL ROWS ';
 
             } else {
-                system.debug('Selected Object- ');
                 searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT 6000 ALL ROWS ';
 
             }
-            //searchquery += string.escapeSingleQuotes(strWhereParam) + ' order by LastModifiedDate desc LIMIT ' + integer.valueof(System.label.Row_Count_Limit) + ' ALL ROWS ';
+            
 
             if (!string.IsBlank(searchquery)) {
 
@@ -419,7 +413,6 @@ global with sharing class RecyclebinController {
         List<SObject> recycleBinRecords = new List<SObject>();
         set<String> setDeletedDataRecIds = new set<String>();
         set<String> setRecIdsToHide = new set<String>();// set to store the record Ids of recycle bin records
-        //List<String> lstSelectedTrackingObjects = new List<String>();
         
         if(!string.isblank(strFromDate) && !string.isblank(strToDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
@@ -431,24 +424,21 @@ global with sharing class RecyclebinController {
             }
         }
 
-        // List<rbin__Deleted_Data__c> lstRbinPermanentDeletedData = [SELECT Id, rbin__Record_ID__c From rbin__Deleted_Data__c WITH SECURITY_ENFORCED];
-        // for (rbin__Deleted_Data__c rbinData : lstRbinPermanentDeletedData) {
-        //     setDeletedDataRecIds.add(rbinData.rbin__Record_ID__c);
-        // }
+       
         
         // get all the records from the recycle bin so that user can not see the same records in permanent delete
         if(string.IsBlank(strSelectedObject)) {
             for (rbin__Permanent_Deleted_Tracking_Object__c trackingObject : lstTrackingObjects) {
                 
                 string objectName = string.valueOf(trackingObject.Name);
-                //lstSelectedTrackingObjects.add(objectName);
+                
                 String myQuery = 'SELECT Id FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE IsDeleted = true ALL ROWS';
                 recycleBinRecords.addAll(Database.query(myQuery));
             }
         } else {
 
             string objectName = strSelectedObject;
-                //lstSelectedTrackingObjects.add(objectName);
+                
                 String myQuery = 'SELECT Id FROM ' + String.escapeSingleQuotes(objectName) + ' WHERE IsDeleted = true ALL ROWS';
                 recycleBinRecords.addAll(Database.query(myQuery));
 
@@ -477,7 +467,7 @@ global with sharing class RecyclebinController {
         
         if (!string.isblank(strFromDate)) {
             Date dtFromDate = Date.NewInstance(Integer.valueof(strFromDate.split('/')[2]),Integer.valueof(strFromDate.split('/')[0]),Integer.valueof(strFromDate.split('/')[1]));
-            system.debug('Date- '+dtFromDate);
+            
             queryString += ' AND DAY_ONLY(rbin__Deleted_Date__c) >= :dtFromDate';
         }
         
@@ -509,7 +499,7 @@ global with sharing class RecyclebinController {
         }
         if(permanentDeletedDataList.size() > 0) {
             recordcount = permanentDeletedDataList.size();
-            //bothRecordCount += permanentDeletedDataList.size();
+            
 
         for (rbin__Deleted_Data__c rec : permanentDeletedDataList) {    
 
@@ -573,20 +563,7 @@ global with sharing class RecyclebinController {
                 }
                 
             }
-            // else if(strSearchIn == 'Both') {
-            //     disablePurgeButton = false;
-            //     forPermanentDeleted = false;
-            //     lstwrapResults = new List<List<WrapResults>>();
-            //     bothRecordCount = 0;
-            //     searchInRecycleBin();
-            //     searchInPermanentlyDeletedData();
-            //     recordcount = bothRecordCount;
-            //     if (lstwrapResults.size() > 0) {
-            //         disableButton = false; 
-            //     } else {
-            //         disableButton = true;
-            //     }
-            // }
+          
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
         }
@@ -710,10 +687,6 @@ global with sharing class RecyclebinController {
                 //here we are calling  UtilityCls class method sObjectsToRestore which will return the sobject list which we have to restore
                 List<Sobject> lstobjectToRestore = UtilityCls.sObjectsToRestore(recordIds);
                
-                //toAdd restored DateTime
-                // TimeZone tz = UserInfo.getTimeZone();
-                // DateTime dt = Datetime.now();
-                // DateTime currentDt = dt.addSeconds((tz.getOffset(dt)/1000));
                 Database.SaveResult[] srList = Database.insert(lstobjectToRestore, false);
                 Integer successcount = 0;
                 Integer failcount = 0;
@@ -738,14 +711,11 @@ global with sharing class RecyclebinController {
                     // Check if the corresponding record should be deleted
                     if (srList[i].isSuccess()) {
                         rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                        // add records to the list for delete operation on the record
-                        // deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
-                        // deleteRecord.rbin__Has_Restored__c = true;
-                        // deleteRecord.rbin__Restored_Date_Time__c = currentDt;
+                        
                         recordtoDelete.add(deleteRecord);
                     }
                 }
-                //undelete lstSobjecttoUndelete;
+                
                 if (successcount > 0) {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm, ' '+successcount + ' selected record(s) from Permanent Deleted Data have been restored successfully.',''));
                 }
@@ -760,7 +730,7 @@ global with sharing class RecyclebinController {
 
                 }
                 if(Schema.sObjectType.rbin__Deleted_Data__c.isdeletable()){
-                //update recordtoDelete;
+                
                 delete recordtoDelete;
             }
                 searchRecords();
@@ -795,9 +765,7 @@ global with sharing class RecyclebinController {
                 List<Sobject> lstUndeleteAll = new List<Sobject>();
                 List<string> recordIdsList = new List<string>(); 
                 
-                //lstwrapResults is list of list of 1000 records. if size is > 1 means it have more than 1000 records.
-                //added by RP on 22-11-2018
-                //if (lstwrapResults.size() > 1) {
+                
                     List<string> lstUndeleteAllRecords = new List<string>();
                     string strval = '';
                     for (List<WrapResults> lstWrapper: lstwrapResults) {
@@ -824,33 +792,8 @@ global with sharing class RecyclebinController {
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
                         return;
                         }
-                //}
                 
-                /*for (List<WrapResults> lstWrapper : lstwrapResults) {
-                    for(WrapResults objW : lstWrapper) {
-                        if (objW.isPermanentlyDeleted == 'No') {    
-                            Sobject objS = Schema.getGlobalDescribe().get(objW.SObjectAPIName).newSObject();
-                            objS.Put('Id', objW.Id);
-                            lstUndeleteAll.add(objS);
-                        } else if (objw.isPermanentlyDeleted == 'Yes') {
-                            recordIds.add(objw.Id);
-                        }
-                    }
-                }
-                if (lstUndeleteAll.size() > 0) {
-                    Database.UndeleteResult[] undeleteresult = Database.Undelete(lstUndeleteAll, false);
-                    //undelete lstUndeleteAll;
-                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' All records have been restored successfully.',''));
-                    searchRecords();*/
-                //} else 
-                // if (!recordIds.isEmpty()) {
-
-                //     BatchMassRestoreAllPrmntDeleted batchToRestoreAll = new BatchMassRestoreAllPrmntDeleted(recordIdsList);
-                //         Database.executeBatch(batchToRestoreAll, 20);
-                //         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Confirm,' A Batch process has been scheduled to restore the records. You may check the batch job status by clicking on the Mass Restore Batch Status tab.',''));
-                //         searchRecords();
-                    
-                // }
+                
             }
         } catch (Exception ex) {
             ApexPages.addMessages(ex);
@@ -891,7 +834,9 @@ global with sharing class RecyclebinController {
         }
     }
     
-    //wrapper class
+    /**
+     * @description wrapper class
+     */
     public class WrapResults {
     /**
      * @description Local variables referenced in the page 'isCheck'

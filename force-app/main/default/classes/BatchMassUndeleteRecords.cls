@@ -79,15 +79,16 @@ public class BatchMassUndeleteRecords Implements Database.batchable<string>, Dat
     public void finish(Database.BatchableContext BC){
 
         List<String> sendtomails = new List<String>();
+        String UserEmail = UserInfo.getUserEmail();
 
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         
-            sendtomails.add('rahangdalebhupesh99@gmail.com'); // Add email of system admin
+            sendtomails.add(UserEmail); // Add email of system admin
         
         email.saveAsActivity = false;
         //email.setTargetObjectId(UserInfo.getUserId());
         email.setToAddresses(sendtomails);
-        email.setSubject('Batch Restore Status');
+        email.setSubject('Batch Restore Records Status');
         
         String body = 'Hi Admin, <br/><br/>' + UserInfo.getName() + ' has processed total ' + totalRecordProcessed + ' for restore. <br/><br/>Below is the details of restored Records,<br/><br/><table border="1" style="border-collapse: collapse; width: 50%; "><tr><th>Description</th><th>Count</b>&nbsp;&nbsp;';
         

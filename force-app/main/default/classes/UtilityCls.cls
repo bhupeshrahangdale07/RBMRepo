@@ -133,12 +133,11 @@ public with sharing class UtilityCls {
             mapContentVersion.put(cVersion.Title, insertedDeletedData.Id);
         }
         
-        if(lstContentVersion.size() > 0){
              // Ensure CRUD permissions on ContentVersion object
-        if (Schema.sObjectType.ContentVersion.isCreateable()) {
+        if (lstContentVersion.size() > 0 && Schema.sObjectType.ContentVersion.isCreateable()) {
             Insert lstContentVersion;    
         }  
-        }
+        
         
         for (ContentVersion cv : [SELECT Id, ContentDocumentId, Title FROM ContentVersion WHERE Title IN :mapContentVersion.keySet() WITH SECURITY_ENFORCED]) {
             ContentDocumentLink cdl = new ContentDocumentLink();
@@ -148,12 +147,11 @@ public with sharing class UtilityCls {
             lstContentDocLnk.add(cdl);
         }
         
-        if(lstContentDocLnk.size() > 0){
              // Ensure CRUD permissions on ContentDocumentLink object
-        if (Schema.sObjectType.ContentDocumentLink.isCreateable()) {
+        if (lstContentDocLnk.size() > 0 && Schema.sObjectType.ContentDocumentLink.isCreateable()) {
             Insert lstContentDocLnk;   
         } 
-        }
+        
     }
 
      /**

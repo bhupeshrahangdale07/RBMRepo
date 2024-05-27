@@ -1,6 +1,9 @@
 <template>
 	<lightning-card>
-		<lightning-button label="Schedule a Batch" variant="brand" class="slds-align_absolute-center" onclick={scheduleBatchClickHandler}></lightning-button>
+		<div slot="actions">
+		<lightning-button label="Schedule a Batch" variant="brand" class="slds-float_right" onclick={scheduleBatchClickHandler} ></lightning-button>
+		<lightning-helptext content="The Schedule a Batch button is used to schedule a batch that will backup all deleted data of the selected object. Please note that you cannot schedule a batch if it is already scheduled." class="slds-m-top_small"></lightning-helptext>
+	</div>
 		<div class="slds-m-around_medium">
 			<div if:true={isLoading} class="slds-is-relative">
 				<div class="backdrop">
@@ -20,9 +23,10 @@
 						1. Please select the objects you would like to track for permanent delete.<br/>
 						2. There will be one batch which will take back up of all deleted data every day for selected objects only. <br/>
 						3. You can select upto 10 objects at a time for permanent delete tracking.<br/>
-						4. For more than 10 selected records the batch will run to restore the records, you can see the batch status in "Mass Restore Batch Status" Tab.<br/>
+						4. When you select more than 10 records to restore, the records will be restored using a batch. You can see the batch status in 'Mass Restore Status' Tab.<br/>
 						5. In "Mass Restore Batch Status" tab if any record get failed to restore then you can check this in "Error Log" Tab.<br/>
 						6. In a master-detail relationship, the child records cannot be restored if their parent records are not available in the org.<br/>
+						7. The <b>"Schedule a Batch"</b> button is used to schedule a batch that will backup all deleted data of the selected object. Please note that you cannot schedule a batch if it is already scheduled.
 						</p>
 					</div>
 					<tr class="slds-line-height_reset">

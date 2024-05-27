@@ -28,7 +28,7 @@ public with sharing class permanentDeletedRecordPreviewController {
         ContentVersion cv = [
             SELECT Id, ContentDocumentId, VersionData, Title
             FROM ContentVersion
-            WHERE Title = :recordId WITH SECURITY_ENFORCED
+            WHERE Title = :recordId WITH SECURITY_ENFORCED LIMIT 1
         ];
 
         String deletedData = (cv.VersionData).toString();
@@ -76,7 +76,7 @@ public with sharing class permanentDeletedRecordPreviewController {
             ContentVersion cv = [
                 SELECT Id, ContentDocumentId, VersionData, Title
                 FROM ContentVersion
-                WHERE Title = :recordId WITH SECURITY_ENFORCED
+                WHERE Title = :recordId WITH SECURITY_ENFORCED LIMIT 1
             ];
 
             String deletedData = (cv.VersionData).toString();
@@ -118,20 +118,14 @@ public with sharing class permanentDeletedRecordPreviewController {
                     }
             }
 
-            // TimeZone tz = UserInfo.getTimeZone();
-            // DateTime dt = Datetime.now();
-            // DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
 
                 Database.SaveResult sr = Database.insert(obj, true);
                 Id recId;
                 if (sr.isSuccess()) {
                     // Record was successfully inserted
                     recId = sr.getId();
-                    // previewRecord.rbin__Restored_Record_Id__c = sr.getId();
-                    // previewRecord.rbin__Has_Restored__c = true;
-                    // previewRecord.rbin__Restored_Date_Time__c =currentDt;
                     if(Schema.sObjectType.rbin__Deleted_Data__c.isdeletable()){
-                        //update previewRecord;
+                        
                         delete previewRecord;
                     }
                         
@@ -140,7 +134,7 @@ public with sharing class permanentDeletedRecordPreviewController {
                          
                 } 
                 return recId;
-               // return null;
+               
         
 
        } catch (Exception e) {

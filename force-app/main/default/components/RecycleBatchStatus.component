@@ -46,7 +46,7 @@
                             <th width="10%"><b>Total Jobs</b></th>
                             <th width="10%"><b>Total Jobs Processed</b></th>
                             <th width="10%"><b>Number of Errors</b></th>
-                            <th width="30%"><b>Batch Progess</b></th>
+                            <th width="30%"><b>Batch Progress</b></th>
                             <th width="10%"><b>Completed on</b></th>
                         </tr>
                     </thead>

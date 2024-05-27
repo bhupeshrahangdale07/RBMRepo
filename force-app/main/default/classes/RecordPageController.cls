@@ -116,14 +116,11 @@ public with sharing class RecordPageController {
                         }
                         lstAllDetails.add(objWrapper);
                         
-                        //if(fieldtype.getType() == Schema.DisplayType.Date) 
-                        // else if(fieldtype.getType() == Schema.DisplayType.DateTime) 
                         count++;
                     }
                 }
-                system.debug('List of Wrapper- '+lstAllDetails);
             }
-            //lstAllDetails.sort();
+           
         }
     }
     
@@ -131,7 +128,7 @@ public with sharing class RecordPageController {
         try {
             Sobject objS = Schema.getGlobalDescribe().get(objectname).newSObject();
             objS.Put('Id',recordid);
-            //undelete objS;
+            
             Database.UndeleteResult undeleteresult = Database.Undelete(objS, false);
 
             List<rbin__Deleted_Data__c> lstDeletedDataRecords = [Select rbin__Record_ID__c from rbin__Deleted_Data__c Where rbin__Record_ID__c =: recordid WITH SECURITY_ENFORCED];

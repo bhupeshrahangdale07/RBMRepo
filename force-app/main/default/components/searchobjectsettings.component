@@ -275,13 +275,11 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="Can we restore the records deleted before 15 days?" class="slds-truncate">Can we restore the records deleted before 15 days?</span>
+                                                            <span title="How do I restore deleted records using the RBM app?" class="slds-truncate">How do I restore deleted records using the RBM app?</span>
                                                         </button>
                                                     </h3>
                                                 </div>
-                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">No, Deleted records remain in the recycle bin for
-                                                    <a target="_blank" href="https://help.salesforce.com/articleView?id=home_delete.htm&type=5">15 days</a>, and can be restored during that time. We cannot restore the
-                                                    permanently deleted records without contacting salesforce. </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">Navigate to the RBM app, select the records you wish to restore, and click the "Restore" button. If you're restoring a large number of records, use the "Restore All" feature.</div>
                                             </section>
                                         </li>
                                         <li class="slds-accordion__list-item">
@@ -352,7 +350,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="Can I preview the deleted record before restoring it from the recycle bin?" class="slds-truncate">Why Reports and Dashboards objects are not supported in this app?</span>
+                                                            <span title="Why Reports and Dashboards objects are not supported in this app?" class="slds-truncate">Why Reports and Dashboards objects are not supported in this app?</span>
                                                         </button>
                                                     </h3>
                                                     
@@ -374,7 +372,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="Can I preview the deleted record before restoring it from the recycle bin?" class="slds-truncate">What are the common warning/error messages that I may encounter while
+                                                            <span title="What are the common warning/error messages that I may encounter while using this app?" class="slds-truncate">What are the common warning/error messages that I may encounter while
                                                                 using this app?</span>
                                                         </button>
                                                     </h3>
@@ -397,7 +395,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="Can I preview the deleted record before restoring it from the recycle bin?" class="slds-truncate">Is it possible to keep track of the deleted records?</span>
+                                                            <span title="Is it possible to keep track of the deleted records?" class="slds-truncate">Is it possible to keep track of the deleted records?</span>
                                                         </button>
                                                     </h3>
                                                     
@@ -414,7 +412,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="Can I preview the deleted record before restoring it from the recycle bin?" class="slds-truncate">How many objects can be tracked for deletion?</span>
+                                                            <span title="How many objects can be tracked for deletion?" class="slds-truncate">How many objects can be tracked for deletion?</span>
                                                         </button>
                                                     </h3>
                                                     
@@ -431,7 +429,147 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="Can I preview the deleted record before restoring it from the recycle bin?" class="slds-truncate">I’ve additional questions related to this application, how can I
+                                                            <span title="What is 'Track Permanently Deleted Data'?" class="slds-truncate">What is 'Track Permanently Deleted Data'?</span>
+                                                        </button>
+                                                    </h3>
+                                                    
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-05" aria-hidden="true">'Track Permanently Deleted Data' is a feature within the RBM (Recycle Bin Manager) app that allows users to monitor and keep a record of objects that have been permanently deleted from the Salesforce organization. By selecting specific objects in the 'Track Permanently Deleted Data' tab, users can ensure that any records deleted permanently are tracked and logged for future reference. This helps in maintaining data integrity and allows for recovery or review of deleted records if needed.
+                                                </div>
+                                            </section>
+                                        </li>
+    
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="How to track permanently Deleted Records?" class="slds-truncate">How to track permanently Deleted Records?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">To track permanently deleted records, please select the objects you wish to monitor in the 'Track Permanently Deleted Data' tab.You can select upto 10 objects only.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="Where I can see the Permanently Deleted Records?" class="slds-truncate">Where I can see the Permanently Deleted Records?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">Using the 'Permanent Deleted Data' filter option in Search In, you can look for permanently deleted records.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="How to restore Permanetly Deleted Records?" class="slds-truncate">How to restore Permanetly Deleted Records?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">You can use 'Restore Selected' or 'Restore All' button to restore the records.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="How will I get the Error from 'Mass Restore Batch'?" class="slds-truncate">How do I sync an error that occurred from the 'Mass Restore Batch'?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">You can see the errors in 'Error Log' Tab. Also User will get email of success and failed records.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="When I can see the tracked records in Permanent Deleted Data?" class="slds-truncate">When will I be able to view the tracked records in Permanent Deleted Data?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">You can see the records in Permanent Deleted Data after 15 day of deleting from salesforce or when you purge record from Recycle Bin then after some time.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="What are 'Error Logs'?" class="slds-truncate">What are 'Error Logs'?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">You can see the error of failed records in 'Error Log' </div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="What are the common warning/error messages that I may encounter while using Permanent Deletd data?" class="slds-truncate">What are the common warning/error messages that I may encounter while using Permanent Deletd data?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">1."Entity is not in the recycle" :- This message indicates that the record you are trying to restore has its parent record deleted or not present in the organization.<br/>
+                                                    2."Failed to restore the record(s), duplicate record'" :- This message indicates that the same record is present in the org and due to duplicate rule you can not restore the record.<br/>
+                                                    3."Failed to restore the record(s), as the parent record is not available for this records Or Invalid cross reference id" :- This message indicates that the record you are trying to restore has its parent record deleted or not present in the organization.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-02">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="What are limitations for 'Developer Edition'?" class="slds-truncate">What are limitations for 'Developer Edition'?</span>
+                                                        </button>
+                                                    </h3>
+                                                </div>
+                                                <div class="slds-accordion__content" id="accordion-details-02" aria-hidden="true">For 'Developer Edition' only 2500 records can be tracked for a day.</div>
+                                            </section>
+                                        </li>
+                                        <li class="slds-accordion__list-item">
+                                            <section class="slds-accordion__section">
+                                                <div class="slds-accordion__summary">
+                                                    <h3 class="slds-accordion__summary-heading">
+                                                        <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-expanded="false" aria-controls="accordion-details-05">
+                                                            <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
+                                                            </svg>
+                                                            <span title="I’ve additional questions related to this application, how can I contact you?" class="slds-truncate">I’ve additional questions related to this application, how can I
                                                                 contact you?</span>
                                                         </button>
                                                     </h3>

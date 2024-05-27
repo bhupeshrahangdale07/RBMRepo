@@ -90,10 +90,7 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         }
 
         List<rbin__Error_Log__c> lstErrorRecords = new List<rbin__Error_Log__c>();
-        // Add restored DateTime
-        // TimeZone tz = UserInfo.getTimeZone();
-        // DateTime dt = Datetime.now();
-        // DateTime currentDt = dt.addSeconds((tz.getOffset(dt) / 1000));
+        
 
         Database.SaveResult[] srList = Database.insert(sobjecttoUndeleteList, false);
         
@@ -103,9 +100,7 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
             if (srList[i].isSuccess()) {
                 totalSuccessRecords +=1;
                 rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                // deleteRecord.rbin__Restored_Record_Id__c = srList[i].getId();
-                // deleteRecord.rbin__Has_Restored__c = true;
-                // deleteRecord.rbin__Restored_Date_Time__c = currentDt;
+                
                 recordtoDelete.add(deleteRecord);
 
             } else {
@@ -114,16 +109,16 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
                 errorObj.rbin__Error_Message__c = String.valueOf(srList[i].getErrors());
                 errorObj.rbin__Failed_Record__c = String.valueOf(sobjecttoUndeleteList[i]);
                 lstErrorRecords.add(errorObj);
-                // rbin__Deleted_Data__c deleteRecord = allRecordList[i];
-                // deleteRecord.rbin__Has_Restored__c = false;
+                
 
             }
         
         }
         
-        
+        if(Schema.sObjectType.rbin__Error_Log__c.isCreateable()) {
+
         insert lstErrorRecords;
-        //Database.update(recordtoDelete, false);
+    }
         Database.delete(recordtoDelete, false);
         List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id IN :setRecordIdsToPurge ALL ROWS];
         if(lstDeletedRecords.size() > 0){
@@ -138,15 +133,15 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
     public void finish(Database.BatchableContext bc) {
         // Add finish logic if needed
         List<String> sendtomails = new List<String>();
+        String UserEmail = UserInfo.getUserEmail();
 
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         
-            sendtomails.add('rahangdalebhupesh99@gmail.com'); // Add email of system admin
+            sendtomails.add(UserEmail); // Add email of system admin
         
         email.saveAsActivity = false;
-        //email.setTargetObjectId(UserInfo.getUserId());
         email.setToAddresses(sendtomails);
-        email.setSubject('Batch Restore Status');
+        email.setSubject('Batch Restore Records Status');
         
         String body = 'Hi Admin, <br/><br/>' + UserInfo.getName() + ' has processed total ' + totalRecordProcessed + ' for restore. <br/><br/>Below is the details of restored Records,<br/><br/><table border="1" style="border-collapse: collapse; width: 50%; "><tr><th>Description</th><th>Count</b>&nbsp;&nbsp;';
         

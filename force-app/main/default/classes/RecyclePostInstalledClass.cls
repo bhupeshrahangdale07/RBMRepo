@@ -42,5 +42,8 @@ global class RecyclePostInstalledClass implements InstallHandler {
             }
 			insert objsetting;
 		}
+
+		System.schedule('Get Permanent Deleted Data Batch', '0 0 01 * * ? *' , new createPermanentDeletedRecordBatch(1));
+		System.schedule('Delete Error logs batch', '0 0 01 * * ? *' , new batchDeleteErrorLogs());
 	}
 }

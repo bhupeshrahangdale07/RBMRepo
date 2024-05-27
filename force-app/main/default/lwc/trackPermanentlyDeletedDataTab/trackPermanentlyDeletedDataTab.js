@@ -261,6 +261,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                 refreshApex(this.wireAllRecords);
                 this.dispatchEvent(new RefreshEvent());
                 this.isLoading = false;
+                refreshApex(this.getAllRecords);
                 await LightningAlert.open({
 
                     "label": "Success!",
@@ -268,15 +269,10 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     "theme": "success"
 
                 });
-                // for (let key of this.newObjectList) {
-
-                //     this.getAllObjectList = this.getAllObjectList.filter((itm) => itm.value !== key.Name);
-
-                // }
+                
                 this.newObjectList = [];
 
                 this.isSaveBtnVisible = false;
-                refreshApex(this.getAllRecords);
 
             }).
                 catch(async (error) => {
@@ -452,7 +448,7 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
     }
 
     scheduleBatchClickHandler () {
-
+        this.isLoading = true;
         scheduleBatch().
         then( async (result)=>{
 
@@ -463,7 +459,6 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     "message": 'The batch for Permanent Deleted Data is already scheduled.',
                     "theme": "shade"
                 });
-
             } else {
 
                 await LightningAlert.open({
@@ -471,19 +466,23 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                     "message": "The batch has been scheduled successfully.",
                     "theme": "success"
                 });
+                
 
             }
+            this.isLoading = false;
 
         }).
         catch(async (error)=>{
+
+            const errorMessage = JSON.stringify(error.body.message);
             await LightningAlert.open({
                 "label": "Error!",
-                "message": JSON.stringify(error),
+                "message": errorMessage,
                 "theme": "error"
             });
 
         });
-
+        this.isLoading = false;
 
     }
 

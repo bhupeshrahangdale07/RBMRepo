@@ -52,6 +52,7 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
             FROM rbin__Permanent_Deleted_Tracking_Object__c
             WHERE rbin__Record_No__c = :recordNo LIMIT 1
         ]);
+        if(lstTrackDeletedObjects.size() > 0) {
 
         String objName = (String) lstTrackDeletedObjects[0].get('Name');
         objectName = objName;
@@ -65,16 +66,25 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         if (lstTrackBatchProcess.size() > 0 && lstTrackBatchProcess[0].Last_Run_Batch_Time__c != null) {
             DateTime lastRunBatch = lstTrackBatchProcess[0].rbin__Last_Run_Batch_Time__c;
 
-            // if(org.OrganizationType == 'Developer Edition'){
-            // Content Publication limtis are not avalaible to check for org. For Developer Edition the Content Publication limtis is 2500 hence added Limit of 2500 for Developer Edition in query. 
-            // myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch LIMIT 2500 ALL ROWS';
+             if(org.OrganizationType == 'Developer Edition'){
+             //Content Publication limtis are not avalaible to check for org. For Developer Edition the Content Publication limtis is 2500 hence added Limit of 2500 for Developer Edition in query. 
+             myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch LIMIT 2500 ALL ROWS';
 
-            // } else {
+             } else {
 
-            // }
-            myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch ALL ROWS';
+                myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch ALL ROWS';
+
+             }
+            
         }
         return Database.getQueryLocator(myQuery);
+        
+    }else{
+
+        System.abortJob(bc.getJobId());
+        return null;
+    }
+
     }
 
     /**
