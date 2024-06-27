@@ -68,11 +68,11 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
 
              if(org.OrganizationType == 'Developer Edition'){
              //Content Publication limtis are not avalaible to check for org. For Developer Edition the Content Publication limtis is 2500 hence added Limit of 2500 for Developer Edition in query. 
-             myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch LIMIT 2500 ALL ROWS';
+             myQuery = 'SELECT ' + String.join(fieldNames, ', ') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch LIMIT 2500 ALL ROWS';
 
              } else {
 
-                myQuery = 'SELECT ' + String.join(fieldNames, ',') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch ALL ROWS';
+                myQuery = 'SELECT ' + String.join(fieldNames, ', ') + ' FROM ' + objName + ' WHERE IsDeleted = true and LastModifiedDate > :lastRunBatch ALL ROWS';
 
              }
             
@@ -173,7 +173,60 @@ public class createPermanentDeletedRecordBatch Implements Database.Batchable<sob
         // Insert/Update Deleted Data
         Database.Upsert(upsertToDeletedData, false);
 
-        UtilityCls.createFileAttachment(mapRecordData, setExistedRecordIds);
+        createFileAttachment(mapRecordData, setExistedRecordIds);
+    }
+     /**
+     *  @description Create an attachment to store record data for the deleted record.
+     *
+     * @param mapDeletedData - Map of deleted record data.
+     * @param setRecIds - Set of record IDs.
+     */
+    public static void createFileAttachment(Map<String, String> mapDeletedData, Set<String> setRecIds) {
+        List<ContentDocument> existedContentDoc = [SELECT Id, Title FROM ContentDocument WHERE Title IN :setRecIds];
+        
+        if(existedContentDoc.size() > 0){
+            Delete existedContentDoc;
+            Database.EmptyRecyclebin(existedContentDoc);
+        }
+       
+        Map<String, Id> mapContentVersion = new Map<String, Id>();
+        List<ContentVersion> lstContentVersion = new List<ContentVersion>();
+        List<ContentDocumentLink> lstContentDocLnk = new List<ContentDocumentLink>();
+
+        for (rbin__Deleted_Data__c insertedDeletedData : [
+            SELECT Id, rbin__Record_ID__c
+            FROM rbin__Deleted_Data__c
+            WHERE rbin__Record_ID__c IN :mapDeletedData.keySet()
+        ]) {
+            ContentVersion cVersion = new ContentVersion();
+            cVersion.ContentLocation = 'S';
+            cVersion.PathOnClient = insertedDeletedData.rbin__Record_ID__c + '.txt';
+            cVersion.Origin = 'C';
+            cVersion.Title = insertedDeletedData.rbin__Record_ID__c;
+            Blob body = Blob.valueOf(mapDeletedData.get(insertedDeletedData.rbin__Record_ID__c));
+            cVersion.VersionData = body;
+            lstContentVersion.add(cVersion);
+            mapContentVersion.put(cVersion.Title, insertedDeletedData.Id);
+        }
+        
+        if (lstContentVersion.size() > 0) {
+            Insert lstContentVersion;    
+        }  
+        
+        for (ContentVersion cv : [SELECT Id, ContentDocumentId, Title FROM ContentVersion WHERE Title IN :mapContentVersion.keySet()]) {
+            ContentDocumentLink cdl = new ContentDocumentLink();
+            cdl.ContentDocumentId = cv.ContentDocumentId;
+            cdl.LinkedEntityId = mapContentVersion.get(cv.Title);
+            cdl.ShareType = 'I';
+            cdl.Visibility = 'AllUsers';
+
+            lstContentDocLnk.add(cdl);
+        }
+        
+        if (lstContentDocLnk.size() > 0 ) {
+            Insert lstContentDocLnk;   
+        } 
+        
     }
      /**
      * @description finish method which will call the batch every time as per the record number

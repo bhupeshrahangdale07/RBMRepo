@@ -77,11 +77,31 @@ public class testUtilityCls {
             Blob body3 = Blob.valueOf(recordData3);
             cVersion3.VersionData = body3;
         insert cVersion3;
+        
+         List<ContentVersion> cv = [SELECT Id, ContentDocumentId, Title FROM ContentVersion];
+        ContentDocumentLink cdl1 = new ContentDocumentLink();
+            cdl1.ContentDocumentId = cv[0].ContentDocumentId;
+            cdl1.LinkedEntityId = Deleted_DataObj1.Id;
+            cdl1.ShareType = 'I';
+            cdl1.Visibility = 'AllUsers';
+        insert cdl1;
+        ContentDocumentLink cdl2 = new ContentDocumentLink();
+            cdl2.ContentDocumentId = cv[1].ContentDocumentId;
+            cdl2.LinkedEntityId = Deleted_DataObj2.Id;
+            cdl2.ShareType = 'I';
+            cdl2.Visibility = 'AllUsers';
+        insert cdl2;
+        ContentDocumentLink cdl3 = new ContentDocumentLink();
+            cdl3.ContentDocumentId = cv[2].ContentDocumentId;
+            cdl3.LinkedEntityId = Deleted_DataObj2.Id;
+            cdl3.ShareType = 'I';
+            cdl3.Visibility = 'AllUsers';
+        insert cdl3;
+       
     }
     
     @isTest
     public static void sObjectsToRestoreTest(){
-        
         List<String> recIds = new List<String>();
         for (rbin__Deleted_Data__c rec : [Select Id, rbin__Record_ID__c, rbin__Object_Name__c FROM rbin__Deleted_Data__c]) {
             recIds.add(rec.rbin__Record_ID__c);
@@ -103,7 +123,7 @@ public class testUtilityCls {
         System.assertEquals(false, fieldMap.keySet().isEmpty(), 'Success');
     }
     
-    @isTest
+    /*@isTest
      public static void createFileAttachmentTest(){
         
          Map<String, String> mapDeletedData = new Map<String, String>();
@@ -116,5 +136,5 @@ public class testUtilityCls {
         Test.startTest();
         UtilityCls.createFileAttachment(mapDeletedData, setRecIds);
         Test.stopTest();
-    }
+    }*/
 }

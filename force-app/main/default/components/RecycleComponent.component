@@ -555,7 +555,7 @@
                         } else if (rselectedcount > 0) {
                             var d = getMessagebox();
                             d = d.replace('{title}', 'Restore Selected Confirmation');
-                            d = d.replace('{message}', 'This will restore ' + rselectedcount + ' selected records below, Are you sure you want to Restore selected?');
+                            d = d.replace('{message}', 'This will restore ' + rselectedcount + ' selected records below, Are you sure you want to Restore Selected?');
                             var btnsave = '<button class="slds-button slds-button--neutral slds-button--brand btnUndeleteSelected" >Ok</button>';
                             var btnclose = '<button class="slds-button slds-button--neutral btnCloseMessagebox">Close</button>';
                             d = d.replace('{cancelbutton}', btnclose);

@@ -9,6 +9,6 @@
 
 -->
 <aura:application extends="ltng:outApp" access="GLOBAL">
-    <aura:dependency resource="permanentlyDeletedRecordPreview" />
-    <aura:dependency resource="trackPermanentlyDeletedDataTab" />
+    <aura:dependency resource="rbin:permanentlyDeletedRecordPreview" />
+    <aura:dependency resource="rbin:trackPermanentlyDeletedDataTab" />
 </aura:application>

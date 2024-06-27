@@ -492,7 +492,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="How will I get the Error from 'Mass Restore Batch'?" class="slds-truncate">How do I sync an error that occurred from the 'Mass Restore Batch'?</span>
+                                                            <span title="How do I sync an error that occurred from the 'Mass Restore Batch'?" class="slds-truncate">How do I sync an error that occurred from the 'Mass Restore Batch'?</span>
                                                         </button>
                                                     </h3>
                                                 </div>
@@ -507,7 +507,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="When I can see the tracked records in Permanent Deleted Data?" class="slds-truncate">When will I be able to view the tracked records in Permanent Deleted Data?</span>
+                                                            <span title="When will I be able to view the tracked records in Permanent Deleted Data?" class="slds-truncate">When will I be able to view the tracked records in Permanent Deleted Data?</span>
                                                         </button>
                                                     </h3>
                                                 </div>
@@ -537,7 +537,7 @@
                                                             <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
                                                                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, "/assets/icons/utility-sprite/svg/symbols.svg#switch")}" />
                                                             </svg>
-                                                            <span title="What are the common warning/error messages that I may encounter while using Permanent Deletd data?" class="slds-truncate">What are the common warning/error messages that I may encounter while using Permanent Deletd data?</span>
+                                                            <span title="What are the common warning/error messages that I may encounter while using Permanent Deleted data?" class="slds-truncate">What are the common warning/error messages that I may encounter while using Permanent Deleted data?</span>
                                                         </button>
                                                     </h3>
                                                 </div>
@@ -690,7 +690,83 @@
                 </div>
                 
             </div>
-            
+            <style>
+                .slds-popover__body,
+                .slds-popover__footer,
+                .slds-popover__header {
+                    position: relative;
+                    padding: .5rem .75rem;
+                    word-wrap: break-word
+                }
+        
+                .slds-popover {
+                    position: relative;
+                    border-radius: .25rem;
+                    width: 20rem;
+                    min-height: 2rem;
+                    z-index: 6000;
+                    background-color: #fff;
+                    display: inline-block;
+                    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, .16);
+                    border: 1px solid #d9dbdd
+                }
+        
+                .slds-popover--tooltip,
+                .slds-popover_tooltip {
+                    width: auto;
+                    max-width: 20rem;
+                    background: #16325c;
+                    border: 0
+                }
+                .slds-popover--tooltip .slds-popover__body,
+                .slds-popover_tooltip .slds-popover__body {
+                    font-size: .75rem;
+                    color: #fff
+                }
+        
+                .slds-fall-into-ground {
+                    visibility: hidden;*
+                    opacity: 0;
+                    transform: translate(0, 0);
+                    transition: opacity .1s linear, visibility .1s linear, transform .1s linear;
+                    will-change: transform
+                }
+        
+                .slds-nubbin--bottom-left:before,
+                .slds-nubbin_bottom-left-corner:before,
+                .slds-nubbin_bottom-left:before {
+                    width: 1rem;
+                    height: 1rem;
+                    position: absolute;
+                    transform: rotate(45deg);
+                    content: '';
+                    background-color: inherit;
+                    bottom: -.5rem;
+                    margin-left: -.5rem
+                }
+        
+                .slds-nubbin--bottom-left:after,
+                .slds-nubbin--bottom-left:before,
+                .slds-nubbin_bottom-left-corner:after,
+                .slds-nubbin_bottom-left-corner:before,
+                .slds-nubbin_bottom-left:after,
+                .slds-nubbin_bottom-left:before {
+                    left: 1.5rem;
+                    top: 100%;
+                    margin-top: -.5rem
+                }
+        
+                .slds-nubbin--bottom-left:after,
+                .slds-nubbin_bottom-left-corner:after,
+                .slds-nubbin_bottom-left:after {
+                    box-shadow: 2px 2px 4px 0 rgba(0, 0, 0, .16);
+                    z-index: -1
+                }
+        
+                .slds-popover :last-child {
+                    margin-bottom: 0
+                }
+            </style>
             <script>
             Visualforce.remoting.timeout = 120000; // Set timeout at page level
             
@@ -723,9 +799,10 @@
                 });
 
                 function openPermntDelTab(){
+                    
                    // $('#perdeltbody').empty();
-                    $Lightning.use("c:permanentDeletedDataApp", function() {
-        $Lightning.createComponent("c:trackPermanentlyDeletedDataTab",
+                    $Lightning.use("rbin:permanentDeletedDataApp", function() {
+        $Lightning.createComponent("rbin:trackPermanentlyDeletedDataTab",
           { 
           },
           "LightningComponentid",

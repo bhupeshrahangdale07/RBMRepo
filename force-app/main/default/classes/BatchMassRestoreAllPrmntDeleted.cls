@@ -39,16 +39,21 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         List<SObject> sobjecttoUndeleteList = new List<SObject>();
         List<rbin__Deleted_Data__c> allRecordList = new List<rbin__Deleted_Data__c>();
         List<rbin__Deleted_Data__c> recordtoDelete = new List<rbin__Deleted_Data__c>();
-        Set<String> setDeletedRecIds = new Set<String>();
         Map<String, String> mapVersionData = new Map<String, String>();
-        Set<String> setRecordIdsToPurge = new Set<String>();
+        Set<String> setDeletedDataIds = new Set<String>();
+        Set<String> setDeletedDataRecIds = new Set<String>();
 
         for (rbin__Deleted_Data__c rec : lstRecords) {
-            setDeletedRecIds.add(rec.rbin__Record_ID__c);
-            setRecordIdsToPurge.add(rec.Id);
+            setDeletedDataIds.add(rec.Id);
         }
 
-        for (ContentVersion recVersionData : [SELECT Id, ContentDocumentId, VersionData, Title FROM ContentVersion WHERE Title IN :setDeletedRecIds]) {
+        Set<string> contentDocIds = new Set<string>();
+        List<ContentDocumentLink> cdlRecords = [SELECT ContentDocumentId from ContentDocumentLink where LinkedEntityId In :setDeletedDataIds ];
+        for (ContentDocumentLink cdl : cdlRecords) {
+            contentDocIds.add(cdl.ContentDocumentId);
+        }
+
+        for (ContentVersion recVersionData : [SELECT Id, ContentDocumentId, VersionData, Title FROM ContentVersion WHERE ContentDocumentId IN :contentDocIds]) {
             String versionDataToString = (recVersionData.VersionData).toString();
             mapVersionData.put(recVersionData.Title, versionDataToString);
         }
@@ -78,7 +83,13 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
                             DateTime fieldValue = DateTime.valueOf(dateField.replace('T',' '));
                             obj.put(fieldName, fieldValue);
 
-                        } else{
+                        } else if(fieldDescribe.getType() == Schema.DisplayType.base64){
+
+                            String base64Value = String.valueOf(jsonMap.get(fieldName));
+                            Blob fieldValue = Blob.valueOf(base64Value);
+                            obj.put(fieldName, fieldValue);
+
+                        }else{
                             obj.put(fieldName, jsonMap.get(fieldName));
                         }
                     }
@@ -120,9 +131,9 @@ public class BatchMassRestoreAllPrmntDeleted implements Database.Batchable<sObje
         insert lstErrorRecords;
     }
         Database.delete(recordtoDelete, false);
-        List<rbin__Deleted_Data__c> lstDeletedRecords = [Select Id, Name From rbin__Deleted_Data__c Where isDeleted = true AND Id IN :setRecordIdsToPurge ALL ROWS];
-        if(lstDeletedRecords.size() > 0){
-            Database.EmptyRecyclebin(lstDeletedRecords);
+       
+        if(recordtoDelete.size() > 0){
+            Database.EmptyRecyclebin(recordtoDelete);
         }
         
     }

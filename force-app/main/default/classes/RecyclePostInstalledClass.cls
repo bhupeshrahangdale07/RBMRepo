@@ -43,7 +43,19 @@ global class RecyclePostInstalledClass implements InstallHandler {
 			insert objsetting;
 		}
 
-		System.schedule('Get Permanent Deleted Data Batch', '0 0 01 * * ? *' , new createPermanentDeletedRecordBatch(1));
+		rbin__Track_Batch_Process__c trackBatchProcess = new rbin__Track_Batch_Process__c();
+		if(Schema.sObjectType.rbin__Track_Batch_Process__c.fields.rbin__Last_Run_Batch_Time__c.isCreateable()){
+			trackBatchProcess.Name = 'Track Permanent Deleted Data Batch';
+		trackBatchProcess.rbin__Last_Run_Batch_Time__c = system.now();
+		}
+		insert trackBatchProcess;
+
+		//System.schedule('Get Permanent Deleted Data Batch', '0 0 01 * * ? *' , new createPermanentDeletedRecordBatch(1));
+		System.schedule('Get Permanent Deleted Data Batch 1', '0 0 0/1 * * ?', new createPermanentDeletedRecordBatch(1));
+		System.schedule('Get Permanent Deleted Data Batch 2', '0 15 0/1 * * ?', new createPermanentDeletedRecordBatch(1));
+		System.schedule('Get Permanent Deleted Data Batch 3', '0 30 0/1 * * ?', new createPermanentDeletedRecordBatch(1));
+		System.schedule('Get Permanent Deleted Data Batch 4', '0 45 0/1 * * ?', new createPermanentDeletedRecordBatch(1));
+
 		System.schedule('Delete Error logs batch', '0 0 01 * * ? *' , new batchDeleteErrorLogs());
 	}
 }

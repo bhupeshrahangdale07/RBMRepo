@@ -50,6 +50,21 @@ public class testBatchMassRestoreAllPrmntDeleted {
             Blob body2 = Blob.valueOf(recordData2);
             cVersion2.VersionData = body2;
         insert cVersion2;
+        
+         List<ContentVersion> cv = [SELECT Id, ContentDocumentId, Title FROM ContentVersion];
+        ContentDocumentLink cdl1 = new ContentDocumentLink();
+            cdl1.ContentDocumentId = cv[0].ContentDocumentId;
+            cdl1.LinkedEntityId = Deleted_DataObj1.Id;
+            cdl1.ShareType = 'I';
+            cdl1.Visibility = 'AllUsers';
+        insert cdl1;
+        ContentDocumentLink cdl2 = new ContentDocumentLink();
+            cdl2.ContentDocumentId = cv[1].ContentDocumentId;
+            cdl2.LinkedEntityId = Deleted_DataObj2.Id;
+            cdl2.ShareType = 'I';
+            cdl2.Visibility = 'AllUsers';
+        insert cdl2;
+        
     }
     @isTest
     public static void BatchMassRestoreAllPrmntDeletedTest(){

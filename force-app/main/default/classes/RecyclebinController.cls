@@ -175,7 +175,7 @@ global with sharing class RecyclebinController {
     public List<SelectOption> getRowOptions() {
         List<SelectOption> opts = new List<SelectOption>();
 
-        SelectOption sopt1 = new SelectOption('RecycleBin', '<span title="It allows search in the recycle bin.">Recycle Bin</span>');
+        SelectOption sopt1 = new SelectOption('RecycleBin', '<span title="It allows search in the Recycle Bin.">Recycle Bin</span>');
         sopt1.setEscapeItem(false);
         opts.add(sopt1);
         SelectOption sopt2 = new SelectOption('PermanentDeletedData', '<span title="It allows search in the Permanent Deleted Data.">Permanent Deleted Data</span>');
@@ -573,6 +573,8 @@ global with sharing class RecyclebinController {
      * @description method to clear the pre-selected filters 
      */
     public void clear() {
+        disableButton = true;
+        disablePurgeButton = true;
         strKeyword = '';
         strFromDate = '';
         strToDate = '';

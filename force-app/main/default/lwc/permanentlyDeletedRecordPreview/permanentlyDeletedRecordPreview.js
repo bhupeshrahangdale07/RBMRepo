@@ -64,10 +64,10 @@ export default class PermanentlyDeletedRecordPreview extends NavigationMixin(Lig
 
         }).
             catch(async (error) => {
-
+                const errorMessage = JSON.stringify(error.body.message);
                 await LightningAlert.open({
                     "label": "Error",
-                    "message": "Failed to load a record -" + error,
+                    "message": "Failed to load a record -" + errorMessage,
                     "theme": "error"
                 });
 
@@ -98,13 +98,26 @@ export default class PermanentlyDeletedRecordPreview extends NavigationMixin(Lig
 
         }).
             catch(async (error) => {
+                
+                var errormsg = error.body.message;
+                if(errormsg.includes("ENTITY_IS_DELETED")){
+                    this.isLoading = true;
+                await LightningAlert.open({
+                    "label": "Error",
+                    "message": "Failed to restore a record, as the parent record is not available for this records Or Invalid cross reference id.",
+                    "theme": "error"
+                });
 
+                }else{
+                
                 this.isLoading = true;
                 await LightningAlert.open({
                     "label": "Error",
                     "message": error.body.message,
                     "theme": "error"
                 });
+                    
+            }
                 this.isLoading = false;
 
             });

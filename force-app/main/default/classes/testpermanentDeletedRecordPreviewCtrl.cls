@@ -27,6 +27,15 @@ public class testpermanentDeletedRecordPreviewCtrl {
             Blob body = Blob.valueOf(recordData);
             cVersion.VersionData = body;
         insert cVersion;
+        
+        ContentVersion cv = [SELECT Id, ContentDocumentId, Title FROM ContentVersion LIMIT 1];
+        ContentDocumentLink cdl = new ContentDocumentLink();
+            cdl.ContentDocumentId = cv.ContentDocumentId;
+            cdl.LinkedEntityId = Deleted_DataObj.Id;
+            cdl.ShareType = 'I';
+            cdl.Visibility = 'AllUsers';
+        insert cdl;
+
     }
     
     @isTest

@@ -394,9 +394,10 @@ export default class TrackPermanentlyDeletedDataTab extends LightningElement {
                         this.isSaveBtnVisible = false;
                     }).
                     catch( async (error) => {
+                        const errorMessage = JSON.stringify(error.body.message);
                         await LightningAlert.open({
                             "label": "Error!",
-                            "message": error,
+                            "message": errorMessage,
                             "theme": "error"
                         });
 

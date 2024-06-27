@@ -7,7 +7,7 @@
  * --------------------------------------------------------------------------------------------------------------
  */
 
-public with sharing class permanentDeletedRecordPreviewController {
+public class permanentDeletedRecordPreviewController {
 
     /** 
      *  @description This method get called for preview of the record
@@ -24,11 +24,13 @@ public with sharing class permanentDeletedRecordPreviewController {
             WHERE rbin__Record_ID__c = :recordId
              WITH SECURITY_ENFORCED LIMIT 1
         ];
+
+        ContentDocumentLink conDocLinkRec = [SELECT ContentDocumentId from ContentDocumentLink where LinkedEntityId =: deletedRecord.Id LIMIT 1];
         // will get the JSON data of the record from ContentVersion
         ContentVersion cv = [
             SELECT Id, ContentDocumentId, VersionData, Title
             FROM ContentVersion
-            WHERE Title = :recordId WITH SECURITY_ENFORCED LIMIT 1
+            WHERE ContentDocumentId = :conDocLinkRec.ContentDocumentId LIMIT 1
         ];
 
         String deletedData = (cv.VersionData).toString();
@@ -73,11 +75,14 @@ public with sharing class permanentDeletedRecordPreviewController {
                 WHERE rbin__Record_ID__c = :recordId
                  WITH SECURITY_ENFORCED LIMIT 1
             ];
-            ContentVersion cv = [
-                SELECT Id, ContentDocumentId, VersionData, Title
-                FROM ContentVersion
-                WHERE Title = :recordId WITH SECURITY_ENFORCED LIMIT 1
-            ];
+             ContentDocumentLink conDocLinkRec = [SELECT ContentDocumentId from ContentDocumentLink where LinkedEntityId = :previewRecord.Id LIMIT 1];
+        // will get the JSON data of the record from ContentVersion
+        ContentVersion cv = [
+            SELECT Id, ContentDocumentId, VersionData, Title
+            FROM ContentVersion
+            WHERE ContentDocumentId = :conDocLinkRec.ContentDocumentId LIMIT 1
+        ];
+
 
             String deletedData = (cv.VersionData).toString();
             String objName = previewRecord.rbin__Object_Name__c;
@@ -107,7 +112,13 @@ public with sharing class permanentDeletedRecordPreviewController {
                         DateTime fieldValue = DateTime.valueOf(dateField.replace('T',' '));
                         obj.put(fieldName, fieldValue);
 
-                    } else {
+                    } else if(fieldDescribe.getType() == Schema.DisplayType.base64){
+
+                        String base64Value = String.valueOf(jsonMap.get(fieldName));
+                        Blob fieldValue = Blob.valueOf(base64Value);
+                        obj.put(fieldName, fieldValue);
+
+                    } else{
 
                         obj.put(fieldName, jsonMap.get(fieldName));
 
